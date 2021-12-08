@@ -76,6 +76,38 @@ open class ArenaDataRepository(
 			?: throw NoSuchElementException("Element from table $tableName, operation: $operation, position: $position does not exist")
 	}
 
+	fun getByIngestStatusIn(
+		tableName: String,
+		statuses: List<IngestStatus>,
+		offset: Int = 0,
+		limit: Int = 100
+	): List<ArenaData> {
+		val sql = """
+			SELECT *
+			FROM arena_data
+			WHERE ingest_status IN (:ingestStatuses)
+			AND arena_table_name = :tableName
+			ORDER BY operation_pos ASC
+			OFFSET :offset LIMIT :limit
+		""".trimIndent()
+
+		val parameters = MapSqlParameterSource().addValues(
+			mapOf(
+				"ingestStatuses" to statuses.map { it.name }.toSet(),
+				"tableName" to tableName,
+				"offset" to offset,
+				"limit" to limit
+			)
+		)
+
+		return template.query(
+			sql,
+			parameters,
+			rowMapper
+		)
+	}
+
+
 	private fun ArenaData.asParameterSource() = MapSqlParameterSource().addValues(
 		mapOf(
 			"arena_table_name" to arenaTableName,
