@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.application
+package no.nav.amt.arena.acl
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -22,22 +22,22 @@ fun main() {
 }
 
 data class KafkaMessage(
-	val table: String,
+    val table: String,
 
-	@JsonProperty("op_type")
+    @JsonProperty("op_type")
 	val operation: String,
 
-	@JsonProperty("op_ts")
+    @JsonProperty("op_ts")
 	val operationTimestamp: String = getOperationTimestamp(LocalDateTime.now()),
 
-	@JsonProperty("current_ts")
+    @JsonProperty("current_ts")
 	val currentTimestamp: String = LocalDateTime.now().toString(),
 
-	val pos: String,
+    val pos: String,
 
-	val before: Any? = null,
+    val before: Any? = null,
 
-	val after: Any? = null
+    val after: Any? = null
 ) {
 
 	companion object {

@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.application
+package no.nav.amt.arena.acl
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

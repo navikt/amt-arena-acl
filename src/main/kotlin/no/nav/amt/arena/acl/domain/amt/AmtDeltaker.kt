@@ -1,6 +1,6 @@
-package no.nav.amt.arena.acl.application.domain.amt
+package no.nav.amt.arena.acl.domain.amt
 
-import no.nav.amt.arena.acl.application.domain.arena.ArenaTiltakDeltaker
+import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime

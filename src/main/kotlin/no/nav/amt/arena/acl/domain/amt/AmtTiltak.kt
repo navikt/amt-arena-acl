@@ -1,6 +1,6 @@
-package no.nav.amt.arena.acl.application.domain.amt
+package no.nav.amt.arena.acl.domain.amt
 
-import no.nav.amt.arena.acl.application.domain.arena.ArenaTiltak
+import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
 import java.util.*
 
 data class AmtTiltak(

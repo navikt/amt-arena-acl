@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.application.kafka
+package no.nav.amt.arena.acl.kafka
 
 import no.nav.common.kafka.util.KafkaPropertiesBuilder
 import no.nav.common.kafka.util.KafkaPropertiesPreset

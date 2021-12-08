@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.application.domain.amt
+package no.nav.amt.arena.acl.domain.amt
 
 import java.time.LocalDateTime
 import java.util.*
