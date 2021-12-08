@@ -1,0 +1,47 @@
+package no.nav.amt.arena.acl.application.domain.arena
+
+// @SONAR_START@
+data class ArenaTiltakGjennomforing(
+	val TILTAKGJENNOMFORING_ID: Long,
+	val SAK_ID: Long,
+	val TILTAKSKODE: String,
+	val ANTALL_DELTAKERE: Int,
+	val ANTALL_VARIGHET: Int?,
+	val DATO_FRA: String?,
+	val DATO_TIL: String?,
+	val FAGPLANKODE: String?,
+	val MAALEENHET_VARIGHET: String?,
+	val TEKST_FAGBESKRIVELSE: String?,
+	val TEKST_KURSSTED: String?,
+	val TEKST_MAALGRUPPE: String?,
+	val STATUS_TREVERDIKODE_INNSOKNING: String?,
+	val REG_DATO: String,
+	val REG_USER: String,
+	val MOD_DATO: String,
+	val MOD_USER: String,
+	val LOKALTNAVN: String?,
+	val TILTAKSTATUSKODE: String,
+	val PROSENT_DELTID: Float,
+	val KOMMENTAR: String?,
+	val ARBGIV_ID_ARRANGOR: Long?,
+	val PROFILELEMENT_ID_GEOGRAFI: String?,
+	val KLOKKETID_FREMMOTE: String?,
+	val DATO_FREMMOTE: String?,
+	val BEGRUNNELSE_STATUS: String?,
+	val AVTALE_ID: Long?,
+	val AKTIVITET_ID: Long?,
+	val DATO_INNSOKNINGSTART: String?,
+	val GML_FRA_DATO: String?,
+	val GML_TIL_DATO: String?,
+	val AETAT_FREMMOTEREG: String?,
+	val AETAT_KONTERINGSSTED: String?,
+	val OPPLAERINGNIVAAKODE: String?,
+	val TILTAKGJENNOMFORING_ID_REL: String?,
+	val VURDERING_GJENNOMFORING: String?,
+	val PROFILELEMENT_ID_OPPL_TILTAK: String?,
+	val DATO_OPPFOLGING_OK: String?,
+	val PARTISJON: Long,
+	val MAALFORM_KRAVBREV: String
+)
+// @SONAR_STOP@
+
