@@ -7,6 +7,7 @@ import no.nav.common.kafka.util.KafkaPropertiesBuilder
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer
+import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.StringReader
 import java.time.LocalDateTime
@@ -17,27 +18,27 @@ import java.util.zip.ZipInputStream
 fun main() {
 	val producer = ArenaKafkaProducer()
 	producer.send("data/tiltak.zip", "tiltak")
-	producer.send("data/tiltakdeltaker.zip", "deltaker")
-	producer.send("data/tiltakgjennomforing.zip", "gjennomforing")
+//	producer.send("data/tiltakdeltaker.zip", "deltaker")
+//	producer.send("data/tiltakgjennomforing.zip", "gjennomforing")
 }
 
 data class KafkaMessage(
-    val table: String,
+	val table: String,
 
-    @JsonProperty("op_type")
+	@JsonProperty("op_type")
 	val operation: String,
 
-    @JsonProperty("op_ts")
+	@JsonProperty("op_ts")
 	val operationTimestamp: String = getOperationTimestamp(LocalDateTime.now()),
 
-    @JsonProperty("current_ts")
+	@JsonProperty("current_ts")
 	val currentTimestamp: String = LocalDateTime.now().toString(),
 
-    val pos: String,
+	val pos: String,
 
-    val before: Any? = null,
+	val before: Any? = null,
 
-    val after: Any? = null
+	val after: Any? = null
 ) {
 
 	companion object {
@@ -49,6 +50,7 @@ data class KafkaMessage(
 }
 
 class ArenaKafkaProducer {
+	private val logger = LoggerFactory.getLogger(javaClass)
 	private val kafkaProducer = KafkaProducer<String, String>(getKafkaProperties())
 
 	fun send(path: String, topic: String) {
@@ -60,6 +62,8 @@ class ArenaKafkaProducer {
 		data.forEach {
 			kafkaProducer.send(ProducerRecord(topic, objectMapper.writeValueAsString(it)))
 		}
+
+		logger.info("Sent ${data.size} messages on topic $topic")
 	}
 
 	private fun readZip(path: String): String {

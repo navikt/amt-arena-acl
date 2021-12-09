@@ -23,21 +23,23 @@ data class ArenaData(
 	val ingestAttempts: Int = 0,
 	val lastAttempted: LocalDateTime? = null,
 	val before: String? = null,
-	val after: String? = null
+	val after: String? = null,
+	val note: String? = null
 ) {
 
-	fun markAsIgnored() = this.copy(ingestStatus = IngestStatus.IGNORED)
+	fun markAsIgnored(reason: String? = null) = this.copy(ingestStatus = IngestStatus.IGNORED, note = reason)
 
 	fun markAsIngested() = this.copy(
 		ingestStatus = IngestStatus.INGESTED,
 		ingestedTimestamp = LocalDateTime.now()
 	)
 
-	fun markAsFailed() = this.copy(ingestStatus = IngestStatus.FAILED)
+	fun markAsFailed(reason: String? = null) = this.copy(ingestStatus = IngestStatus.FAILED, note = reason)
 
-	fun retry() = this.copy(
+	fun retry(reason: String? = null) = this.copy(
 		ingestStatus = IngestStatus.RETRY,
 		ingestAttempts = ingestAttempts + 1,
-		lastAttempted = LocalDateTime.now()
+		lastAttempted = LocalDateTime.now(),
+		note = reason
 	)
 }

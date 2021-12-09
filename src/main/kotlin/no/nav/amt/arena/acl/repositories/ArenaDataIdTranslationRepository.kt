@@ -2,7 +2,6 @@ package no.nav.amt.arena.acl.repositories
 
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.utils.getUUID
-import org.postgresql.util.PSQLException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -19,17 +18,19 @@ open class ArenaDataIdTranslationRepository(
 			amtId = rs.getUUID("amt_id"),
 			arenaTableName = rs.getString("arena_table_name"),
 			arenaId = rs.getString("arena_id"),
-			ignored = rs.getBoolean("is_ignored")
+			ignored = rs.getBoolean("is_ignored"),
+			currentHash = rs.getString("current_hash")
 		)
 	}
 
 	fun insert(entry: ArenaDataIdTranslation) {
 		val sql = """
-			INSERT INTO arena_data_id_translation(amt_id, arena_table_name, arena_id, is_ignored)
+			INSERT INTO arena_data_id_translation(amt_id, arena_table_name, arena_id, is_ignored, current_hash)
 			VALUES (:amt_id,
 					:arena_table_name,
 					:arena_id,
-					:is_ignored)
+					:is_ignored,
+					:current_hash)
 		""".trimIndent()
 
 		try {
@@ -64,7 +65,8 @@ open class ArenaDataIdTranslationRepository(
 			"amt_id" to amtId,
 			"arena_table_name" to arenaTableName,
 			"arena_id" to arenaId,
-			"is_ignored" to ignored
+			"is_ignored" to ignored,
+			"current_hash" to currentHash
 		)
 	)
 

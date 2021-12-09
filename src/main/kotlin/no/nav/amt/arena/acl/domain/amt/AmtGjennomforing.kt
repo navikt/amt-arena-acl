@@ -4,4 +4,4 @@ import java.util.*
 
 data class AmtGjennomforing(
 	val id: UUID
-) : AmtPayload
+)

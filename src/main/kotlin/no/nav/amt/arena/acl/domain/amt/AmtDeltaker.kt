@@ -16,4 +16,4 @@ data class AmtDeltaker(
 	val status: AmtDeltakerStatus,
 	val dagerPerUke: Int?,
 	val prosentDeltid: Float?
-) : AmtPayload
+)

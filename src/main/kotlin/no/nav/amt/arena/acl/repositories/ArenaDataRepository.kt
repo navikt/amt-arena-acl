@@ -26,14 +26,15 @@ open class ArenaDataRepository(
 			ingestAttempts = rs.getInt("ingest_attempts"),
 			lastAttempted = rs.getTimestamp("last_attempted")?.toLocalDateTime(),
 			before = rs.getString("before"),
-			after = rs.getString("after")
+			after = rs.getString("after"),
+			note = rs.getString("note")
 		)
 	}
 
 	fun upsert(arenaData: ArenaData) {
 		val sql = """
 			INSERT INTO arena_data(arena_table_name, arena_id, operation_type, operation_pos, operation_timestamp, ingest_status,
-								   ingested_timestamp, ingest_attempts, last_attempted, before, after)
+								   ingested_timestamp, ingest_attempts, last_attempted, before, after, note)
 			VALUES (:arena_table_name,
 					:arena_id,
 					:operation_type,
@@ -44,7 +45,8 @@ open class ArenaDataRepository(
 					:ingest_attempts,
 					:last_attempted,
 					:before::json,
-					:after::json)
+					:after::json,
+					:note)
 			ON CONFLICT (arena_table_name, operation_type, operation_pos) DO UPDATE SET
 					ingest_status      = :ingest_status,
 					ingested_timestamp = :ingested_timestamp,
@@ -80,7 +82,7 @@ open class ArenaDataRepository(
 		tableName: String,
 		statuses: List<IngestStatus>,
 		offset: Int = 0,
-		limit: Int = 100
+		limit: Int = 1000
 	): List<ArenaData> {
 		val sql = """
 			SELECT *
@@ -120,7 +122,8 @@ open class ArenaDataRepository(
 			"ingest_attempts" to ingestAttempts,
 			"last_attempted" to lastAttempted,
 			"before" to before,
-			"after" to after
+			"after" to after,
+			"note" to note
 		)
 	)
 

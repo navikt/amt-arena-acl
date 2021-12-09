@@ -9,7 +9,7 @@ enum class AmtOperation {
 	DELETED
 }
 
-data class AmtWrapper<T : AmtPayload>(
+data class AmtWrapper<T>(
 	val transactionId: UUID = UUID.randomUUID(),
 	val source: String = "AMT_ARENA_ACL",
 	val type: String,
@@ -18,5 +18,3 @@ data class AmtWrapper<T : AmtPayload>(
 	val before: T,
 	val after: T
 )
-
-interface AmtPayload

@@ -23,7 +23,8 @@ class ArenaDataIdTranslationRepositoryTest : FunSpec({
 		amtId = UUID.randomUUID(),
 		arenaTableName = "ARENA_TABLE_NAME",
 		arenaId = "ARENA_ID",
-		ignored = true
+		ignored = true,
+		currentHash = UUID.randomUUID().toString()
 	)
 
 	beforeEach {

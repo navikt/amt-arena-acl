@@ -6,5 +6,6 @@ data class ArenaDataIdTranslation(
 	val amtId: UUID,
 	val arenaTableName: String,
 	val arenaId: String,
-	val ignored: Boolean = false
+	val ignored: Boolean = false,
+	val currentHash: String
 )
