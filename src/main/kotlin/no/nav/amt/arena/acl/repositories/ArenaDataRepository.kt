@@ -51,7 +51,8 @@ open class ArenaDataRepository(
 					ingest_status      = :ingest_status,
 					ingested_timestamp = :ingested_timestamp,
 					ingest_attempts    = :ingest_attempts,
-					last_attempted     = :last_attempted
+					last_attempted     = :last_attempted,
+					note 			   = :note
 		""".trimIndent()
 
 		template.update(sql, arenaData.asParameterSource())

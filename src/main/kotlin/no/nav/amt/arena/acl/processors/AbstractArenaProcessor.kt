@@ -1,14 +1,15 @@
 package no.nav.amt.arena.acl.processors
 
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.amt.arena.acl.domain.ArenaData
-import org.slf4j.LoggerFactory
 
 abstract class AbstractArenaProcessor {
 
-	private val logger = LoggerFactory.getLogger(javaClass)
-
 	protected val objectMapper = jacksonObjectMapper()
+		.registerModule(JavaTimeModule())
+		.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
 	companion object {
 		private const val MAX_INGEST_ATTEMPTS = 10

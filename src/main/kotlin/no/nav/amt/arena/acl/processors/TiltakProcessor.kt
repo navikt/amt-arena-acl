@@ -8,7 +8,10 @@ import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.common.kafka.producer.KafkaProducerClientImpl
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.util.DigestUtils
 import java.util.*
@@ -17,23 +20,39 @@ import java.util.*
 open class TiltakProcessor(
 	private val repository: ArenaDataRepository,
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
+	private val kafkaProducer: KafkaProducerClientImpl<String, String>
 ) : AbstractArenaProcessor() {
+
+	@Value("\${app.env.amtTopic}")
+	lateinit var topic: String
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	override fun handle(data: ArenaData) {
 		val arenaTiltak = getMainObject(data)
 
-		val translation = idTranslationRepository.get(data.arenaTableName, data.arenaId)
+		val translation = idTranslationRepository.get(data.arenaTableName, data.arenaId)?.let {
+			if (it.ignored) {
+				logger.debug("tiltak med kode ${arenaTiltak.TILTAKSKODE} er ikke støttet og sendes ikke videre")
+				repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
+				return
+			}
+
+			val digest = getDigest(arenaTiltak.toAmtTiltak(it.amtId))
+
+			if (it.currentHash == digest) {
+				logger.info("Tiltak med kode ${arenaTiltak.TILTAKSKODE} sendes ikke videre fordi det allerede er sendt (Samme hash)")
+				repository.upsert(data.markAsIgnored("Tiltaket er allerede sendt (samme hash)."))
+				return
+			}
+
+			it
+		}
 			?: generateTranslation(data, arenaTiltak)
 
 		if (translation.ignored) {
-			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak (${arenaTiltak.TILTAKSKODE})"))
-			return
-		}
-
-		if (translation.currentHash == getDigest(arenaTiltak)) {
-			repository.upsert(data.markAsIgnored("Tiltaket er allerede sendt. (samme hash)"))
+			logger.debug("tiltak med kode ${arenaTiltak.TILTAKSKODE} er ikke støttet og sendes ikke videre")
+			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
 			return
 		}
 
@@ -45,22 +64,28 @@ open class TiltakProcessor(
 
 		)
 
-		//TODO Send on Kafka
+		kafkaProducer.sendSync(
+			ProducerRecord(
+				topic,
+				objectMapper.writeValueAsString(amtData)
+			)
+		)
 
-		repository.upsert(data.markAsIngested())
+		repository.upsert(data.markAsSent())
 		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Tiltak with id ${translation.amtId} Sent.")
 	}
 
 	private fun generateTranslation(data: ArenaData, tiltak: ArenaTiltak): ArenaDataIdTranslation {
 		val ignored = !isSupportedTiltak(tiltak.TILTAKSKODE)
+		val id = UUID.randomUUID()
 
 		idTranslationRepository.insert(
 			ArenaDataIdTranslation(
-				amtId = UUID.randomUUID(),
+				amtId = id,
 				arenaTableName = data.arenaTableName,
 				arenaId = data.arenaId,
 				ignored,
-				getDigest(tiltak)
+				getDigest(tiltak.toAmtTiltak(id))
 			)
 		)
 
@@ -68,7 +93,7 @@ open class TiltakProcessor(
 			?: throw IllegalStateException("Translation for id ${data.arenaId} in table ${data.arenaTableName} should exist")
 	}
 
-	private fun getDigest(tiltak: ArenaTiltak): String {
+	private fun getDigest(tiltak: AmtTiltak): String {
 		return DigestUtils.md5DigestAsHex(objectMapper.writeValueAsString(tiltak).toByteArray())
 	}
 
@@ -82,15 +107,17 @@ open class TiltakProcessor(
 	}
 
 	private fun String.toAmtTiltak(tiltakId: UUID): AmtTiltak {
-
-		val arenaTiltak = jsonObject(this, ArenaTiltak::class.java)
+		return jsonObject(this, ArenaTiltak::class.java)?.toAmtTiltak(tiltakId)
 			?: throw IllegalArgumentException("Expected String not to be null")
+	}
 
+	private fun ArenaTiltak.toAmtTiltak(tiltakId: UUID): AmtTiltak {
 		return AmtTiltak(
 			id = tiltakId,
-			kode = arenaTiltak.TILTAKSKODE,
-			navn = arenaTiltak.TILTAKSNAVN
+			kode = TILTAKSKODE,
+			navn = TILTAKSNAVN
 		)
 	}
+
 
 }

@@ -6,7 +6,7 @@ CREATE TABLE arena_data
     operation_type      VARCHAR            NOT NULL CHECK ( operation_type IN ('CREATED', 'MODIFIED', 'DELETED')),
     operation_pos       VARCHAR            NOT NULL,
     operation_timestamp TIMESTAMP          NOT NULL,
-    ingest_status       VARCHAR            NOT NULL DEFAULT 'NEW' CHECK ( ingest_status IN ('NEW', 'INGESTED', 'RETRY', 'FAILED', 'IGNORED')),
+    ingest_status       VARCHAR            NOT NULL DEFAULT 'NEW' CHECK ( ingest_status IN ('NEW', 'SENT', 'RETRY', 'FAILED', 'IGNORED')),
     ingested_timestamp  TIMESTAMP,
     ingest_attempts     INT                NOT NULL DEFAULT 0,
     last_attempted      TIMESTAMP,

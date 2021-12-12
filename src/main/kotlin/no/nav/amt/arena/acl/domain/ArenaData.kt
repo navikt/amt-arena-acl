@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 enum class IngestStatus {
 	NEW,
-	INGESTED,
+	SENT,
 	RETRY,
 	FAILED,
 	IGNORED
@@ -29,8 +29,8 @@ data class ArenaData(
 
 	fun markAsIgnored(reason: String? = null) = this.copy(ingestStatus = IngestStatus.IGNORED, note = reason)
 
-	fun markAsIngested() = this.copy(
-		ingestStatus = IngestStatus.INGESTED,
+	fun markAsSent() = this.copy(
+		ingestStatus = IngestStatus.SENT,
 		ingestedTimestamp = LocalDateTime.now()
 	)
 

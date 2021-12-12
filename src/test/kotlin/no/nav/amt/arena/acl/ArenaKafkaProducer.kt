@@ -3,8 +3,8 @@ package no.nav.amt.arena.acl
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import no.nav.amt.arena.acl.kafka.KafkaConfiguration
 import no.nav.common.kafka.util.KafkaPropertiesBuilder
-import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.LoggerFactory
@@ -17,6 +17,7 @@ import java.util.zip.ZipInputStream
 
 fun main() {
 	val producer = ArenaKafkaProducer()
+	producer.send("data/tiltak.zip", "tiltak")
 	producer.send("data/tiltak.zip", "tiltak")
 //	producer.send("data/tiltakdeltaker.zip", "deltaker")
 //	producer.send("data/tiltakgjennomforing.zip", "gjennomforing")
@@ -50,8 +51,12 @@ data class KafkaMessage(
 }
 
 class ArenaKafkaProducer {
+	var pos = 1
+
 	private val logger = LoggerFactory.getLogger(javaClass)
-	private val kafkaProducer = KafkaProducer<String, String>(getKafkaProperties())
+	private val kafkaConfiguration = KafkaConfiguration()
+
+	private val kafkaProducer = kafkaConfiguration.kafkaProducer(kafkaConfiguration.localKafkaProperties())
 
 	fun send(path: String, topic: String) {
 		val objectMapper = jacksonObjectMapper()
@@ -60,7 +65,8 @@ class ArenaKafkaProducer {
 		val data: List<KafkaMessage> = objectMapper.readValue(string)
 
 		data.forEach {
-			kafkaProducer.send(ProducerRecord(topic, objectMapper.writeValueAsString(it)))
+			val entry = it.copy(pos = "${pos++}")
+			kafkaProducer.send(ProducerRecord(topic, objectMapper.writeValueAsString(entry)))
 		}
 
 		logger.info("Sent ${data.size} messages on topic $topic")
