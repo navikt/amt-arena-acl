@@ -4,6 +4,7 @@ import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -19,10 +20,6 @@ open class ArenaMessageProcessorService(
 
 	companion object {
 		private const val MAX_NUMBER_THREADS = 10
-
-		private const val TILTAK_TABLE_NAME = "SIAMO.TILTAK"
-		private const val TILTAKGJENNOMFORING_TABLE_NAME = "SIAMO.TILTAKGJENNOMFORING"
-		private const val TILTAK_DELTAKER_TABLE_NAME = "SIAMO.TILTAKDELTAKER"
 	}
 
 
