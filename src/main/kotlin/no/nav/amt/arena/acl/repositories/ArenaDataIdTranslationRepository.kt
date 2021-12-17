@@ -1,5 +1,7 @@
 package no.nav.amt.arena.acl.repositories
 
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.utils.getUUID
 import org.springframework.dao.DuplicateKeyException
@@ -7,11 +9,22 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 @Component
 open class ArenaDataIdTranslationRepository(
 	private val template: NamedParameterJdbcTemplate
 ) {
+
+	private val cache: Cache<Pair<String, String>, ArenaDataIdTranslation> = Caffeine.newBuilder()
+		.maximumSize(1000)
+		.expireAfterWrite(10, TimeUnit.MINUTES)
+		.build()
+
+	private val containsCache: Cache<Pair<String, String>, Boolean> = Caffeine.newBuilder()
+		.maximumSize(10000)
+		.expireAfterWrite(10, TimeUnit.MINUTES)
+		.build()
 
 	private val rowMapper = RowMapper { rs, _ ->
 		ArenaDataIdTranslation(
@@ -35,6 +48,8 @@ open class ArenaDataIdTranslationRepository(
 
 		try {
 			template.update(sql, entry.asParameterSource())
+			cache.put(Pair(entry.arenaTableName, entry.arenaId), entry)
+			containsCache.put(Pair(entry.arenaTableName, entry.arenaId), true)
 		} catch (e: DuplicateKeyException) {
 			throw IllegalStateException("Translation entry on table ${entry.arenaTableName} with id ${entry.arenaId} already exist.")
 		}
@@ -42,6 +57,23 @@ open class ArenaDataIdTranslationRepository(
 	}
 
 	fun get(table: String, arenaId: String): ArenaDataIdTranslation? {
+		cache.cleanUp()
+
+		if (cache.estimatedSize() == 0L) {
+			updateCache()
+		}
+
+		val key = Pair(table, arenaId)
+		val contains = containsCache.getIfPresent(key)
+
+		return if (contains != null) {
+			return contains.let { cache.getIfPresent(key) }
+		} else {
+			getFromDatabase(table, arenaId)
+		}
+	}
+
+	private fun getFromDatabase(table: String, arenaId: String): ArenaDataIdTranslation? {
 		val sql = """
 			SELECT *
 				FROM arena_data_id_translation
@@ -56,9 +88,37 @@ open class ArenaDataIdTranslationRepository(
 			)
 		)
 
-		return template.query(sql, parameters, rowMapper)
+		val entry = template.query(sql, parameters, rowMapper)
 			.firstOrNull()
+
+		val cacheKey = Pair(table, arenaId)
+
+		if (entry != null) {
+			cache.put(cacheKey, entry)
+			containsCache.put(cacheKey, true)
+		} else {
+			containsCache.put(cacheKey, false)
+		}
+
+		return entry
 	}
+
+	private fun updateCache() {
+		val entryList = template.query("SELECT * FROM arena_data_id_translation", rowMapper)
+
+		val entries = entryList
+			.associateBy({ Pair(it.arenaTableName, it.arenaId) }, { it })
+
+		val contains = entryList
+			.associateBy({ Pair(it.arenaTableName, it.arenaId) }, { true })
+
+		cache.invalidateAll()
+		cache.putAll(entries)
+
+		containsCache.invalidateAll()
+		containsCache.putAll(contains)
+	}
+
 
 	private fun ArenaDataIdTranslation.asParameterSource() = MapSqlParameterSource().addValues(
 		mapOf(

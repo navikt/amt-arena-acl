@@ -22,7 +22,7 @@ CREATE TABLE arena_data_id_translation
     amt_id           UUID PRIMARY KEY NOT NULL,
     arena_table_name VARCHAR          NOT NULL,
     arena_id         VARCHAR          NOT NULL,
-    is_ignored       BOOLEAN          NOT NULL DEFAULT FALSE,
+    is_ignored       BOOLEAN          NOT NULL,
     current_hash     VARCHAR          NOT NULL
 );
 

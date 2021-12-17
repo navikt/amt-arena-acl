@@ -1,81 +1,140 @@
 package no.nav.amt.arena.acl.processors
 
-//@Component
-//open class TiltaksgjennomforingProcessor(
-//	private val repository: ArenaDataRepository,
-//	private val idTranslationRepository: ArenaDataIdTranslationRepository,
-//	private val kafkaProducer: KafkaProducerClientImpl<String, String>,
-//	private val ordsProxyClient: ArenaOrdsProxyClient
-//) : AbstractArenaProcessor() {
-//
-//	@Value("\${app.env.amtTopic}")
-//	lateinit var topic: String
-//
-//	private val logger = LoggerFactory.getLogger(javaClass)
-//
-//	override fun handle(data: ArenaData) {
-//		val arenaTiltakGjennomforing = getMainObject(data)
-//
-//		val tiltakTranslation = idTranslationRepository.get(TILTAK_TABLE_NAME, arenaTiltakGjennomforing.TILTAKSKODE)
-//			?: throw DependencyNotIngestedException(
-//				"Tiltak med Arena ID ${arenaTiltakGjennomforing.TILTAKSKODE} må eksistere for å håndtere " +
-//					"tiltakGjennomføring med Arena ID ${arenaTiltakGjennomforing.TILTAKGJENNOMFORING_ID}"
-//			)
-//
-//
-//		val translation = idTranslationRepository.get(data.arenaTableName, data.arenaId)?.let {
-//			if (it.ignored) {
-//				logger.debug("Tiltaksgjennomføring med id ${arenaTiltakGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
-//				repository.upsert(data.markAsIgnored("Ikke et støttet tiltaksgjennomforing."))
-//				return
-//			}
-//
-//			val digest = getDigest(arenaTiltakGjennomforing.toAmtTiltakGjennomforing(it.amtId))
-//
-//			it
-//		}
-//			?: generateTranslation(data, arenaTiltakGjennomforing)
-//
-//		TODO("Not yet implemented")
-//	}
-//
-//	private fun generateTranslation(data: ArenaData, tiltak: ArenaTiltakGjennomforing): ArenaDataIdTranslation {
-//		TODO("Not yet implemented")
-//	}
-//
-//	private fun getDigest(tiltak: AmtGjennomforing): String {
-//		return DigestUtils.md5DigestAsHex(objectMapper.writeValueAsString(tiltak).toByteArray())
-//	}
-//
-//	private fun getMainObject(data: ArenaData): ArenaTiltakGjennomforing {
-//		return when (data.operation) {
-//			AmtOperation.CREATED -> jsonObject(data.after, ArenaTiltakGjennomforing::class.java)
-//			AmtOperation.MODIFIED -> jsonObject(data.after, ArenaTiltakGjennomforing::class.java)
-//			AmtOperation.DELETED -> jsonObject(data.before, ArenaTiltakGjennomforing::class.java)
-//		}
-//			?: throw IllegalArgumentException("Expected ${data.arenaTableName} id ${data.arenaId} to have before or after correctly set.")
-//	}
-//
-//	private fun String.toAmtTiltakGjennomforing(tiltakGjennomforingId: UUID): AmtGjennomforing {
-//		return jsonObject(this, ArenaTiltakGjennomforing::class.java)?.toAmtTiltakGjennomforing(tiltakGjennomforingId)
-//			?: throw IllegalArgumentException("Expected String not to be null")
-//	}
-//
-//	private fun ArenaTiltakGjennomforing.toAmtTiltakGjennomforing(
-//		tiltakGjennomforingId: UUID,
-//		tiltakId: UUID
-//	): AmtGjennomforing {
-//		return AmtGjennomforing(
-//			id = tiltakGjennomforingId,
-//			kode = TILTAKSKODE,
-//			navn = TILTAKSNAVN
-//		)
-//	}
-//
-//	private fun getTiltakTranslation(arenaId: String): ArenaDataIdTranslation {
-//		val translation = idTranslationRepository.get(TILTAK_TABLE_NAME, arenaId)
-//			?: throw DependencyNotIngestedException("Tiltak med Arena ID ${arenaId} må eksistere for å håndtere")
-//	}
-//
-//
-//}
+import no.nav.amt.arena.acl.domain.ArenaData
+import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
+import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.amt.AmtWrapper
+import no.nav.amt.arena.acl.domain.arena.ArenaTiltakGjennomforing
+import no.nav.amt.arena.acl.ordsproxy.ArenaOrdsProxyClient
+import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
+import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.utils.*
+import no.nav.common.kafka.producer.KafkaProducerClientImpl
+import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.stereotype.Component
+import java.util.*
+
+@Component
+open class TiltaksgjennomforingProcessor(
+	private val repository: ArenaDataRepository,
+	private val idTranslationRepository: ArenaDataIdTranslationRepository,
+	private val ordsClient: ArenaOrdsProxyClient,
+	kafkaProducer: KafkaProducerClientImpl<String, String>
+) : AbstractArenaProcessor<ArenaTiltakGjennomforing>(
+	clazz = ArenaTiltakGjennomforing::class.java,
+	kafkaProducer = kafkaProducer
+) {
+
+	private val logger = LoggerFactory.getLogger(javaClass)
+
+	override fun handle(data: ArenaData) {
+		val arenaGjennomforing = getMainObject(data)
+
+		val tiltakskode = arenaGjennomforing.TILTAKSKODE
+		val arenaGjennomforingId = arenaGjennomforing.TILTAKGJENNOMFORING_ID.toString()
+
+		if (!isSupportedTiltak(tiltakskode)) {
+			logger.debug("Tiltaksgjennomføring for tiltak med kode $tiltakskode er ikke støttet og sendes ikke videre")
+			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
+			return
+		}
+
+		val tiltakIdInfo = idTranslationRepository.get(TILTAK_TABLE_NAME, tiltakskode)
+
+		if (tiltakIdInfo == null) {
+			logger.debug("Tiltak $tiltakskode er ikke håndtert, kan derfor ikke håndtere gjennomføring med Arena ID ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} enda.")
+			repository.upsert(data.retry("Tiltaket ($tiltakskode) er ikke håndtert"))
+			return
+		}
+
+//		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
+		val virksomhetsnummer = "12345678910"
+		var gjennomforingIdInfo = idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, arenaGjennomforingId)
+
+
+		if (gjennomforingIdInfo != null) {
+			val amtGjennomforing = arenaGjennomforing.toAmtGjennomforing(
+				amtTiltakId = tiltakIdInfo.amtId,
+				amtGjennomforingId = gjennomforingIdInfo.amtId,
+				virksomhetsnummer = virksomhetsnummer
+			)
+
+			val digest = getDigest(amtGjennomforing)
+
+			if (gjennomforingIdInfo.currentHash == digest) {
+				logger.info("Tiltaksgjennomforing med id ${gjennomforingIdInfo.amtId} sendes ikke videre fordi det allerede er sendt (Samme hash)")
+				repository.upsert(data.markAsIgnored("Gjennomføringen er allerede sendt (samme hash)."))
+				return
+			}
+		} else {
+			gjennomforingIdInfo = generateTranslation(tiltakIdInfo.amtId, virksomhetsnummer, data, arenaGjennomforing)
+		}
+
+		val amtData = AmtWrapper(
+			type = "GJENNOMFORING",
+			operation = data.operation,
+			before = data.before?.toAmtTiltak(tiltakIdInfo.amtId, gjennomforingIdInfo.amtId, virksomhetsnummer),
+			after = data.after?.toAmtTiltak(tiltakIdInfo.amtId, gjennomforingIdInfo.amtId, virksomhetsnummer)
+		)
+
+		send(objectMapper.writeValueAsString(amtData))
+		repository.upsert(data.markAsSent())
+		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Gjennomføring with id ${gjennomforingIdInfo.amtId} Sent.")
+
+	}
+
+	private fun generateTranslation(
+		tiltakId: UUID,
+		virksomhetsnummer: String,
+		data: ArenaData,
+		arenaGjennomforing: ArenaTiltakGjennomforing
+	): ArenaDataIdTranslation {
+		val id = UUID.randomUUID()
+
+		idTranslationRepository.insert(
+			ArenaDataIdTranslation(
+				amtId = id,
+				arenaTableName = data.arenaTableName,
+				arenaId = arenaGjennomforing.TILTAKGJENNOMFORING_ID.toString(),
+				ignored = !isSupportedTiltak(arenaGjennomforing.TILTAKSKODE),
+				getDigest(arenaGjennomforing.toAmtGjennomforing(tiltakId, id, virksomhetsnummer))
+			)
+		)
+
+		return idTranslationRepository.get(data.arenaTableName, data.arenaId)
+			?: throw IllegalStateException("Translation for id ${data.arenaId} in table ${data.arenaTableName} should exist")
+
+	}
+
+	private fun String.toAmtTiltak(
+		amtTiltakId: UUID,
+		amtGjennomforingId: UUID,
+		virksomhetsnummer: String
+	): AmtGjennomforing {
+		return jsonObject(this, ArenaTiltakGjennomforing::class.java)?.toAmtGjennomforing(
+			amtTiltakId,
+			amtGjennomforingId,
+			virksomhetsnummer
+		)
+			?: throw IllegalArgumentException("Expected String not to be null")
+	}
+
+
+	private fun ArenaTiltakGjennomforing.toAmtGjennomforing(
+		amtTiltakId: UUID,
+		amtGjennomforingId: UUID,
+		virksomhetsnummer: String
+	): AmtGjennomforing {
+		return AmtGjennomforing(
+			id = amtGjennomforingId,
+			tiltakId = amtTiltakId,
+			virksomhetsnummer = virksomhetsnummer,
+			navn = LOKALTNAVN ?: throw DataIntegrityViolationException("Forventet at LOKALTNAVN ikke er null"),
+			oppstartDato = DATO_FRA?.asLocalDate(),
+			sluttDato = DATO_TIL?.asLocalDate(),
+			registrert = REG_DATO.asLocalDateTime(),
+			fremmote = DATO_FREMMOTE?.asLocalDate() withTime KLOKKETID_FREMMOTE.asTime()
+		)
+	}
+}

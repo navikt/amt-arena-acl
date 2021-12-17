@@ -23,7 +23,7 @@ class ArenaDataIdTranslationRepositoryTest : FunSpec({
 		amtId = UUID.randomUUID(),
 		arenaTableName = "ARENA_TABLE_NAME",
 		arenaId = "ARENA_ID",
-		ignored = true,
+		ignored = false,
 		currentHash = UUID.randomUUID().toString()
 	)
 
@@ -45,7 +45,6 @@ class ArenaDataIdTranslationRepositoryTest : FunSpec({
 		stored!!.amtId shouldBe testObject.amtId
 		stored.arenaTableName shouldBe testObject.arenaTableName
 		stored.arenaId shouldBe testObject.arenaId
-		stored.ignored shouldBe testObject.ignored
 	}
 
 	test("Insert twice on same table + arena_id should throw exception") {
