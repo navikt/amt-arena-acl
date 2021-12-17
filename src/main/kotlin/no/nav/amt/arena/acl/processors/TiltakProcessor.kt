@@ -2,6 +2,7 @@ package no.nav.amt.arena.acl.processors
 
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
+import no.nav.amt.arena.acl.domain.Creation
 import no.nav.amt.arena.acl.domain.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
@@ -27,54 +28,67 @@ open class TiltakProcessor(
 	override fun handle(data: ArenaData) {
 		val arenaTiltak = getMainObject(data)
 
-		if (!isSupportedTiltak(arenaTiltak.TILTAKSKODE)) {
+		val id = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
+			?: UUID.randomUUID()
+
+		val amtTiltak = arenaTiltak.toAmtTiltak(id)
+
+		if (isIgnored(arenaTiltak)) {
 			logger.debug("tiltak med kode ${arenaTiltak.TILTAKSKODE} er ikke støttet og sendes ikke videre")
+			getTranslation(data, amtTiltak)
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
 			return
 		}
 
-		var idTranslation = idTranslationRepository.get(data.arenaTableName, data.arenaId)
+		val translation = getTranslation(data, amtTiltak)
 
-		if (idTranslation != null) {
-			val digest = getDigest(arenaTiltak.toAmtTiltak(idTranslation.amtId))
+		if (translation.first == Creation.EXISTED) {
+			val digest = getDigest(amtTiltak)
 
-			if (idTranslation.currentHash == digest) {
-				logger.info("Tiltak med kode ${arenaTiltak.TILTAKSKODE} sendes ikke videre fordi det allerede er sendt (Samme hash)")
+			if (translation.second.currentHash == digest) {
+				logger.info("Tiltak med kode $id sendes ikke videre fordi det allerede er sendt (Samme hash)")
 				repository.upsert(data.markAsIgnored("Tiltaket er allerede sendt (samme hash)."))
 				return
 			}
-		} else {
-			idTranslation = generateTranslation(data, arenaTiltak)
 		}
 
 		val amtData = AmtWrapper(
 			type = "TILTAK",
 			operation = data.operation,
-			before = data.before?.toAmtTiltak(idTranslation.amtId),
-			after = data.after?.toAmtTiltak(idTranslation.amtId)
-
+			before = data.before?.toAmtTiltak(id),
+			after = data.after?.toAmtTiltak(id)
 		)
 
 		send(objectMapper.writeValueAsString(amtData))
 		repository.upsert(data.markAsSent())
-		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Tiltak with id ${idTranslation.amtId} Sent.")
+		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Tiltak with id $id Sent.")
 	}
 
-	private fun generateTranslation(data: ArenaData, tiltak: ArenaTiltak): ArenaDataIdTranslation {
-		val id = UUID.randomUUID()
+	private fun isIgnored(tiltak: ArenaTiltak): Boolean {
+		return !isSupportedTiltak(tiltak.TILTAKSKODE)
+	}
 
-		idTranslationRepository.insert(
-			ArenaDataIdTranslation(
-				amtId = id,
-				arenaTableName = data.arenaTableName,
-				arenaId = data.arenaId,
-				ignored = !isSupportedTiltak(tiltak.TILTAKSKODE),
-				getDigest(tiltak.toAmtTiltak(id))
+	private fun getTranslation(data: ArenaData, tiltak: AmtTiltak): Pair<Creation, ArenaDataIdTranslation> {
+		val exists = idTranslationRepository.get(data.arenaTableName, data.arenaId)
+
+		if (exists != null) {
+			return Pair(Creation.EXISTED, exists)
+		} else {
+			idTranslationRepository.insert(
+				ArenaDataIdTranslation(
+					amtId = tiltak.id,
+					arenaTableName = data.arenaTableName,
+					arenaId = data.arenaId,
+					ignored = !isSupportedTiltak(tiltak.kode),
+					getDigest(tiltak)
+				)
 			)
-		)
 
-		return idTranslationRepository.get(data.arenaTableName, data.arenaId)
-			?: throw IllegalStateException("Translation for id ${data.arenaId} in table ${data.arenaTableName} should exist")
+			val created = idTranslationRepository.get(data.arenaTableName, data.arenaId)
+				?: throw IllegalStateException("Translation for id ${data.arenaId} in table ${data.arenaTableName} should exist")
+
+			return Pair(Creation.CREATED, created)
+		}
 	}
 
 	private fun String.toAmtTiltak(tiltakId: UUID): AmtTiltak {
@@ -89,6 +103,5 @@ open class TiltakProcessor(
 			navn = TILTAKSNAVN
 		)
 	}
-
 
 }

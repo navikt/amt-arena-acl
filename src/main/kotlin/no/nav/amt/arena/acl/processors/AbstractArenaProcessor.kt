@@ -26,12 +26,9 @@ abstract class AbstractArenaProcessor<T>(
 		.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
 	companion object {
-		private const val MAX_INGEST_ATTEMPTS = 10
-
 		private val SUPPORTED_TILTAK = setOf(
 			"INDOPPFAG",
 		)
-
 	}
 
 	abstract fun handle(data: ArenaData)
@@ -58,7 +55,7 @@ abstract class AbstractArenaProcessor<T>(
 		)
 	}
 
-	protected fun jsonObject(string: String?): T? {
+	private fun jsonObject(string: String?): T? {
 		if (string == null) {
 			return null
 		}

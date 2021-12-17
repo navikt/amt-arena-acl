@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Component
@@ -17,7 +18,7 @@ open class ArenaDataIdTranslationRepository(
 ) {
 
 	private val cache: Cache<Pair<String, String>, ArenaDataIdTranslation> = Caffeine.newBuilder()
-		.maximumSize(1000)
+		.maximumSize(10000)
 		.expireAfterWrite(10, TimeUnit.MINUTES)
 		.build()
 
@@ -44,6 +45,9 @@ open class ArenaDataIdTranslationRepository(
 					:arena_id,
 					:is_ignored,
 					:current_hash)
+			ON CONFLICT (arena_table_name, arena_id) DO UPDATE SET
+				is_ignored = :is_ignored,
+				current_hash = :current_hash
 		""".trimIndent()
 
 		try {
@@ -56,18 +60,16 @@ open class ArenaDataIdTranslationRepository(
 
 	}
 
+	fun getAmtId(table: String, arenaId: String): UUID? {
+		return get(table, arenaId)?.amtId
+	}
+
 	fun get(table: String, arenaId: String): ArenaDataIdTranslation? {
-		cache.cleanUp()
-
-		if (cache.estimatedSize() == 0L) {
-			updateCache()
-		}
-
 		val key = Pair(table, arenaId)
 		val contains = containsCache.getIfPresent(key)
 
 		return if (contains != null) {
-			return contains.let { cache.getIfPresent(key) }
+			return cache.getIfPresent(key)
 		} else {
 			getFromDatabase(table, arenaId)
 		}
@@ -102,23 +104,6 @@ open class ArenaDataIdTranslationRepository(
 
 		return entry
 	}
-
-	private fun updateCache() {
-		val entryList = template.query("SELECT * FROM arena_data_id_translation", rowMapper)
-
-		val entries = entryList
-			.associateBy({ Pair(it.arenaTableName, it.arenaId) }, { it })
-
-		val contains = entryList
-			.associateBy({ Pair(it.arenaTableName, it.arenaId) }, { true })
-
-		cache.invalidateAll()
-		cache.putAll(entries)
-
-		containsCache.invalidateAll()
-		containsCache.putAll(contains)
-	}
-
 
 	private fun ArenaDataIdTranslation.asParameterSource() = MapSqlParameterSource().addValues(
 		mapOf(

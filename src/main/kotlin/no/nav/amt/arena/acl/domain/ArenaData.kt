@@ -31,7 +31,8 @@ data class ArenaData(
 
 	fun markAsSent() = this.copy(
 		ingestStatus = IngestStatus.SENT,
-		ingestedTimestamp = LocalDateTime.now()
+		ingestedTimestamp = LocalDateTime.now(),
+		note = null
 	)
 
 	fun markAsFailed(reason: String? = null) = this.copy(ingestStatus = IngestStatus.FAILED, note = reason)

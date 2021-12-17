@@ -2,6 +2,7 @@ package no.nav.amt.arena.acl.processors
 
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
+import no.nav.amt.arena.acl.domain.Creation
 import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakGjennomforing
@@ -32,80 +33,89 @@ open class TiltaksgjennomforingProcessor(
 		val arenaGjennomforing = getMainObject(data)
 
 		val tiltakskode = arenaGjennomforing.TILTAKSKODE
-		val arenaGjennomforingId = arenaGjennomforing.TILTAKGJENNOMFORING_ID.toString()
 
-		if (!isSupportedTiltak(tiltakskode)) {
-			logger.debug("Tiltaksgjennomføring for tiltak med kode $tiltakskode er ikke støttet og sendes ikke videre")
-			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
-			return
-		}
+		val id = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
+			?: UUID.randomUUID()
 
-		val tiltakIdInfo = idTranslationRepository.get(TILTAK_TABLE_NAME, tiltakskode)
+		//	TODO	val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
+		val virksomhetsnummer = "12345678910"
 
-		if (tiltakIdInfo == null) {
+		val tiltakInfo = idTranslationRepository.get(TILTAK_TABLE_NAME, tiltakskode)
+
+		if (tiltakInfo == null) {
 			logger.debug("Tiltak $tiltakskode er ikke håndtert, kan derfor ikke håndtere gjennomføring med Arena ID ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} enda.")
 			repository.upsert(data.retry("Tiltaket ($tiltakskode) er ikke håndtert"))
 			return
 		}
 
-//		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
-		val virksomhetsnummer = "12345678910"
-		var gjennomforingIdInfo = idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, arenaGjennomforingId)
+		val amtGjennomforing = arenaGjennomforing.toAmtGjennomforing(
+			amtTiltakId = tiltakInfo.amtId,
+			amtGjennomforingId = id,
+			virksomhetsnummer = virksomhetsnummer
+		)
 
+		if (isIgnored(arenaGjennomforing)) {
+			logger.debug("Gjennomføring med kode $tiltakskode er ikke støttet og sendes ikke videre")
+			getTranslation(data, amtGjennomforing, isIgnored(arenaGjennomforing))
+			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
+			return
+		}
 
-		if (gjennomforingIdInfo != null) {
-			val amtGjennomforing = arenaGjennomforing.toAmtGjennomforing(
-				amtTiltakId = tiltakIdInfo.amtId,
-				amtGjennomforingId = gjennomforingIdInfo.amtId,
-				virksomhetsnummer = virksomhetsnummer
-			)
+		val translation = getTranslation(data, amtGjennomforing, isIgnored(arenaGjennomforing))
 
+		if (translation.first == Creation.EXISTED) {
 			val digest = getDigest(amtGjennomforing)
 
-			if (gjennomforingIdInfo.currentHash == digest) {
-				logger.info("Tiltaksgjennomforing med id ${gjennomforingIdInfo.amtId} sendes ikke videre fordi det allerede er sendt (Samme hash)")
-				repository.upsert(data.markAsIgnored("Gjennomføringen er allerede sendt (samme hash)."))
+			if (translation.second.currentHash == digest) {
+				logger.info("Gjennomføring med kode $id sendes ikke videre fordi det allerede er sendt (Samme hash)")
+				repository.upsert(data.markAsIgnored("Tiltaket er allerede sendt (samme hash)."))
 				return
 			}
-		} else {
-			gjennomforingIdInfo = generateTranslation(tiltakIdInfo.amtId, virksomhetsnummer, data, arenaGjennomforing)
 		}
 
 		val amtData = AmtWrapper(
 			type = "GJENNOMFORING",
 			operation = data.operation,
-			before = data.before?.toAmtTiltak(tiltakIdInfo.amtId, gjennomforingIdInfo.amtId, virksomhetsnummer),
-			after = data.after?.toAmtTiltak(tiltakIdInfo.amtId, gjennomforingIdInfo.amtId, virksomhetsnummer)
+			before = data.before?.toAmtTiltak(tiltakInfo.amtId, id, virksomhetsnummer),
+			after = data.after?.toAmtTiltak(tiltakInfo.amtId, id, virksomhetsnummer)
 		)
 
 		send(objectMapper.writeValueAsString(amtData))
 		repository.upsert(data.markAsSent())
-		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Gjennomføring with id ${gjennomforingIdInfo.amtId} Sent.")
-
+		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Gjennomføring with id $id Sent.")
 	}
 
-	private fun generateTranslation(
-		tiltakId: UUID,
-		virksomhetsnummer: String,
+	private fun isIgnored(gjennomforing: ArenaTiltakGjennomforing): Boolean {
+		return !isSupportedTiltak(gjennomforing.TILTAKSKODE)
+	}
+
+	private fun getTranslation(
 		data: ArenaData,
-		arenaGjennomforing: ArenaTiltakGjennomforing
-	): ArenaDataIdTranslation {
-		val id = UUID.randomUUID()
+		gjennomforing: AmtGjennomforing,
+		ignored: Boolean
+	): Pair<Creation, ArenaDataIdTranslation> {
+		val exists = idTranslationRepository.get(data.arenaTableName, data.arenaId)
 
-		idTranslationRepository.insert(
-			ArenaDataIdTranslation(
-				amtId = id,
-				arenaTableName = data.arenaTableName,
-				arenaId = arenaGjennomforing.TILTAKGJENNOMFORING_ID.toString(),
-				ignored = !isSupportedTiltak(arenaGjennomforing.TILTAKSKODE),
-				getDigest(arenaGjennomforing.toAmtGjennomforing(tiltakId, id, virksomhetsnummer))
+		if (exists != null) {
+			return Pair(Creation.EXISTED, exists)
+		} else {
+			idTranslationRepository.insert(
+				ArenaDataIdTranslation(
+					amtId = gjennomforing.id,
+					arenaTableName = data.arenaTableName,
+					arenaId = data.arenaId,
+					ignored = ignored,
+					getDigest(gjennomforing)
+				)
 			)
-		)
 
-		return idTranslationRepository.get(data.arenaTableName, data.arenaId)
-			?: throw IllegalStateException("Translation for id ${data.arenaId} in table ${data.arenaTableName} should exist")
+			val created = idTranslationRepository.get(data.arenaTableName, data.arenaId)
+				?: throw IllegalStateException("Translation for id ${data.arenaId} in table ${data.arenaTableName} should exist")
 
+			return Pair(Creation.CREATED, created)
+		}
 	}
+
 
 	private fun String.toAmtTiltak(
 		amtTiltakId: UUID,
