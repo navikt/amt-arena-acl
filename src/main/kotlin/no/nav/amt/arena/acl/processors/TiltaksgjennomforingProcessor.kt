@@ -38,8 +38,7 @@ open class TiltaksgjennomforingProcessor(
 		val id = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
 			?: UUID.randomUUID()
 
-		//	TODO	val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
-		val virksomhetsnummer = "12345678910"
+		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
 
 		val tiltakInfo = idTranslationRepository.get(TILTAK_TABLE_NAME, tiltakskode)
 
