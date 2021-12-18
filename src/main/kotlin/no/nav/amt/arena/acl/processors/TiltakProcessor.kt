@@ -15,17 +15,18 @@ import java.util.*
 
 @Component
 open class TiltakProcessor(
-	private val repository: ArenaDataRepository,
+	repository: ArenaDataRepository,
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
 	kafkaProducer: KafkaProducerClientImpl<String, String>
 ) : AbstractArenaProcessor<ArenaTiltak>(
+	repository = repository,
 	clazz = ArenaTiltak::class.java,
 	kafkaProducer = kafkaProducer
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	override fun handle(data: ArenaData) {
+	override fun handleEntry(data: ArenaData) {
 		val arenaTiltak = getMainObject(data)
 
 		val id = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)

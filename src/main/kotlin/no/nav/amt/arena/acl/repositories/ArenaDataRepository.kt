@@ -81,6 +81,15 @@ open class ArenaDataRepository(
 
 	fun getByIngestStatusIn(
 		tableName: String,
+		status: IngestStatus,
+		offset: Int = 0,
+		limit: Int = 1000
+	): List<ArenaData> {
+		return getByIngestStatusIn(tableName, listOf(status), offset, limit)
+	}
+
+	fun getByIngestStatusIn(
+		tableName: String,
 		statuses: List<IngestStatus>,
 		offset: Int = 0,
 		limit: Int = 1000

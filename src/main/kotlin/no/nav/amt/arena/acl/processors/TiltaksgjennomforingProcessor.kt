@@ -18,18 +18,19 @@ import java.util.*
 
 @Component
 open class TiltaksgjennomforingProcessor(
-	private val repository: ArenaDataRepository,
+	repository: ArenaDataRepository,
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
 	private val ordsClient: ArenaOrdsProxyClient,
 	kafkaProducer: KafkaProducerClientImpl<String, String>
 ) : AbstractArenaProcessor<ArenaTiltakGjennomforing>(
+	repository = repository,
 	clazz = ArenaTiltakGjennomforing::class.java,
 	kafkaProducer = kafkaProducer
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	override fun handle(data: ArenaData) {
+	override fun handleEntry(data: ArenaData) {
 		val arenaGjennomforing = getMainObject(data)
 
 		val tiltakskode = arenaGjennomforing.TILTAKSKODE
@@ -55,7 +56,7 @@ open class TiltaksgjennomforingProcessor(
 		)
 
 		if (isIgnored(arenaGjennomforing)) {
-			logger.debug("Gjennomføring med kode $tiltakskode er ikke støttet og sendes ikke videre")
+			logger.debug("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
 			getTranslation(data, amtGjennomforing, isIgnored(arenaGjennomforing))
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
 			return

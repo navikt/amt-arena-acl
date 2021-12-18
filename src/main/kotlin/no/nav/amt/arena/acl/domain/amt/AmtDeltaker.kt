@@ -1,11 +1,8 @@
 package no.nav.amt.arena.acl.domain.amt
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
-
-enum class AmtDeltakerStatus {
-	NY_BRUKER, GJENNOMFORES, AVBRUTT, FULLFORT
-}
 
 data class AmtDeltaker(
 	val id: UUID,
@@ -13,7 +10,13 @@ data class AmtDeltaker(
 	val personIdent: String,
 	val oppstartDato: LocalDate?,
 	val sluttDato: LocalDate?,
-	val status: AmtDeltakerStatus,
+	val status: Status,
 	val dagerPerUke: Int?,
-	val prosentDeltid: Float?
-)
+	val prosentDeltid: Float?,
+	val registrertDato: LocalDateTime
+) {
+
+	enum class Status {
+		VENTER_PA_OPPSTART, GJENNOMFORES, HAR_SLUTTET, IKKE_AKTUELL
+	}
+}

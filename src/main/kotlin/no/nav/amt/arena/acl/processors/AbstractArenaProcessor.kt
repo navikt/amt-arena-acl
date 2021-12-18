@@ -5,6 +5,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
+import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.util.DigestUtils
 
 abstract class AbstractArenaProcessor<T>(
+	protected val repository: ArenaDataRepository,
 	private val clazz: Class<T>,
 	private val kafkaProducer: KafkaProducerClientImpl<String, String>
 ) {
@@ -26,12 +29,32 @@ abstract class AbstractArenaProcessor<T>(
 		.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
 	companion object {
+		private const val MAX_INGEST_ATTEMPTS = 10
+
 		private val SUPPORTED_TILTAK = setOf(
 			"INDOPPFAG",
 		)
 	}
 
-	abstract fun handle(data: ArenaData)
+	fun handle(data: ArenaData) {
+		try{
+			handleEntry(data)
+		} catch (e: Exception) {
+			if (data.ingestAttempts >= MAX_INGEST_ATTEMPTS) {
+				logger.error("[arena_data_id ${data.id}]: ${e.message}", e)
+				repository.upsert(data.markAsFailed())
+			} else {
+				if (e !is DependencyNotIngestedException) {
+					logger.error("[arena_data_id ${data.id}]: ${e.message}", e)
+				}
+
+				repository.upsert(data.retry())
+			}
+		}
+
+	}
+
+	protected abstract fun handleEntry(data: ArenaData)
 
 	protected fun getMainObject(data: ArenaData): T {
 		return when (data.operation) {
