@@ -141,6 +141,10 @@
             <artifactId>kotlinx-coroutines-core-jvm</artifactId>
             <version>1.5.2</version>
         </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
 
         <!-- TEST DEPENDENCIES -->
         <dependency>

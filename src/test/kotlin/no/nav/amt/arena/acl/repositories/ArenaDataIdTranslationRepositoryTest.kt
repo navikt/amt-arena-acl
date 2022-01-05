@@ -46,13 +46,4 @@ class ArenaDataIdTranslationRepositoryTest : FunSpec({
 		stored.arenaTableName shouldBe testObject.arenaTableName
 		stored.arenaId shouldBe testObject.arenaId
 	}
-
-	test("Insert twice on same table + arena_id should throw exception") {
-		repository.insert(testObject)
-
-		val exception = shouldThrowExactly<IllegalStateException> { repository.insert(testObject) }
-
-		exception.message shouldBe "Translation entry on table ${testObject.arenaTableName} with id ${testObject.arenaId} already exist."
-	}
-
 })
