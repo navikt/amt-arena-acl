@@ -1,0 +1,37 @@
+name: Deploy to dev
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+env:
+  IMAGE_TAG: ${{ github.sha }}
+  IMAGE: ghcr.io/${{ github.repository }}/amt-arena-acl
+  PRINT_PAYLOAD: true
+
+jobs:
+  test-build-and-push:
+    name: Test, build and push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Set up JDK 15
+        uses: actions/setup-java@v1
+        with:
+          java-version: 15
+      - name: Set up cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+      - name: Build maven artifacts
+        run: mvn -B package
+      - name: Build and push Docker image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo ${GITHUB_TOKEN} | docker login ghcr.io -u ${GITHUB_REPOSITORY} --password-stdin
+          docker build -t ${IMAGE}:${IMAGE_TAG} .
+          docker push ${IMAGE}:${IMAGE_TAG}
