@@ -38,12 +38,6 @@ open class TiltaksgjennomforingProcessor(
 
 		val tiltakskode = arenaGjennomforing.TILTAKSKODE
 
-		val id = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
-			?: UUID.randomUUID()
-
-//		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
-		val virksomhetsnummer = "123456789"
-
 		val tiltak = tiltakRepository.getByKode(tiltakskode)
 
 		if (tiltak == null) {
@@ -51,6 +45,11 @@ open class TiltaksgjennomforingProcessor(
 			repository.upsert(data.retry("Tiltaket ($tiltakskode) er ikke håndtert"))
 			return
 		}
+
+		val id = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
+			?: UUID.randomUUID()
+
+		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
 
 		val amtGjennomforing = arenaGjennomforing.toAmtGjennomforing(
 			amtTiltak = tiltak,
@@ -84,7 +83,7 @@ open class TiltaksgjennomforingProcessor(
 			after = data.after?.toAmtTiltak(tiltak, id, virksomhetsnummer)
 		)
 
-		send(objectMapper.writeValueAsString(amtData))
+		send(amtGjennomforing.id, objectMapper.writeValueAsString(amtData))
 		repository.upsert(data.markAsHandled())
 		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Gjennomføring with id $id Sent.")
 	}

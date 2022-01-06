@@ -46,7 +46,6 @@ open class DeltakerProcessor(
 
 		val ignored = gjennomforingInfo.ignored
 
-
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.PERSON_ID.toString())
 			?: throw IllegalStateException("Expected Person with ArenaId ${arenaDeltaker.PERSON_ID} to exist")
 
@@ -85,7 +84,7 @@ open class DeltakerProcessor(
 			after = data.after?.toAmtDeltaker(amtDeltakerId, gjennomforingInfo.amtId, personIdent)
 		)
 
-		send(objectMapper.writeValueAsString(amtData))
+		send(amtDeltaker.gjennomforingId, objectMapper.writeValueAsString(amtData))
 		repository.upsert(data.markAsHandled())
 		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Deltaker with id $amtDeltakerId Sent.")
 	}

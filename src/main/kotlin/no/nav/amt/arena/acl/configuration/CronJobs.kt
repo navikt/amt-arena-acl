@@ -16,8 +16,8 @@ open class CronJobs(
 
 	@Scheduled(cron = "0 * * * * *")
 	open fun processArenaMessages() {
-		logger.info("Starting processing job for uningested Arena Data...")
+		logger.debug("Starting processing job for uningested Arena Data...")
 		messageProcessorService.processMessages()
-		logger.info("Finished processing job for uningested Arena Data!")
+		logger.debug("Finished processing job for uningested Arena Data!")
 	}
 }
