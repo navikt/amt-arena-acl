@@ -1,56 +1,84 @@
 package no.nav.amt.arena.acl.processors
 
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 import java.time.LocalDate
 
-private typealias ConversionStrategy = (DateRange) -> AmtDeltaker.Status
+private typealias ConversionStrategy = (StatusDates) -> AmtDeltaker.Status
 
-@Component
-open class DeltakerStatusConverter {
+@Service
+internal class DeltakerStatusConverter(
+	private val meterRegistry: MeterRegistry
+) {
+
+	private val alltidIkkeAktuell: ConversionStrategy = {
+		AmtDeltaker.Status.IKKE_AKTUELL
+	}
+
+	private val gjennomforendeStatus: ConversionStrategy = {
+		if (it.startDatoPassert() && it.sluttDatoPassert())
+			AmtDeltaker.Status.HAR_SLUTTET
+		else if (it.startDatoPassert())
+			AmtDeltaker.Status.GJENNOMFORES
+		else AmtDeltaker.Status.VENTER_PA_OPPSTART
+	}
+
+	private val avsluttendeStatus: ConversionStrategy = {
+		if (it.endretEtterStartDato())
+			AmtDeltaker.Status.HAR_SLUTTET
+		else
+			AmtDeltaker.Status.IKKE_AKTUELL
+	}
 
 	private val alleStatuser: Map<String, ConversionStrategy> = mapOf(
-		"AKTUELL" to { AmtDeltaker.Status.IKKE_AKTUELL }, // Aktuell
-		"AVSLAG" to { AmtDeltaker.Status.IKKE_AKTUELL }, // Fått avslag
-		"DELAVB" to { if (it.startDatoPassert()) AmtDeltaker.Status.HAR_SLUTTET else AmtDeltaker.Status.IKKE_AKTUELL }, // Deltakelse avbrutt
-		"FULLF" to { AmtDeltaker.Status.HAR_SLUTTET }, // Fullført
-		"GJENN" to
-			{
-				if (it.startDatoPassert() && it.sluttDatoPassert())
-					AmtDeltaker.Status.HAR_SLUTTET
-				else if (it.startDatoPassert())
-					AmtDeltaker.Status.GJENNOMFORES
-				else AmtDeltaker.Status.VENTER_PA_OPPSTART
-			}, // Gjennomføres
-		"GJENN_AVB" to { if (it.startDatoPassert()) AmtDeltaker.Status.HAR_SLUTTET else AmtDeltaker.Status.IKKE_AKTUELL }, // Gjennomføring avbrutt
-		"GJENN_AVL" to { if (it.startDatoPassert()) AmtDeltaker.Status.HAR_SLUTTET else AmtDeltaker.Status.IKKE_AKTUELL }, // Gjennomføring avlyst
-		"IKKAKTUELL" to { AmtDeltaker.Status.IKKE_AKTUELL }, // Ikke aktuell
-		"IKKEM" to { if (it.startDatoPassert()) AmtDeltaker.Status.HAR_SLUTTET else AmtDeltaker.Status.IKKE_AKTUELL }, // Ikke møtt
-		"INFOMOETE" to { AmtDeltaker.Status.IKKE_AKTUELL }, // Informasjonmøte
-		"JATAKK" to { AmtDeltaker.Status.IKKE_AKTUELL }, // Takket ja  til tilbud
-		"NEITAKK" to { AmtDeltaker.Status.IKKE_AKTUELL }, // Takket nei til tilbud
-		"TILBUD" to { AmtDeltaker.Status.VENTER_PA_OPPSTART }, // Godkjent tiltaksplass
-		"VENTELISTE" to { AmtDeltaker.Status.IKKE_AKTUELL } // Venteliste
+
+		"DELAVB" to avsluttendeStatus, // Deltakelse avbrutt
+		"FULLF" to avsluttendeStatus, // Fullført
+		"GJENN_AVB" to avsluttendeStatus, // Gjennomføring avbrutt
+		"GJENN_AVL" to avsluttendeStatus, // Gjennomføring avlyst
+		"IKKEM" to avsluttendeStatus, // Ikke møtt
+
+		"GJENN" to gjennomforendeStatus, // Gjennomføres
+		"INFOMOETE" to gjennomforendeStatus, // Informasjonmøte
+		"JATAKK" to gjennomforendeStatus, // Takket ja  til tilbud
+		"VENTELISTE" to gjennomforendeStatus, // Venteliste
+		"AKTUELL" to gjennomforendeStatus, // Aktuell
+		"TILBUD" to gjennomforendeStatus, // Godkjent tiltaksplass
+
+		"IKKAKTUELL" to alltidIkkeAktuell, // Ikke aktuell
+		"AVSLAG" to alltidIkkeAktuell, // Fått avslag
+		"NEITAKK" to alltidIkkeAktuell, // Takket nei til tilbud
 	)
 
 	internal fun convert(
-		AmtDeltakerStatusCode: String?,
+		deltakerStatusCode: String?,
 		startDato: LocalDate?,
-		sluttDato: LocalDate?
+		sluttDato: LocalDate?,
+		datoStatusEndring: LocalDate?
 	): AmtDeltaker.Status {
-		requireNotNull(AmtDeltakerStatusCode) { "AmtDeltakerStatsKode kan ikke være null" }
+		requireNotNull(deltakerStatusCode) { "deltakerStatsKode kan ikke være null" }
 
-		return alleStatuser.getValue(AmtDeltakerStatusCode)(DateRange(startDato, sluttDato))
+		return alleStatuser.getValue(deltakerStatusCode)(StatusDates(startDato, sluttDato, datoStatusEndring))
+			.also {
+				meterRegistry.counter(
+					"amt.tiltak.deltaker.status",
+					listOf(Tag.of("arena", deltakerStatusCode), Tag.of("amt-tiltak", it.name))
+				).increment()
+			}
 	}
 
 }
 
-private data class DateRange(
-	val start: LocalDate?,
-	val end: LocalDate?
+private data class StatusDates(
+	private val start: LocalDate?,
+	private val end: LocalDate?,
+	private val datoStatusEndring: LocalDate?
 ) {
 
 	fun startDatoPassert() = start?.isBefore(LocalDate.now()) ?: false
 	fun sluttDatoPassert() = end?.isBefore(LocalDate.now()) ?: false
+	fun endretEtterStartDato() = start != null && datoStatusEndring?.isAfter(start) ?: false
 
 }
