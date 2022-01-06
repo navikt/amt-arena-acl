@@ -6,7 +6,7 @@ import java.util.*
 
 data class AmtGjennomforing(
 	val id: UUID,
-	val tiltakId: UUID,
+	val tiltak: AmtTiltak,
 	val virksomhetsnummer: String,
 	val navn: String,
 	val oppstartDato: LocalDate?,

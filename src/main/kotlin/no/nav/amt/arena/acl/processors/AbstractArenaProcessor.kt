@@ -12,6 +12,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.util.DigestUtils
+import java.util.*
 
 abstract class AbstractArenaProcessor<T>(
 	protected val repository: ArenaDataRepository,
@@ -37,7 +38,7 @@ abstract class AbstractArenaProcessor<T>(
 	}
 
 	fun handle(data: ArenaData) {
-		try{
+		try {
 			handleEntry(data)
 		} catch (e: Exception) {
 			if (data.ingestAttempts >= MAX_INGEST_ATTEMPTS) {
@@ -69,10 +70,11 @@ abstract class AbstractArenaProcessor<T>(
 		return DigestUtils.md5DigestAsHex(objectMapper.writeValueAsString(data).toByteArray())
 	}
 
-	protected fun send(data: String) {
+	protected fun send(groupKey: UUID, data: String) {
 		kafkaProducer.sendSync(
 			ProducerRecord(
 				topic,
+				groupKey.toString(),
 				data
 			)
 		)

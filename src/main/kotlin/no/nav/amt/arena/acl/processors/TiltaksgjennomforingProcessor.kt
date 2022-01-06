@@ -4,12 +4,17 @@ import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.domain.Creation
 import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakGjennomforing
 import no.nav.amt.arena.acl.ordsproxy.ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.utils.*
+import no.nav.amt.arena.acl.repositories.TiltakRepository
+import no.nav.amt.arena.acl.utils.asLocalDate
+import no.nav.amt.arena.acl.utils.asLocalDateTime
+import no.nav.amt.arena.acl.utils.asTime
+import no.nav.amt.arena.acl.utils.withTime
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
@@ -20,6 +25,7 @@ import java.util.*
 open class TiltaksgjennomforingProcessor(
 	repository: ArenaDataRepository,
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
+	private val tiltakRepository: TiltakRepository,
 	private val ordsClient: ArenaOrdsProxyClient,
 	kafkaProducer: KafkaProducerClientImpl<String, String>
 ) : AbstractArenaProcessor<ArenaTiltakGjennomforing>(
@@ -35,21 +41,21 @@ open class TiltaksgjennomforingProcessor(
 
 		val tiltakskode = arenaGjennomforing.TILTAKSKODE
 
-		val id = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
-			?: UUID.randomUUID()
+		val tiltak = tiltakRepository.getByKode(tiltakskode)
 
-		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
-
-		val tiltakInfo = idTranslationRepository.get(TILTAK_TABLE_NAME, tiltakskode)
-
-		if (tiltakInfo == null) {
+		if (tiltak == null) {
 			logger.debug("Tiltak $tiltakskode er ikke håndtert, kan derfor ikke håndtere gjennomføring med Arena ID ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} enda.")
 			repository.upsert(data.retry("Tiltaket ($tiltakskode) er ikke håndtert"))
 			return
 		}
 
+		val id = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
+			?: UUID.randomUUID()
+
+		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
+
 		val amtGjennomforing = arenaGjennomforing.toAmtGjennomforing(
-			amtTiltakId = tiltakInfo.amtId,
+			amtTiltak = tiltak,
 			amtGjennomforingId = id,
 			virksomhetsnummer = virksomhetsnummer
 		)
@@ -76,12 +82,11 @@ open class TiltaksgjennomforingProcessor(
 		val amtData = AmtWrapper(
 			type = "GJENNOMFORING",
 			operation = data.operation,
-			before = data.before?.toAmtTiltak(tiltakInfo.amtId, id, virksomhetsnummer),
-			after = data.after?.toAmtTiltak(tiltakInfo.amtId, id, virksomhetsnummer)
+			payload = arenaGjennomforing.toAmtGjennomforing(tiltak, id, virksomhetsnummer)
 		)
 
-		send(objectMapper.writeValueAsString(amtData))
-		repository.upsert(data.markAsSent())
+		send(amtGjennomforing.id, objectMapper.writeValueAsString(amtData))
+		repository.upsert(data.markAsHandled())
 		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Gjennomføring with id $id Sent.")
 	}
 
@@ -118,12 +123,12 @@ open class TiltaksgjennomforingProcessor(
 
 
 	private fun String.toAmtTiltak(
-		amtTiltakId: UUID,
+		amtTiltak: AmtTiltak,
 		amtGjennomforingId: UUID,
 		virksomhetsnummer: String
 	): AmtGjennomforing {
 		return jsonObject(this, ArenaTiltakGjennomforing::class.java)?.toAmtGjennomforing(
-			amtTiltakId,
+			amtTiltak,
 			amtGjennomforingId,
 			virksomhetsnummer
 		)
@@ -132,13 +137,13 @@ open class TiltaksgjennomforingProcessor(
 
 
 	private fun ArenaTiltakGjennomforing.toAmtGjennomforing(
-		amtTiltakId: UUID,
+		amtTiltak: AmtTiltak,
 		amtGjennomforingId: UUID,
 		virksomhetsnummer: String
 	): AmtGjennomforing {
 		return AmtGjennomforing(
 			id = amtGjennomforingId,
-			tiltakId = amtTiltakId,
+			tiltak = amtTiltak,
 			virksomhetsnummer = virksomhetsnummer,
 			navn = LOKALTNAVN ?: throw DataIntegrityViolationException("Forventet at LOKALTNAVN ikke er null"),
 			oppstartDato = DATO_FRA?.asLocalDate(),

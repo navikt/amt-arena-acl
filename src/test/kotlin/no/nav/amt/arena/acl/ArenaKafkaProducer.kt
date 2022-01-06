@@ -20,7 +20,6 @@ fun main() {
 	producer.send("data/tiltak.zip", "tiltak")
 	producer.send("data/tiltakgjennomforing.zip", "gjennomforing")
 	producer.send("data/tiltakdeltaker.zip", "deltaker")
-
 }
 
 data class KafkaMessage(

@@ -46,7 +46,6 @@ open class DeltakerProcessor(
 
 		val ignored = gjennomforingInfo.ignored
 
-
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.PERSON_ID.toString())
 			?: throw IllegalStateException("Expected Person with ArenaId ${arenaDeltaker.PERSON_ID} to exist")
 
@@ -81,12 +80,11 @@ open class DeltakerProcessor(
 		val amtData = AmtWrapper(
 			type = "DELTAKER",
 			operation = data.operation,
-			before = data.before?.toAmtDeltaker(amtDeltakerId, gjennomforingInfo.amtId, personIdent),
-			after = data.after?.toAmtDeltaker(amtDeltakerId, gjennomforingInfo.amtId, personIdent)
+			payload = arenaDeltaker.toAmtDeltaker(amtDeltakerId, gjennomforingInfo.amtId, personIdent)
 		)
 
-		send(objectMapper.writeValueAsString(amtData))
-		repository.upsert(data.markAsSent())
+		send(amtDeltaker.gjennomforingId, objectMapper.writeValueAsString(amtData))
+		repository.upsert(data.markAsHandled())
 		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Deltaker with id $amtDeltakerId Sent.")
 	}
 
@@ -146,7 +144,8 @@ open class DeltakerProcessor(
 			status = statusConverter.convert(
 				DELTAKERSTATUSKODE,
 				DATO_FRA?.asLocalDate(),
-				DATO_TIL?.asLocalDate()
+				DATO_TIL?.asLocalDate(),
+				DATO_STATUSENDRING?.asLocalDate()
 			),
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
