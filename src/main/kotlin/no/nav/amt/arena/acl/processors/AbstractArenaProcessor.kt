@@ -78,6 +78,16 @@ abstract class AbstractArenaProcessor<T>(
 		)
 	}
 
+//	protected fun send(groupKey: String, data: String) {
+//		kafkaProducer.sendSync(
+//			ProducerRecord(
+//				topic,
+//				groupKey,
+//				data
+//			)
+//		)
+//	}
+
 	private fun jsonObject(string: String?): T? {
 		if (string == null) {
 			return null

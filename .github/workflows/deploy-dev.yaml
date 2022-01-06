@@ -35,3 +35,25 @@ jobs:
           echo ${GITHUB_TOKEN} | docker login ghcr.io -u ${GITHUB_REPOSITORY} --password-stdin
           docker build -t ${IMAGE}:${IMAGE_TAG} .
           docker push ${IMAGE}:${IMAGE_TAG}
+  deploy:
+    name: Deploy application to dev
+    needs: test-build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Deploy application
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-gcp
+          RESOURCE: .nais/nais-dev.yaml
+          VAR: version=${{ env.IMAGE_TAG }}
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: release/dev@${{ env.IMAGE_TAG }}
+          release_name: Release to dev
+          prerelease: true

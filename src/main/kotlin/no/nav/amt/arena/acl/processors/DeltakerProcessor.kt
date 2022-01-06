@@ -86,7 +86,7 @@ open class DeltakerProcessor(
 		)
 
 		send(objectMapper.writeValueAsString(amtData))
-		repository.upsert(data.markAsSent())
+		repository.upsert(data.markAsHandled())
 		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Deltaker with id $amtDeltakerId Sent.")
 	}
 
