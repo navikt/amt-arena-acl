@@ -80,8 +80,7 @@ open class DeltakerProcessor(
 		val amtData = AmtWrapper(
 			type = "DELTAKER",
 			operation = data.operation,
-			before = data.before?.toAmtDeltaker(amtDeltakerId, gjennomforingInfo.amtId, personIdent),
-			after = data.after?.toAmtDeltaker(amtDeltakerId, gjennomforingInfo.amtId, personIdent)
+			payload = arenaDeltaker.toAmtDeltaker(amtDeltakerId, gjennomforingInfo.amtId, personIdent)
 		)
 
 		send(amtDeltaker.gjennomforingId, objectMapper.writeValueAsString(amtData))

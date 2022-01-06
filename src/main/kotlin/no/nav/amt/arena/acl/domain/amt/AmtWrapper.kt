@@ -15,7 +15,5 @@ data class AmtWrapper<T>(
 	val type: String,
 	val timestamp: LocalDateTime = LocalDateTime.now(),
 	val operation: AmtOperation,
-	val payload: T? = null,
-	val before: T,
-	val after: T
+	val payload: T?
 )

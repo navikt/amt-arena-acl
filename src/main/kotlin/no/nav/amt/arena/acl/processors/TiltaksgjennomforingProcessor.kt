@@ -11,7 +11,10 @@ import no.nav.amt.arena.acl.ordsproxy.ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
-import no.nav.amt.arena.acl.utils.*
+import no.nav.amt.arena.acl.utils.asLocalDate
+import no.nav.amt.arena.acl.utils.asLocalDateTime
+import no.nav.amt.arena.acl.utils.asTime
+import no.nav.amt.arena.acl.utils.withTime
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
@@ -79,8 +82,7 @@ open class TiltaksgjennomforingProcessor(
 		val amtData = AmtWrapper(
 			type = "GJENNOMFORING",
 			operation = data.operation,
-			before = data.before?.toAmtTiltak(tiltak, id, virksomhetsnummer),
-			after = data.after?.toAmtTiltak(tiltak, id, virksomhetsnummer)
+			payload = arenaGjennomforing.toAmtGjennomforing(tiltak, id, virksomhetsnummer)
 		)
 
 		send(amtGjennomforing.id, objectMapper.writeValueAsString(amtData))
