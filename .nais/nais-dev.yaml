@@ -1,7 +1,7 @@
 kind: Application
 apiVersion: nais.io/v1alpha1
 metadata:
-  name: amt-tiltak
+  name: amt-arena-acl
   namespace: amt
   labels:
     team: amt
@@ -42,6 +42,8 @@ spec:
     - name: POAO_GCP_PROXY_URL
       value: https://poao-gcp-proxy.dev-fss-pub.nais.io
     # Kafka topics
+    - name: AMT_TOPIC
+      value: amt-tiltak-v1
     - name: ARENA_TILTAK_TOPIC
       value: teamarenanais.aapen-arena-tiltakendret-v1-q2
     - name: ARENA_TILTAKSGRUPPE_TOPIC
