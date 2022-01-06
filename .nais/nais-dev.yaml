@@ -8,7 +8,6 @@ metadata:
 spec:
   image: ghcr.io/navikt/amt-arena-acl/amt-arena-acl:{{version}}
   port: 8080
-  webproxy: true
   prometheus:
     enabled: true
     path: /internal/prometheus
@@ -29,11 +28,6 @@ spec:
     requests:
       cpu: 250m
       memory: 512Mi
-  azure:
-    application:
-      enabled: true
-  tokenx:
-    enabled: true
   kafka:
     pool: nav-dev
   env:
@@ -56,6 +50,6 @@ spec:
     sqlInstances:
       - type: POSTGRES_12
         databases:
-          - name: amt-arena-acl-db
+          - name: amt-arena-acl
             envVarPrefix: DB
         tier: db-custom-1-3840
