@@ -9,7 +9,7 @@ import java.time.LocalDate
 private typealias ConversionStrategy = (StatusDates) -> AmtDeltaker.Status
 
 @Service
-internal class DeltakerStatusConverter(
+open class DeltakerStatusConverter(
 	private val meterRegistry: MeterRegistry
 ) {
 

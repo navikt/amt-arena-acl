@@ -144,7 +144,8 @@ open class DeltakerProcessor(
 			status = statusConverter.convert(
 				DELTAKERSTATUSKODE,
 				DATO_FRA?.asLocalDate(),
-				DATO_TIL?.asLocalDate()
+				DATO_TIL?.asLocalDate(),
+				DATO_STATUSENDRING?.asLocalDate()
 			),
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
