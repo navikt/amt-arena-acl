@@ -43,8 +43,6 @@ spec:
       value: amt-tiltak-v1
     - name: ARENA_TILTAK_TOPIC
       value: teamarenanais.aapen-arena-tiltakendret-v1-q2
-    - name: ARENA_TILTAKSGRUPPE_TOPIC
-      value: teamarenanais.aapen-arena-tiltaksgruppeendret-v1-q2
     - name: ARENA_TILTAKSGJENNOMFORING_TOPIC
       value: teamarenanais.aapen-arena-tiltakgjennomforingendret-v1-q2
     - name: ARENA_TILTAK_DELTAKER_TOPIC

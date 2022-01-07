@@ -30,7 +30,6 @@ open class GoldenGateKafkaConsumer(
 	init {
 		val topicConfigs = listOf(
 			kafkaTopicProperties.arenaTiltakTopic,
-			kafkaTopicProperties.arenaTiltaksgruppeTopic,
 			kafkaTopicProperties.arenaTiltaksgjennomforingTopic,
 			kafkaTopicProperties.arenaTiltakDeltakerTopic
 		).map { topic ->
