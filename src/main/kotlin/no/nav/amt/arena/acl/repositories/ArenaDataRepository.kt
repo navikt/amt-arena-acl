@@ -1,5 +1,7 @@
 package no.nav.amt.arena.acl.repositories
 
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
@@ -10,8 +12,9 @@ import org.springframework.stereotype.Component
 
 @Component
 open class ArenaDataRepository(
-	private val template: NamedParameterJdbcTemplate
-) {
+	private val template: NamedParameterJdbcTemplate,
+	private val meterRegistry: MeterRegistry,
+	) {
 
 	private val rowMapper = RowMapper { rs, _ ->
 		ArenaData(
@@ -56,6 +59,7 @@ open class ArenaDataRepository(
 		""".trimIndent()
 
 		template.update(sql, arenaData.asParameterSource())
+		registerMetric(arenaData.ingestStatus)
 	}
 
 	fun get(tableName: String, operation: AmtOperation, position: String): ArenaData {
@@ -119,6 +123,12 @@ open class ArenaDataRepository(
 		)
 	}
 
+	private fun registerMetric(status: IngestStatus) {
+		meterRegistry.counter(
+			"amt.arena-acl.ingest.status",
+			listOf(Tag.of("status", status.name))
+		).increment()
+	}
 
 	private fun ArenaData.asParameterSource() = MapSqlParameterSource().addValues(
 		mapOf(

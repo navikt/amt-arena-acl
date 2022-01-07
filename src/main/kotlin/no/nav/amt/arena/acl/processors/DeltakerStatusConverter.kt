@@ -63,7 +63,7 @@ open class DeltakerStatusConverter(
 		return alleStatuser.getValue(deltakerStatusCode)(StatusDates(startDato, sluttDato, datoStatusEndring))
 			.also {
 				meterRegistry.counter(
-					"amt.tiltak.deltaker.status",
+					"amt.arena-acl.deltaker.status",
 					listOf(Tag.of("arena", deltakerStatusCode), Tag.of("amt-tiltak", it.name))
 				).increment()
 			}
