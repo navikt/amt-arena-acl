@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component
 @Component
 open class ArenaDataRepository(
 	private val template: NamedParameterJdbcTemplate,
-	private val meterRegistry: MeterRegistry,
-	) {
+	private val meterRegistry: MeterRegistry?,
+) {
 
 	private val rowMapper = RowMapper { rs, _ ->
 		ArenaData(
@@ -124,10 +124,12 @@ open class ArenaDataRepository(
 	}
 
 	private fun registerMetric(status: IngestStatus) {
-		meterRegistry.counter(
-			"amt.arena-acl.ingest.status",
-			listOf(Tag.of("status", status.name))
-		).increment()
+		if (meterRegistry != null) {
+			meterRegistry.counter(
+				"amt.arena-acl.ingest.status",
+				listOf(Tag.of("status", status.name))
+			).increment()
+		}
 	}
 
 	private fun ArenaData.asParameterSource() = MapSqlParameterSource().addValues(
