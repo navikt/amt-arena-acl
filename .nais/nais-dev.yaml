@@ -28,6 +28,9 @@ spec:
     requests:
       cpu: 250m
       memory: 512Mi
+  azure:
+    application:
+      enabled: true
   kafka:
     pool: nav-dev
   env:
