@@ -23,6 +23,7 @@ open class DeltakerProcessor(
 	repository: ArenaDataRepository,
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
 	private val statusConverter: DeltakerStatusConverter,
+	private val statusEndretDatoConverter: DeltakerEndretDatoConverter,
 	private val ordsClient: ArenaOrdsProxyClient,
 	meterRegistry: MeterRegistry,
 	kafkaProducer: KafkaProducerClientImpl<String, String>
@@ -152,7 +153,13 @@ open class DeltakerProcessor(
 			),
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
-			registrertDato = REG_DATO.asLocalDateTime()
+			registrertDato = REG_DATO.asLocalDateTime(),
+			statusEndretDato = statusEndretDatoConverter.convert(
+				deltakerStatus = DELTAKERSTATUSKODE,
+				datoStatusEndring = DATO_STATUSENDRING?.asLocalDateTime(),
+				oppstartDato = DATO_FRA?.asLocalDate()?.atStartOfDay(),
+				sluttDato = DATO_TIL?.asLocalDate()?.atStartOfDay()
+			)
 		)
 	}
 
