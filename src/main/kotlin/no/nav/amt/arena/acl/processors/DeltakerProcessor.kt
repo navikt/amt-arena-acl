@@ -49,9 +49,8 @@ open class DeltakerProcessor(
 
 		val ignored = gjennomforingInfo.ignored
 
-		val personIdent = "12345"
-//		val personIdent = ordsClient.hentFnr(arenaDeltaker.PERSON_ID.toString())
-//			?: throw IllegalStateException("Expected Person with ArenaId ${arenaDeltaker.PERSON_ID} to exist")
+		val personIdent = ordsClient.hentFnr(arenaDeltaker.PERSON_ID.toString())
+			?: throw IllegalStateException("Expected Person with ArenaId ${arenaDeltaker.PERSON_ID} to exist")
 
 		val amtDeltakerId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
 			?: UUID.randomUUID()
