@@ -28,7 +28,7 @@ open class CronJobs(
 		return threadPoolTaskScheduler
 	}
 
-	@Scheduled(fixedRate = 60000) // Hvert minutt
+	@Scheduled(fixedDelay = 60000) // Hvert minutt
 	open fun processArenaMessages() {
 		logger.debug("Starting processing job for uningested Arena Data...")
 		messageProcessorService.processMessages()
@@ -42,7 +42,7 @@ open class CronJobs(
 		logger.debug("Finished processing job for failed Arena Data!")
 	}
 
-	@Scheduled(fixedRate = 20000)
+	@Scheduled(fixedDelay = 20000)
 	open fun logArenaDataStatuses() {
 		arenaDataRepository.logStatus()
 	}
