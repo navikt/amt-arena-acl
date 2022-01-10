@@ -22,13 +22,13 @@ open class CronJobs(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Bean
-	open fun threadPoolTaskScheduler(): ThreadPoolTaskScheduler? {
+	open fun threadPoolTaskScheduler(): ThreadPoolTaskScheduler {
 		val threadPoolTaskScheduler = ThreadPoolTaskScheduler()
 		threadPoolTaskScheduler.poolSize = 3
 		return threadPoolTaskScheduler
 	}
 
-	@Scheduled(cron = "0 * * * * *") // Hvert minutt
+	@Scheduled(fixedRate = 60000) // Hvert minutt
 	open fun processArenaMessages() {
 		logger.debug("Starting processing job for uningested Arena Data...")
 		messageProcessorService.processMessages()
