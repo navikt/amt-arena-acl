@@ -3,6 +3,8 @@ package no.nav.amt.arena.acl.processors
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
@@ -17,7 +19,8 @@ import java.util.*
 abstract class AbstractArenaProcessor<T>(
 	protected val repository: ArenaDataRepository,
 	private val clazz: Class<T>,
-	private val kafkaProducer: KafkaProducerClientImpl<String, String>
+	private val kafkaProducer: KafkaProducerClientImpl<String, String>,
+	private val meterRegistry: MeterRegistry
 ) {
 
 	@Value("\${app.env.amtTopic}")
@@ -38,21 +41,27 @@ abstract class AbstractArenaProcessor<T>(
 	}
 
 	fun handle(data: ArenaData) {
-		try {
-			handleEntry(data)
-		} catch (e: Exception) {
-			if (data.ingestAttempts >= MAX_INGEST_ATTEMPTS) {
-				logger.error("[arena_data_id ${data.id}]: ${e.message}", e)
-				repository.upsert(data.markAsFailed())
-			} else {
-				if (e !is DependencyNotIngestedException) {
-					logger.error("[arena_data_id ${data.id}]: ${e.message}", e)
-				}
+		val timer = meterRegistry.timer(
+			"amt.arena-acl.ingestStatus",
+			listOf(Tag.of("processor", clazz.name))
+		)
 
-				repository.upsert(data.retry())
+		timer.record {
+			try {
+				handleEntry(data)
+			} catch (e: Exception) {
+				if (data.ingestAttempts >= MAX_INGEST_ATTEMPTS) {
+					logger.error("[arena_data_id ${data.id}]: ${e.message}", e)
+					repository.upsert(data.markAsFailed())
+				} else {
+					if (e !is DependencyNotIngestedException) {
+						logger.error("[arena_data_id ${data.id}]: ${e.message}", e)
+					}
+
+					repository.upsert(data.retry())
+				}
 			}
 		}
-
 	}
 
 	protected abstract fun handleEntry(data: ArenaData)

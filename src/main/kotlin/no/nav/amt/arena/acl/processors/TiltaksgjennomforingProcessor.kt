@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.processors
 
+import io.micrometer.core.instrument.MeterRegistry
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.domain.Creation
@@ -27,9 +28,11 @@ open class TiltaksgjennomforingProcessor(
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
 	private val tiltakRepository: TiltakRepository,
 	private val ordsClient: ArenaOrdsProxyClient,
+	meterRegistry: MeterRegistry,
 	kafkaProducer: KafkaProducerClientImpl<String, String>
 ) : AbstractArenaProcessor<ArenaTiltakGjennomforing>(
 	repository = repository,
+	meterRegistry = meterRegistry,
 	clazz = ArenaTiltakGjennomforing::class.java,
 	kafkaProducer = kafkaProducer
 ) {
@@ -40,6 +43,12 @@ open class TiltaksgjennomforingProcessor(
 		val arenaGjennomforing = getMainObject(data)
 
 		val tiltakskode = arenaGjennomforing.TILTAKSKODE
+
+		if (ugyldigGjennomforing(arenaGjennomforing)) {
+			logger.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaTiltakgjennomforingId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}")
+			repository.upsert(data.markAsIgnored())
+			return
+		}
 
 		val tiltak = tiltakRepository.getByKode(tiltakskode)
 
@@ -52,7 +61,8 @@ open class TiltaksgjennomforingProcessor(
 		val id = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
 			?: UUID.randomUUID()
 
-		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
+		val virksomhetsnummer = "12345"
+//		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
 
 		val amtGjennomforing = arenaGjennomforing.toAmtGjennomforing(
 			amtTiltak = tiltak,
@@ -121,21 +131,6 @@ open class TiltaksgjennomforingProcessor(
 		}
 	}
 
-
-	private fun String.toAmtTiltak(
-		amtTiltak: AmtTiltak,
-		amtGjennomforingId: UUID,
-		virksomhetsnummer: String
-	): AmtGjennomforing {
-		return jsonObject(this, ArenaTiltakGjennomforing::class.java)?.toAmtGjennomforing(
-			amtTiltak,
-			amtGjennomforingId,
-			virksomhetsnummer
-		)
-			?: throw IllegalArgumentException("Expected String not to be null")
-	}
-
-
 	private fun ArenaTiltakGjennomforing.toAmtGjennomforing(
 		amtTiltak: AmtTiltak,
 		amtGjennomforingId: UUID,
@@ -146,10 +141,13 @@ open class TiltaksgjennomforingProcessor(
 			tiltak = amtTiltak,
 			virksomhetsnummer = virksomhetsnummer,
 			navn = LOKALTNAVN ?: throw DataIntegrityViolationException("Forventet at LOKALTNAVN ikke er null"),
-			oppstartDato = DATO_FRA?.asLocalDate(),
+			startDato = DATO_FRA?.asLocalDate(),
 			sluttDato = DATO_TIL?.asLocalDate(),
-			registrert = REG_DATO.asLocalDateTime(),
-			fremmote = DATO_FREMMOTE?.asLocalDate() withTime KLOKKETID_FREMMOTE.asTime()
+			registrertDato = REG_DATO.asLocalDateTime(),
+			fremmoteDato = DATO_FREMMOTE?.asLocalDate() withTime KLOKKETID_FREMMOTE.asTime()
 		)
 	}
+
+	private fun ugyldigGjennomforing(data: ArenaTiltakGjennomforing) =
+		data.ARBGIV_ID_ARRANGOR == null || data.LOKALTNAVN == null
 }

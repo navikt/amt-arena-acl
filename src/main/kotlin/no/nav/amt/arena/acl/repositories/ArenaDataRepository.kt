@@ -5,6 +5,7 @@ import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -15,6 +16,8 @@ open class ArenaDataRepository(
 	private val template: NamedParameterJdbcTemplate,
 	private val meterRegistry: MeterRegistry?,
 ) {
+
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	private val rowMapper = RowMapper { rs, _ ->
 		ArenaData(
@@ -59,7 +62,6 @@ open class ArenaDataRepository(
 		""".trimIndent()
 
 		template.update(sql, arenaData.asParameterSource())
-		registerMetric(arenaData.ingestStatus)
 	}
 
 	fun get(tableName: String, operation: AmtOperation, position: String): ArenaData {
@@ -87,7 +89,7 @@ open class ArenaDataRepository(
 		tableName: String,
 		status: IngestStatus,
 		offset: Int = 0,
-		limit: Int = 1000
+		limit: Int = 500
 	): List<ArenaData> {
 		return getByIngestStatusIn(tableName, listOf(status), offset, limit)
 	}
@@ -123,30 +125,69 @@ open class ArenaDataRepository(
 		)
 	}
 
-	private fun registerMetric(status: IngestStatus) {
-		if (meterRegistry != null) {
-			meterRegistry.counter(
-				"amt.arena-acl.ingest.status",
-				listOf(Tag.of("status", status.name))
-			).increment()
+	fun logStatus() {
+		if (meterRegistry == null) {
+			return
 		}
+
+		val sql = """
+			SELECT arena_table_name, ingest_status, count(*)
+			FROM arena_data
+			GROUP BY arena_table_name, ingest_status
+		""".trimIndent()
+
+		val logRowMapper = RowMapper { rs, _ ->
+			LogDto(
+				table = rs.getString("arena_table_name"),
+				status = IngestStatus.valueOf(rs.getString("ingest_status")),
+				count = rs.getInt("count")
+			)
+		}
+
+		val gaugeName = "amt.arena-acl.ingest.status"
+
+		template.query(sql, logRowMapper)
+			.groupBy { it.table }
+			.forEach { (tableName, statusList) ->
+				val countByStatus = statusList.associateBy { it.status }
+
+				IngestStatus.values().forEach { status ->
+					logger.info("Table: $tableName, Status: $status, Count: ${countByStatus[status]?.count ?: 0}")
+
+					meterRegistry.gauge(
+						gaugeName,
+						listOf(
+							Tag.of("table", tableName),
+							Tag.of("status", status.name)
+						),
+						countByStatus[status]?.count ?: 0
+					)
+				}
+
+			}
 	}
-
-	private fun ArenaData.asParameterSource() = MapSqlParameterSource().addValues(
-		mapOf(
-			"arena_table_name" to arenaTableName,
-			"arena_id" to arenaId,
-			"operation_type" to operation.name,
-			"operation_pos" to operationPosition,
-			"operation_timestamp" to operationTimestamp,
-			"ingest_status" to ingestStatus.name,
-			"ingested_timestamp" to ingestedTimestamp,
-			"ingest_attempts" to ingestAttempts,
-			"last_attempted" to lastAttempted,
-			"before" to before,
-			"after" to after,
-			"note" to note
-		)
-	)
-
 }
+
+private fun ArenaData.asParameterSource() = MapSqlParameterSource().addValues(
+	mapOf(
+		"arena_table_name" to arenaTableName,
+		"arena_id" to arenaId,
+		"operation_type" to operation.name,
+		"operation_pos" to operationPosition,
+		"operation_timestamp" to operationTimestamp,
+		"ingest_status" to ingestStatus.name,
+		"ingested_timestamp" to ingestedTimestamp,
+		"ingest_attempts" to ingestAttempts,
+		"last_attempted" to lastAttempted,
+		"before" to before,
+		"after" to after,
+		"note" to note
+	)
+)
+
+
+private data class LogDto(
+	val table: String,
+	val status: IngestStatus,
+	val count: Int
+)

@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.processors
 
+import io.micrometer.core.instrument.MeterRegistry
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.domain.Creation
@@ -23,9 +24,11 @@ open class DeltakerProcessor(
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
 	private val statusConverter: DeltakerStatusConverter,
 	private val ordsClient: ArenaOrdsProxyClient,
+	meterRegistry: MeterRegistry,
 	kafkaProducer: KafkaProducerClientImpl<String, String>
 ) : AbstractArenaProcessor<ArenaTiltakDeltaker>(
 	repository = repository,
+	meterRegistry = meterRegistry,
 	clazz = ArenaTiltakDeltaker::class.java,
 	kafkaProducer = kafkaProducer
 ) {
@@ -46,8 +49,9 @@ open class DeltakerProcessor(
 
 		val ignored = gjennomforingInfo.ignored
 
-		val personIdent = ordsClient.hentFnr(arenaDeltaker.PERSON_ID.toString())
-			?: throw IllegalStateException("Expected Person with ArenaId ${arenaDeltaker.PERSON_ID} to exist")
+		val personIdent = "12345"
+//		val personIdent = ordsClient.hentFnr(arenaDeltaker.PERSON_ID.toString())
+//			?: throw IllegalStateException("Expected Person with ArenaId ${arenaDeltaker.PERSON_ID} to exist")
 
 		val amtDeltakerId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
 			?: UUID.randomUUID()

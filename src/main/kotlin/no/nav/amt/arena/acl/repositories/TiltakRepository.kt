@@ -58,6 +58,15 @@ open class TiltakRepository(
 		return tiltak
 	}
 
+	fun delete(kode: String) {
+		val sql = """
+			DELETE FROM arena_tiltak
+			WHERE kode = :kode
+		""".trimIndent()
+
+		template.update(sql, singletonParameterMap("kode", kode))
+	}
+
 	fun getByKode(kode: String): AmtTiltak? {
 		val cachedTiltak = cache.getIfPresent(kode)
 

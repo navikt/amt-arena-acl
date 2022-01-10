@@ -24,13 +24,21 @@ open class TiltakProcessor(
 	fun handle(data: ArenaData) {
 		val arenaTiltak = getMainObject(data)
 
-		repository.upsert(
-			kode = arenaTiltak.TILTAKSKODE,
-			navn = arenaTiltak.TILTAKSNAVN
-		)
+		when (data.operation) {
+			AmtOperation.CREATED, AmtOperation.MODIFIED -> {
+				repository.upsert(
+					kode = arenaTiltak.TILTAKSKODE,
+					navn = arenaTiltak.TILTAKSNAVN
+				)
+			}
+			AmtOperation.DELETED -> {
+				repository.delete(
+					kode = arenaTiltak.TILTAKSKODE
+				)
+			}
+		}
 
 		arenaDataRepository.upsert(data.markAsHandled())
-
 	}
 
 	private fun getMainObject(data: ArenaData): ArenaTiltak {

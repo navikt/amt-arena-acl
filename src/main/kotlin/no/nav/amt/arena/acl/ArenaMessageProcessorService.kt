@@ -13,6 +13,8 @@ import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.Instant
 import java.time.LocalDateTime
 
 @Service
@@ -39,15 +41,24 @@ open class ArenaMessageProcessorService(
 		process { filterRetry(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.RETRY)) }
 	}
 
+	fun processFailedMessages() {
+		process { dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.FAILED) }
+		process { dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.FAILED) }
+		process { dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.FAILED) }
+	}
+
 	private fun process(getter: () -> List<ArenaData>) {
+		lateinit var start: Instant
 		var messages: List<ArenaData>
 
 		do {
 			runBlocking {
+				start = Instant.now()
 				messages = getter()
 				messages.forEach {
 					launch { proccessEntry(it) }
 				}
+				log(start, messages)
 			}
 		} while (messages.isNotEmpty())
 	}
@@ -70,5 +81,16 @@ open class ArenaMessageProcessorService(
 				)
 			}
 	}
+
+	private fun log(start: Instant, messages: List<ArenaData>) {
+		if (messages.isEmpty()) {
+			return
+		}
+		val table = messages.first().arenaTableName
+		val duration = Duration.between(start, Instant.now())
+
+		logger.info("[$table]: Handled ${messages.size} messages in ${duration.toSeconds()}.${duration.toMillisPart()} seconds.")
+	}
+
 
 }
