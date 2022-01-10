@@ -9,8 +9,8 @@ data class AmtGjennomforing(
 	val tiltak: AmtTiltak,
 	val virksomhetsnummer: String,
 	val navn: String,
-	val oppstartDato: LocalDate?,
+	val startDato: LocalDate?,
 	val sluttDato: LocalDate?,
-	val registrert: LocalDateTime,
-	val fremmote: LocalDateTime?
+	val registrertDato: LocalDateTime,
+	val fremmoteDato: LocalDateTime?
 )
