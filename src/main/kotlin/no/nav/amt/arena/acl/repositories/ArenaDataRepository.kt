@@ -5,7 +5,6 @@ import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
-import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -16,9 +15,6 @@ open class ArenaDataRepository(
 	private val template: NamedParameterJdbcTemplate,
 	private val meterRegistry: MeterRegistry?,
 ) {
-
-	private val logger = LoggerFactory.getLogger(javaClass)
-
 	private val rowMapper = RowMapper { rs, _ ->
 		ArenaData(
 			id = rs.getInt("id"),
@@ -152,7 +148,6 @@ open class ArenaDataRepository(
 				val countByStatus = statusList.associateBy { it.status }
 
 				IngestStatus.values().forEach { status ->
-					logger.info("Table: $tableName, Status: $status, Count: ${countByStatus[status]?.count ?: 0}")
 
 					meterRegistry.gauge(
 						gaugeName,

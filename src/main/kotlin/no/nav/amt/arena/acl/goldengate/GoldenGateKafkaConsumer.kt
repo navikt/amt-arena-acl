@@ -1,8 +1,6 @@
 package no.nav.amt.arena.acl.goldengate
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.arena.ArenaOperation
@@ -52,11 +50,8 @@ open class GoldenGateKafkaConsumer(
 	}
 
 	private fun handle(value: String) {
-		GlobalScope.launch {
-			val data = mapper.readValue(value, ArenaWrapper::class.java).toArenaData()
-			arenaDataRepository.upsert(data)
-		}
-
+		val data = mapper.readValue(value, ArenaWrapper::class.java).toArenaData()
+		arenaDataRepository.upsert(data)
 	}
 
 	private fun ArenaWrapper.toArenaData() = ArenaData(

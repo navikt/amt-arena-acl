@@ -1,7 +1,5 @@
 package no.nav.amt.arena.acl
 
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
@@ -52,14 +50,12 @@ open class ArenaMessageProcessorService(
 		var messages: List<ArenaData>
 
 		do {
-			runBlocking {
-				start = Instant.now()
-				messages = getter()
-				messages.forEach {
-					launch { proccessEntry(it) }
-				}
-				log(start, messages)
+			start = Instant.now()
+			messages = getter()
+			messages.forEach {
+				proccessEntry(it)
 			}
+			log(start, messages)
 		} while (messages.isNotEmpty())
 	}
 

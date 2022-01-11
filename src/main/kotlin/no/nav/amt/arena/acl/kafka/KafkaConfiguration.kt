@@ -5,6 +5,7 @@ import no.nav.common.kafka.util.KafkaPropertiesBuilder
 import no.nav.common.kafka.util.KafkaPropertiesPreset
 import org.apache.kafka.common.serialization.ByteArrayDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -14,6 +15,12 @@ import java.util.*
 @Configuration
 @EnableConfigurationProperties(KafkaTopicProperties::class)
 open class KafkaConfiguration {
+
+	@Value("\${app.env.consumerId}")
+	var consumerId: String = ""
+
+	@Value("\${app.env.producerId}")
+	var producerId: String = ""
 
 	@Bean
 	open fun kafkaProducer(kafkaProperties: KafkaProperties): KafkaProducerClientImpl<String, String> {
@@ -25,11 +32,11 @@ open class KafkaConfiguration {
 	open fun kafkaProperties(): KafkaProperties {
 		return object : KafkaProperties {
 			override fun consumer(): Properties {
-				return KafkaPropertiesPreset.aivenDefaultConsumerProperties("amt-arena-acl-consumer")
+				return KafkaPropertiesPreset.aivenDefaultConsumerProperties(consumerId)
 			}
 
 			override fun producer(): Properties {
-				return KafkaPropertiesPreset.aivenDefaultProducerProperties("amt-arena-acl-producer")
+				return KafkaPropertiesPreset.aivenDefaultProducerProperties(producerId)
 			}
 		}
 	}
@@ -42,7 +49,7 @@ open class KafkaConfiguration {
 				return KafkaPropertiesBuilder.consumerBuilder()
 					.withBrokerUrl("localhost:9092")
 					.withBaseProperties()
-					.withConsumerGroupId("amt-arena-acl-consumer")
+					.withConsumerGroupId(consumerId)
 					.withDeserializers(ByteArrayDeserializer::class.java, ByteArrayDeserializer::class.java)
 					.build()
 			}
@@ -51,7 +58,7 @@ open class KafkaConfiguration {
 				return KafkaPropertiesBuilder.producerBuilder()
 					.withBrokerUrl(("localhost:9092"))
 					.withBaseProperties()
-					.withProducerId("amt-arena-acl-producer")
+					.withProducerId(producerId)
 					.withSerializers(StringSerializer::class.java, StringSerializer::class.java)
 					.build()
 			}
