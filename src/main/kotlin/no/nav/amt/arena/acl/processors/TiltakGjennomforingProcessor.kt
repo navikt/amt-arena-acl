@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
-open class TiltaksgjennomforingProcessor(
+open class TiltakGjennomforingProcessor(
 	repository: ArenaDataRepository,
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
 	private val tiltakRepository: TiltakRepository,

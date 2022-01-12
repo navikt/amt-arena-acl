@@ -25,7 +25,7 @@ open class GoldenGateKafkaConsumer(
 	init {
 		val topicConfigs = listOf(
 			kafkaTopicProperties.arenaTiltakTopic,
-			kafkaTopicProperties.arenaTiltaksgjennomforingTopic,
+			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
 			kafkaTopicProperties.arenaTiltakDeltakerTopic
 		).map { topic ->
 			KafkaConsumerClientBuilder.TopicConfig<String, String>()
