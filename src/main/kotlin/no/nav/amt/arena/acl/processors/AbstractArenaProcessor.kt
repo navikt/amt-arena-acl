@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.processors
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -89,12 +90,12 @@ abstract class AbstractArenaProcessor<T>(
 		)
 	}
 
-	private fun jsonObject(string: String?): T? {
-		if (string == null) {
+	private fun jsonObject(node: JsonNode?): T? {
+		if (node == null) {
 			return null
 		}
 
-		return objectMapper.readValue(string, clazz)
+		return objectMapper.treeToValue(node, clazz)
 	}
 
 
