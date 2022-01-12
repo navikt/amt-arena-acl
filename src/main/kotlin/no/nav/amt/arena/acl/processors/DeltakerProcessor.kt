@@ -22,8 +22,6 @@ import java.util.*
 open class DeltakerProcessor(
 	repository: ArenaDataRepository,
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
-	private val statusConverter: DeltakerStatusConverter,
-	private val statusEndretDatoConverter: DeltakerEndretDatoConverter,
 	private val ordsClient: ArenaOrdsProxyClient,
 	meterRegistry: MeterRegistry,
 	kafkaProducer: KafkaProducerClientImpl<String, String>
@@ -35,6 +33,8 @@ open class DeltakerProcessor(
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
+	private val statusConverter = DeltakerStatusConverter(meterRegistry)
+	private val statusEndretDatoConverter = DeltakerEndretDatoConverter()
 
 	override fun handleEntry(data: ArenaData) {
 		val arenaDeltaker = getMainObject(data)
