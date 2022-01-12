@@ -43,8 +43,6 @@ data class ArenaWrapper(
 	val operationTimestamp = LocalDateTime.parse(operationTimestampString, opTsFormatter)
 
 	fun toArenaData(): ArenaData {
-		val mapper = jacksonObjectMapper()
-
 		return ArenaData(
 			arenaTableName = this.table,
 			arenaId = this.arenaId,
