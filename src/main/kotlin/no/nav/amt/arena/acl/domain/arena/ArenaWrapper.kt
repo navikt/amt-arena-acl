@@ -2,7 +2,10 @@ package no.nav.amt.arena.acl.domain.arena
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.amt.arena.acl.domain.ArenaData
+import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -25,8 +28,8 @@ data class ArenaWrapper(
 	@JsonProperty("pos")
 	val operationPosition: String,
 
-	val before: String?,
-	val after: String?
+	val before: JsonNode?,
+	val after: JsonNode?
 ) {
 	private val opTsFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
 
@@ -39,10 +42,39 @@ data class ArenaWrapper(
 
 	val operationTimestamp = LocalDateTime.parse(operationTimestampString, opTsFormatter)
 
+	fun toArenaData(): ArenaData {
+		val mapper = jacksonObjectMapper()
+
+		return ArenaData(
+			arenaTableName = this.table,
+			arenaId = this.arenaId,
+			operation = this.operation.toAmtOperation(),
+			operationPosition = this.operationPosition,
+			operationTimestamp = this.operationTimestamp,
+			before = this.before,
+			after = this.after
+		)
+
+	}
+
+	private fun ArenaOperation.toAmtOperation(): AmtOperation {
+		return when (this) {
+			ArenaOperation.I -> AmtOperation.CREATED
+			ArenaOperation.U -> AmtOperation.MODIFIED
+			ArenaOperation.D -> AmtOperation.DELETED
+		}
+	}
+
 	private fun <T> getPayload(clazz: Class<T>): T {
 		val objectMapper = jacksonObjectMapper()
-		val data = before ?: after ?: throw NoSuchElementException("Both before and after is null")
-		return objectMapper.readValue(data, clazz)
+
+		val data = when (operation) {
+			ArenaOperation.I -> after
+			ArenaOperation.U -> after
+			ArenaOperation.D -> before
+		} ?: throw NoSuchElementException("Both before and after is null")
+
+		return objectMapper.treeToValue(data, clazz)
 	}
 
 }
