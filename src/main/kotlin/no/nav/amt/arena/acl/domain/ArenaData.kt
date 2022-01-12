@@ -36,7 +36,12 @@ data class ArenaData(
 		note = null
 	)
 
-	fun markAsFailed(reason: String? = null) = this.copy(ingestStatus = IngestStatus.FAILED, note = reason)
+	fun markAsFailed(reason: String? = null) = this.copy(
+		ingestStatus = IngestStatus.FAILED,
+		ingestAttempts = ingestAttempts + 1,
+		lastAttempted = LocalDateTime.now(),
+		note = reason
+	)
 
 	fun retry(reason: String? = null) = this.copy(
 		ingestStatus = IngestStatus.RETRY,
