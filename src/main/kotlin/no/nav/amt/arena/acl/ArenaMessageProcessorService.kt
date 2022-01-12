@@ -30,33 +30,27 @@ open class ArenaMessageProcessorService(
 	}
 
 	fun processMessages() {
-		process { dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.NEW) }
-		process { dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.NEW) }
-		process { dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.NEW) }
+		process(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.NEW))
+		process(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.NEW))
+		process(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.NEW))
 
-		process { filterRetry(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.RETRY)) }
-		process { filterRetry(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.RETRY)) }
-		process { filterRetry(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.RETRY)) }
+		process(filterRetry(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.RETRY)))
+		process(filterRetry(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.RETRY)))
+		process(filterRetry(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.RETRY)))
 	}
 
 	fun processFailedMessages() {
-		process { dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.FAILED) }
-		process { dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.FAILED) }
-		process { dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.FAILED) }
+		process(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.FAILED))
+		process(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.FAILED))
+		process(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.FAILED))
 	}
 
-	private fun process(getter: () -> List<ArenaData>) {
-		lateinit var start: Instant
-		var messages: List<ArenaData>
-
-		do {
-			start = Instant.now()
-			messages = getter()
-			messages.forEach {
-				proccessEntry(it)
-			}
-			log(start, messages)
-		} while (messages.isNotEmpty())
+	private fun process(messages: List<ArenaData>) {
+		val start = Instant.now()
+		messages.forEach {
+			proccessEntry(it)
+		}
+		log(start, messages)
 	}
 
 	private fun proccessEntry(entry: ArenaData) {
