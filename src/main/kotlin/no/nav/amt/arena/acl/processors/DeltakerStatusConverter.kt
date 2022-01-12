@@ -3,12 +3,10 @@ package no.nav.amt.arena.acl.processors
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
-import org.springframework.stereotype.Service
 import java.time.LocalDate
 
 private typealias ConversionStrategy = (StatusDates) -> AmtDeltaker.Status
 
-@Service
 open class DeltakerStatusConverter(
 	private val meterRegistry: MeterRegistry
 ) {
