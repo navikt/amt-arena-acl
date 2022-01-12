@@ -38,13 +38,13 @@ open class DeltakerProcessor(
 
 	override fun handleEntry(data: ArenaData) {
 		val arenaDeltaker = getMainObject(data)
-		val tiltaksgjennomforingId = arenaDeltaker.TILTAKGJENNOMFORING_ID.toString()
+		val tiltakGjennomforingId = arenaDeltaker.TILTAKGJENNOMFORING_ID.toString()
 
-		val gjennomforingInfo = idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, tiltaksgjennomforingId)
+		val gjennomforingInfo = idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, tiltakGjennomforingId)
 
 		if (gjennomforingInfo == null) {
-			logger.debug("Tiltakgjennomføring $tiltaksgjennomforingId er ikke håndtert, kan derfor ikke håndtere Deltaker med Arena ID ${arenaDeltaker.TILTAKDELTAKER_ID} enda.")
-			repository.upsert(data.retry("Tiltakgjennomføring ($tiltaksgjennomforingId) er ikke håndtert"))
+			logger.debug("Tiltakgjennomføring $tiltakGjennomforingId er ikke håndtert, kan derfor ikke håndtere Deltaker med Arena ID ${arenaDeltaker.TILTAKDELTAKER_ID} enda.")
+			repository.upsert(data.retry("Tiltakgjennomføring ($tiltakGjennomforingId) er ikke håndtert"))
 			return
 		}
 
@@ -118,20 +118,6 @@ open class DeltakerProcessor(
 
 			return Pair(Creation.CREATED, created)
 		}
-	}
-
-	private fun String.toAmtDeltaker(
-		amtDeltakerId: UUID,
-		gjennomforingId: UUID,
-		personIdent: String
-	): AmtDeltaker {
-		return jsonObject(this, ArenaTiltakDeltaker::class.java)?.toAmtDeltaker(
-			amtDeltakerId,
-			gjennomforingId,
-			personIdent
-		)
-			?: throw IllegalArgumentException("Expected String not to be null")
-
 	}
 
 	private fun ArenaTiltakDeltaker.toAmtDeltaker(

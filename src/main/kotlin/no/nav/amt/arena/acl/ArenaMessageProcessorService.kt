@@ -4,7 +4,7 @@ import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.TiltakProcessor
-import no.nav.amt.arena.acl.processors.TiltaksgjennomforingProcessor
+import no.nav.amt.arena.acl.processors.TiltakGjennomforingProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.TILTAKGJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
@@ -19,7 +19,7 @@ import java.time.LocalDateTime
 open class ArenaMessageProcessorService(
 	private val dataRepository: ArenaDataRepository,
 	private val tiltakProcessor: TiltakProcessor,
-	private val tiltaksgjennomforingProcessor: TiltaksgjennomforingProcessor,
+	private val tiltakGjennomforingProcessor: TiltakGjennomforingProcessor,
 	private val deltakerProcessor: DeltakerProcessor
 ) {
 
@@ -56,7 +56,7 @@ open class ArenaMessageProcessorService(
 	private fun proccessEntry(entry: ArenaData) {
 		when (entry.arenaTableName) {
 			TILTAK_TABLE_NAME -> tiltakProcessor.handle(entry)
-			TILTAKGJENNOMFORING_TABLE_NAME -> tiltaksgjennomforingProcessor.handle(entry)
+			TILTAKGJENNOMFORING_TABLE_NAME -> tiltakGjennomforingProcessor.handle(entry)
 			TILTAK_DELTAKER_TABLE_NAME -> deltakerProcessor.handle(entry)
 		}
 	}
