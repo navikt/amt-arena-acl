@@ -12,5 +12,12 @@ data class AmtGjennomforing(
 	val startDato: LocalDate?,
 	val sluttDato: LocalDate?,
 	val registrertDato: LocalDateTime,
-	val fremmoteDato: LocalDateTime?
-)
+	val fremmoteDato: LocalDateTime?,
+	val status: Status
+) {
+	enum class Status {
+		IKKE_STARTET,
+		GJENNOMFORES,
+		AVSLUTTET
+	}
+}

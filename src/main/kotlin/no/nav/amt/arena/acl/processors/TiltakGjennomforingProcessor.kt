@@ -38,6 +38,7 @@ open class TiltakGjennomforingProcessor(
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
+	private val statusConverter = GjennomforingStatusConverter()
 
 	override fun handleEntry(data: ArenaData) {
 		val arenaGjennomforing = getMainObject(data)
@@ -143,7 +144,8 @@ open class TiltakGjennomforingProcessor(
 			startDato = DATO_FRA?.asLocalDate(),
 			sluttDato = DATO_TIL?.asLocalDate(),
 			registrertDato = REG_DATO.asLocalDateTime(),
-			fremmoteDato = DATO_FREMMOTE?.asLocalDate() withTime KLOKKETID_FREMMOTE.asTime()
+			fremmoteDato = DATO_FREMMOTE?.asLocalDate() withTime KLOKKETID_FREMMOTE.asTime(),
+			status = statusConverter.convert(TILTAKSTATUSKODE)
 		)
 	}
 
