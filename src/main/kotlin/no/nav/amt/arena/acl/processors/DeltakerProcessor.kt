@@ -129,7 +129,7 @@ open class DeltakerProcessor(
 			id = amtDeltakerId,
 			gjennomforingId = gjennomforingId,
 			personIdent = personIdent,
-			oppstartDato = DATO_FRA?.asLocalDate(),
+			startDato = DATO_FRA?.asLocalDate(),
 			sluttDato = DATO_TIL?.asLocalDate(),
 			status = statusConverter.convert(
 				DELTAKERSTATUSKODE,
