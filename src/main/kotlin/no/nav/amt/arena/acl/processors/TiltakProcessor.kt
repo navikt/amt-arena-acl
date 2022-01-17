@@ -1,9 +1,10 @@
 package no.nav.amt.arena.acl.processors
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.treeToValue
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
@@ -49,7 +50,7 @@ open class TiltakProcessor(
 		}
 	}
 
-	private fun jsonObject(string: String): ArenaTiltak {
-		return objectMapper.readValue(string)
+	private fun jsonObject(node: JsonNode): ArenaTiltak {
+		return objectMapper.treeToValue<ArenaTiltak>(node)!!
 	}
 }

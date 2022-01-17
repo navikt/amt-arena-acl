@@ -22,7 +22,6 @@ import java.util.*
 open class DeltakerProcessor(
 	repository: ArenaDataRepository,
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
-	private val statusConverter: DeltakerStatusConverter,
 	private val ordsClient: ArenaOrdsProxyClient,
 	meterRegistry: MeterRegistry,
 	kafkaProducer: KafkaProducerClientImpl<String, String>
@@ -34,16 +33,18 @@ open class DeltakerProcessor(
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
+	private val statusConverter = DeltakerStatusConverter(meterRegistry)
+	private val statusEndretDatoConverter = DeltakerEndretDatoConverter()
 
 	override fun handleEntry(data: ArenaData) {
 		val arenaDeltaker = getMainObject(data)
-		val tiltaksgjennomforingId = arenaDeltaker.TILTAKGJENNOMFORING_ID.toString()
+		val tiltakGjennomforingId = arenaDeltaker.TILTAKGJENNOMFORING_ID.toString()
 
-		val gjennomforingInfo = idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, tiltaksgjennomforingId)
+		val gjennomforingInfo = idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, tiltakGjennomforingId)
 
 		if (gjennomforingInfo == null) {
-			logger.debug("Tiltakgjennomføring $tiltaksgjennomforingId er ikke håndtert, kan derfor ikke håndtere Deltaker med Arena ID ${arenaDeltaker.TILTAKDELTAKER_ID} enda.")
-			repository.upsert(data.retry("Tiltakgjennomføring ($tiltaksgjennomforingId) er ikke håndtert"))
+			logger.debug("Tiltakgjennomføring $tiltakGjennomforingId er ikke håndtert, kan derfor ikke håndtere Deltaker med Arena ID ${arenaDeltaker.TILTAKDELTAKER_ID} enda.")
+			repository.upsert(data.retry("Tiltakgjennomføring ($tiltakGjennomforingId) er ikke håndtert"))
 			return
 		}
 
@@ -119,20 +120,6 @@ open class DeltakerProcessor(
 		}
 	}
 
-	private fun String.toAmtDeltaker(
-		amtDeltakerId: UUID,
-		gjennomforingId: UUID,
-		personIdent: String
-	): AmtDeltaker {
-		return jsonObject(this, ArenaTiltakDeltaker::class.java)?.toAmtDeltaker(
-			amtDeltakerId,
-			gjennomforingId,
-			personIdent
-		)
-			?: throw IllegalArgumentException("Expected String not to be null")
-
-	}
-
 	private fun ArenaTiltakDeltaker.toAmtDeltaker(
 		amtDeltakerId: UUID,
 		gjennomforingId: UUID,
@@ -142,7 +129,7 @@ open class DeltakerProcessor(
 			id = amtDeltakerId,
 			gjennomforingId = gjennomforingId,
 			personIdent = personIdent,
-			oppstartDato = DATO_FRA?.asLocalDate(),
+			startDato = DATO_FRA?.asLocalDate(),
 			sluttDato = DATO_TIL?.asLocalDate(),
 			status = statusConverter.convert(
 				DELTAKERSTATUSKODE,
@@ -152,7 +139,13 @@ open class DeltakerProcessor(
 			),
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
-			registrertDato = REG_DATO.asLocalDateTime()
+			registrertDato = REG_DATO.asLocalDateTime(),
+			statusEndretDato = statusEndretDatoConverter.convert(
+				deltakerStatus = DELTAKERSTATUSKODE,
+				datoStatusEndring = DATO_STATUSENDRING?.asLocalDateTime(),
+				oppstartDato = DATO_FRA?.asLocalDate()?.atStartOfDay(),
+				sluttDato = DATO_TIL?.asLocalDate()?.atStartOfDay()
+			)
 		)
 	}
 

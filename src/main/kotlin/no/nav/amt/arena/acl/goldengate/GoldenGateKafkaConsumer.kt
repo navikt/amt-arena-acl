@@ -1,9 +1,6 @@
 package no.nav.amt.arena.acl.goldengate
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.arena.ArenaOperation
 import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
 import no.nav.amt.arena.acl.kafka.KafkaProperties
 import no.nav.amt.arena.acl.kafka.KafkaTopicProperties
@@ -28,7 +25,7 @@ open class GoldenGateKafkaConsumer(
 	init {
 		val topicConfigs = listOf(
 			kafkaTopicProperties.arenaTiltakTopic,
-			kafkaTopicProperties.arenaTiltaksgjennomforingTopic,
+			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
 			kafkaTopicProperties.arenaTiltakDeltakerTopic
 		).map { topic ->
 			KafkaConsumerClientBuilder.TopicConfig<String, String>()
@@ -52,23 +49,5 @@ open class GoldenGateKafkaConsumer(
 	private fun handle(value: String) {
 		val data = mapper.readValue(value, ArenaWrapper::class.java).toArenaData()
 		arenaDataRepository.upsert(data)
-	}
-
-	private fun ArenaWrapper.toArenaData() = ArenaData(
-		arenaTableName = this.table,
-		arenaId = this.arenaId,
-		operation = this.operation.toAmtOperation(),
-		operationPosition = this.operationPosition,
-		operationTimestamp = this.operationTimestamp,
-		before = this.before,
-		after = this.after
-	)
-
-	private fun ArenaOperation.toAmtOperation(): AmtOperation {
-		return when (this) {
-			ArenaOperation.I -> AmtOperation.CREATED
-			ArenaOperation.U -> AmtOperation.MODIFIED
-			ArenaOperation.D -> AmtOperation.DELETED
-		}
 	}
 }

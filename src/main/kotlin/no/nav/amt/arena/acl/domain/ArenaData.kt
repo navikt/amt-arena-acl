@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.domain
 
+import com.fasterxml.jackson.databind.JsonNode
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import java.time.LocalDateTime
 
@@ -22,8 +23,8 @@ data class ArenaData(
 	val ingestedTimestamp: LocalDateTime? = null,
 	val ingestAttempts: Int = 0,
 	val lastAttempted: LocalDateTime? = null,
-	val before: String? = null,
-	val after: String? = null,
+	val before: JsonNode? = null,
+	val after: JsonNode? = null,
 	val note: String? = null
 ) {
 
@@ -35,7 +36,12 @@ data class ArenaData(
 		note = null
 	)
 
-	fun markAsFailed(reason: String? = null) = this.copy(ingestStatus = IngestStatus.FAILED, note = reason)
+	fun markAsFailed(reason: String? = null) = this.copy(
+		ingestStatus = IngestStatus.FAILED,
+		ingestAttempts = ingestAttempts + 1,
+		lastAttempted = LocalDateTime.now(),
+		note = reason
+	)
 
 	fun retry(reason: String? = null) = this.copy(
 		ingestStatus = IngestStatus.RETRY,

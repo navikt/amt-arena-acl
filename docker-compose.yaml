@@ -1,8 +1,8 @@
 version: '3.7'
 services:
-  amt-tiltak-postgres:
+  amt-arena-acl-postgres:
     image: 'postgres:12-alpine'
-    container_name: amt-tiltak-postgres
+    container_name: amt-arena-acl-postgres
     #    volumes:
     #      - postgres-db-volume:/var/lib/postgresql/data
     ports:

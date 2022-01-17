@@ -40,10 +40,10 @@ spec:
       value: https://poao-gcp-proxy.dev-fss-pub.nais.io
     # Kafka topics
     - name: AMT_TOPIC
-      value: amt-tiltak-v1
+      value: amt.amt-tiltak-v1
     - name: ARENA_TILTAK_TOPIC
       value: teamarenanais.aapen-arena-tiltakendret-v1-q2
-    - name: ARENA_TILTAKSGJENNOMFORING_TOPIC
+    - name: ARENA_TILTAKGJENNOMFORING_TOPIC
       value: teamarenanais.aapen-arena-tiltakgjennomforingendret-v1-q2
     - name: ARENA_TILTAK_DELTAKER_TOPIC
       value: teamarenanais.aapen-arena-tiltakdeltakerendret-v1-q2

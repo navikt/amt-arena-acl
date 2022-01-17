@@ -8,12 +8,13 @@ data class AmtDeltaker(
 	val id: UUID,
 	val gjennomforingId: UUID,
 	val personIdent: String,
-	val oppstartDato: LocalDate?,
+	val startDato: LocalDate?,
 	val sluttDato: LocalDate?,
 	val status: Status,
 	val dagerPerUke: Int?,
 	val prosentDeltid: Float?,
-	val registrertDato: LocalDateTime
+	val registrertDato: LocalDateTime,
+	val statusEndretDato: LocalDateTime?
 ) {
 
 	enum class Status {
