@@ -64,12 +64,12 @@ open class DeltakerProcessor(
 
 		if (ignored) {
 			logger.debug("Deltaker med med id ${arenaDeltaker.TILTAKDELTAKER_ID} er ikke støttet og sendes ikke videre")
-			getTranslation(data.arenaTableName, data.arenaId, amtDeltaker, ignored)
+			insertTranslation(data.arenaTableName, data.arenaId, amtDeltaker, ignored)
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
 			return
 		}
 
-		val deltakerInfo = getTranslation(data.arenaTableName, data.arenaId, amtDeltaker, ignored)
+		val deltakerInfo = insertTranslation(data.arenaTableName, data.arenaId, amtDeltaker, ignored)
 
 		if (deltakerInfo.first == Creation.EXISTED) {
 			val digest = getDigest(amtDeltaker)
@@ -92,7 +92,7 @@ open class DeltakerProcessor(
 		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Deltaker with id $amtDeltakerId Sent.")
 	}
 
-	private fun getTranslation(
+	private fun insertTranslation(
 		table: String,
 		arenaId: String,
 		deltaker: AmtDeltaker,
