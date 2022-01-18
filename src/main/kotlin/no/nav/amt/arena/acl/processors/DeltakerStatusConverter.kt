@@ -19,7 +19,7 @@ open class DeltakerStatusConverter(
 		if (it.startDatoPassert() && it.sluttDatoPassert())
 			AmtDeltaker.Status.HAR_SLUTTET
 		else if (it.startDatoPassert())
-			AmtDeltaker.Status.GJENNOMFORES
+			AmtDeltaker.Status.DELTAR
 		else AmtDeltaker.Status.VENTER_PA_OPPSTART
 	}
 
