@@ -43,47 +43,46 @@ open class TiltakGjennomforingProcessor(
 	override fun handleEntry(data: ArenaData) {
 		val arenaGjennomforing = getMainObject(data)
 
-		val tiltakskode = arenaGjennomforing.TILTAKSKODE
+		val gjennomforingId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
+			?: UUID.randomUUID()
 
 		if (ugyldigGjennomforing(arenaGjennomforing)) {
 			logger.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaTiltakgjennomforingId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}")
+			insertTranslation(data, gjennomforingId, true)
 			repository.upsert(data.markAsIgnored())
 			return
 		}
 
-		val tiltak = tiltakRepository.getByKode(tiltakskode)
+		if (isIgnored(arenaGjennomforing)) {
+			logger.debug("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
+			insertTranslation(data, gjennomforingId, isIgnored(arenaGjennomforing))
+			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
+			return
+		}
 
+		val tiltakskode = arenaGjennomforing.TILTAKSKODE
+		val tiltak = tiltakRepository.getByKode(tiltakskode)
 		if (tiltak == null) {
 			logger.debug("Tiltak $tiltakskode er ikke håndtert, kan derfor ikke håndtere gjennomføring med Arena ID ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} enda.")
 			repository.upsert(data.retry("Tiltaket ($tiltakskode) er ikke håndtert"))
 			return
 		}
 
-		val id = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
-			?: UUID.randomUUID()
-
 		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.ARBGIV_ID_ARRANGOR.toString())
 
 		val amtGjennomforing = arenaGjennomforing.toAmtGjennomforing(
 			amtTiltak = tiltak,
-			amtGjennomforingId = id,
+			amtGjennomforingId = gjennomforingId,
 			virksomhetsnummer = virksomhetsnummer
 		)
 
-		if (isIgnored(arenaGjennomforing)) {
-			logger.debug("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
-			getTranslation(data, amtGjennomforing, isIgnored(arenaGjennomforing))
-			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
-			return
-		}
-
-		val translation = getTranslation(data, amtGjennomforing, isIgnored(arenaGjennomforing))
+		val translation = insertTranslation(data, gjennomforingId, isIgnored(arenaGjennomforing))
 
 		if (translation.first == Creation.EXISTED) {
 			val digest = getDigest(amtGjennomforing)
 
 			if (translation.second.currentHash == digest) {
-				logger.info("Gjennomføring med kode $id sendes ikke videre fordi det allerede er sendt (Samme hash)")
+				logger.info("Gjennomføring med kode $gjennomforingId sendes ikke videre fordi det allerede er sendt (Samme hash)")
 				repository.upsert(data.markAsIgnored("Tiltaket er allerede sendt (samme hash)."))
 				return
 			}
@@ -92,21 +91,21 @@ open class TiltakGjennomforingProcessor(
 		val amtData = AmtWrapper(
 			type = "GJENNOMFORING",
 			operation = data.operation,
-			payload = arenaGjennomforing.toAmtGjennomforing(tiltak, id, virksomhetsnummer)
+			payload = arenaGjennomforing.toAmtGjennomforing(tiltak, gjennomforingId, virksomhetsnummer)
 		)
 
 		send(amtGjennomforing.id, objectMapper.writeValueAsString(amtData))
 		repository.upsert(data.markAsHandled())
-		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Gjennomføring with id $id Sent.")
+		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Gjennomføring with id $gjennomforingId Sent.")
 	}
 
 	private fun isIgnored(gjennomforing: ArenaTiltakGjennomforing): Boolean {
 		return !isSupportedTiltak(gjennomforing.TILTAKSKODE)
 	}
 
-	private fun getTranslation(
+	private fun insertTranslation(
 		data: ArenaData,
-		gjennomforing: AmtGjennomforing,
+		gjennomforingId: UUID,
 		ignored: Boolean
 	): Pair<Creation, ArenaDataIdTranslation> {
 		val exists = idTranslationRepository.get(data.arenaTableName, data.arenaId)
@@ -116,11 +115,11 @@ open class TiltakGjennomforingProcessor(
 		} else {
 			idTranslationRepository.insert(
 				ArenaDataIdTranslation(
-					amtId = gjennomforing.id,
+					amtId = gjennomforingId,
 					arenaTableName = data.arenaTableName,
 					arenaId = data.arenaId,
 					ignored = ignored,
-					getDigest(gjennomforing)
+					getDigest(gjennomforingId)
 				)
 			)
 
