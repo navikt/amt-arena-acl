@@ -1,11 +1,10 @@
 package no.nav.amt.arena.acl.repositories
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.dto.LogStatusCountDto
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Component
 @Component
 open class ArenaDataRepository(
 	private val template: NamedParameterJdbcTemplate,
-	private val meterRegistry: MeterRegistry?,
 ) {
 
 	private val mapper = jacksonObjectMapper()
@@ -133,11 +131,7 @@ open class ArenaDataRepository(
 		)
 	}
 
-	fun logStatus() {
-		if (meterRegistry == null) {
-			return
-		}
-
+	fun getStatusCount(): List<LogStatusCountDto> {
 		val sql = """
 			SELECT arena_table_name, ingest_status, count(*)
 			FROM arena_data
@@ -145,33 +139,26 @@ open class ArenaDataRepository(
 		""".trimIndent()
 
 		val logRowMapper = RowMapper { rs, _ ->
-			LogDto(
+			LogStatusCountDto(
 				table = rs.getString("arena_table_name"),
 				status = IngestStatus.valueOf(rs.getString("ingest_status")),
 				count = rs.getInt("count")
 			)
 		}
 
-		val gaugeName = "amt.arena-acl.ingest.status"
+		return template.query(sql, logRowMapper)
+	}
 
-		template.query(sql, logRowMapper)
-			.groupBy { it.table }
-			.forEach { (tableName, statusList) ->
-				val countByStatus = statusList.associateBy { it.status }
+	fun getAll(): List<ArenaData> {
+		val sql = """
+			SELECT *
+			FROM arena_data
+		""".trimIndent()
 
-				IngestStatus.values().forEach { status ->
-
-					meterRegistry.gauge(
-						gaugeName,
-						listOf(
-							Tag.of("table", tableName),
-							Tag.of("status", status.name)
-						),
-						countByStatus[status]?.count ?: 0
-					)
-				}
-
-			}
+		return template.query(
+			sql,
+			rowMapper
+		)
 	}
 }
 
@@ -190,11 +177,4 @@ private fun ArenaData.asParameterSource() = MapSqlParameterSource().addValues(
 		"after" to if (after != null) jacksonObjectMapper().writeValueAsString(after) else null,
 		"note" to note
 	)
-)
-
-
-private data class LogDto(
-	val table: String,
-	val status: IngestStatus,
-	val count: Int
 )

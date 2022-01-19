@@ -10,7 +10,7 @@ import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.common.kafka.producer.KafkaProducerClientImpl
+import no.nav.common.kafka.producer.KafkaProducerClient
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -20,7 +20,7 @@ import java.util.*
 abstract class AbstractArenaProcessor<T>(
 	protected val repository: ArenaDataRepository,
 	private val clazz: Class<T>,
-	private val kafkaProducer: KafkaProducerClientImpl<String, String>,
+	private val kafkaProducer: KafkaProducerClient<String, String>,
 	private val meterRegistry: MeterRegistry
 ) {
 

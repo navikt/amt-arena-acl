@@ -1,6 +1,9 @@
 package no.nav.amt.arena.acl.configuration
 
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.ArenaMessageProcessorService
+import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
@@ -10,13 +13,12 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 
 
-
-
 @Configuration
 @EnableScheduling
 open class CronJobs(
 	private val messageProcessorService: ArenaMessageProcessorService,
-	private val arenaDataRepository: ArenaDataRepository
+	private val arenaDataRepository: ArenaDataRepository,
+	private val meterRegistry: MeterRegistry,
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -44,6 +46,25 @@ open class CronJobs(
 
 	@Scheduled(fixedDelay = 20000)
 	open fun logArenaDataStatuses() {
-		arenaDataRepository.logStatus()
+		val gaugeName = "amt.arena-acl.ingest.status"
+
+		arenaDataRepository.getStatusCount()
+			.groupBy { it.table }
+			.forEach { (tableName, statusList) ->
+				val countByStatus = statusList.associateBy { it.status }
+
+				IngestStatus.values().forEach { status ->
+
+					meterRegistry.gauge(
+						gaugeName,
+						listOf(
+							Tag.of("table", tableName),
+							Tag.of("status", status.name)
+						),
+						countByStatus[status]?.count ?: 0
+					)
+				}
+
+			}
 	}
 }

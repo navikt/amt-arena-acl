@@ -75,6 +75,15 @@ open class ArenaDataIdTranslationRepository(
 		}
 	}
 
+	fun getAll(): List<ArenaDataIdTranslation> {
+		val sql = """
+			SELECT *
+			FROM arena_data_id_translation
+		""".trimIndent()
+
+		return template.query(sql, rowMapper)
+	}
+
 	private fun getFromDatabase(table: String, arenaId: String): ArenaDataIdTranslation? {
 		val sql = """
 			SELECT *

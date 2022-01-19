@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.processors
 
+import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
@@ -7,13 +8,12 @@ import no.nav.amt.arena.acl.domain.Creation
 import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
-import no.nav.amt.arena.acl.ordsproxy.ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.TILTAKGJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.asLocalDate
 import no.nav.amt.arena.acl.utils.asLocalDateTime
-import no.nav.common.kafka.producer.KafkaProducerClientImpl
+import no.nav.common.kafka.producer.KafkaProducerClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.*
@@ -24,7 +24,7 @@ open class DeltakerProcessor(
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
 	private val ordsClient: ArenaOrdsProxyClient,
 	meterRegistry: MeterRegistry,
-	kafkaProducer: KafkaProducerClientImpl<String, String>
+	kafkaProducer: KafkaProducerClient<String, String>
 ) : AbstractArenaProcessor<ArenaTiltakDeltaker>(
 	repository = repository,
 	meterRegistry = meterRegistry,
