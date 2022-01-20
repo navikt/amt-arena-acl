@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.processors
 
+import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
@@ -8,7 +9,6 @@ import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakGjennomforing
-import no.nav.amt.arena.acl.ordsproxy.ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository

@@ -27,7 +27,7 @@ class ArenaDataRepositoryTest : FunSpec({
 		val rootLogger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 		rootLogger.level = Level.WARN
 
-		repository = ArenaDataRepository(NamedParameterJdbcTemplate(dataSource), null)
+		repository = ArenaDataRepository(NamedParameterJdbcTemplate(dataSource))
 
 		DatabaseTestUtils.cleanDatabase(dataSource)
 	}

@@ -2,7 +2,6 @@ package no.nav.amt.arena.acl.repositories
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.benmanes.caffeine.cache.stats.CacheStats
 import no.nav.amt.arena.acl.domain.amt.AmtTiltak
 import no.nav.amt.arena.acl.utils.getUUID
 import org.springframework.jdbc.core.RowMapper
@@ -50,12 +49,14 @@ open class TiltakRepository(
 			)
 		)
 
-		template.update(sql, parameters)
+		val rowsUpdated = template.update(sql, parameters)
 
-		val tiltak = getByKode(kode)
+		if (rowsUpdated > 0) {
+			cache.invalidate(kode)
+		}
+
+		return getByKode(kode)
 			?: throw NoSuchElementException("Tiltak med kode $kode kan ikke hentes fra databasen.")
-
-		return tiltak
 	}
 
 	fun delete(kode: String) {
@@ -65,6 +66,7 @@ open class TiltakRepository(
 		""".trimIndent()
 
 		template.update(sql, singletonParameterMap("kode", kode))
+		cache.invalidate(kode)
 	}
 
 	fun getByKode(kode: String): AmtTiltak? {
