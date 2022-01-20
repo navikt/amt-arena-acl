@@ -12,7 +12,7 @@ data class Arbeidsgiver(
 	val organisasjonsnummerMorselskap: String
 )
 
-class ArenaOrdsProxyClient(
+open class ArenaOrdsProxyClient(
 	private val tokenProvider: Supplier<String>,
 	private val arenaOrdsProxyUrl: String,
 	private val httpClient: OkHttpClient = OkHttpClient(),

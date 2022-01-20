@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.repositories
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.ArenaData
@@ -15,7 +16,18 @@ open class ArenaDataRepository(
 	private val template: NamedParameterJdbcTemplate,
 	private val meterRegistry: MeterRegistry?,
 ) {
+
+	private val mapper = jacksonObjectMapper()
+
 	private val rowMapper = RowMapper { rs, _ ->
+		val before = if (rs.getBytes("before") != null)
+			mapper.readTree(rs.getBytes("before"))
+		else null
+
+		val after = if (rs.getBytes("after") != null)
+			mapper.readTree(rs.getBytes("after"))
+		else null
+
 		ArenaData(
 			id = rs.getInt("id"),
 			arenaTableName = rs.getString("arena_table_name"),
@@ -27,8 +39,8 @@ open class ArenaDataRepository(
 			ingestedTimestamp = rs.getTimestamp("ingested_timestamp")?.toLocalDateTime(),
 			ingestAttempts = rs.getInt("ingest_attempts"),
 			lastAttempted = rs.getTimestamp("last_attempted")?.toLocalDateTime(),
-			before = rs.getString("before"),
-			after = rs.getString("after"),
+			before = before,
+			after = after,
 			note = rs.getString("note")
 		)
 	}
@@ -174,8 +186,8 @@ private fun ArenaData.asParameterSource() = MapSqlParameterSource().addValues(
 		"ingested_timestamp" to ingestedTimestamp,
 		"ingest_attempts" to ingestAttempts,
 		"last_attempted" to lastAttempted,
-		"before" to before,
-		"after" to after,
+		"before" to if (before != null) jacksonObjectMapper().writeValueAsString(before) else null,
+		"after" to if (after != null) jacksonObjectMapper().writeValueAsString(after) else null,
 		"note" to note
 	)
 )

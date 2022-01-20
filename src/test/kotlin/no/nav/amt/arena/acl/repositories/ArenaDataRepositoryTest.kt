@@ -2,6 +2,7 @@ package no.nav.amt.arena.acl.repositories
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -17,6 +18,8 @@ import java.time.LocalDateTime
 class ArenaDataRepositoryTest : FunSpec({
 
 	val dataSource = SingletonPostgresContainer.getDataSource()
+	val mapper = jacksonObjectMapper()
+
 
 	lateinit var repository: ArenaDataRepository
 
@@ -30,13 +33,15 @@ class ArenaDataRepositoryTest : FunSpec({
 	}
 
 	test("Insert and get should return inserted object") {
+		val afterData = mapper.readTree("{\"test\": \"test\"}".toByteArray())
+
 		val data = ArenaData(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
 			operationPosition = "1",
 			operationTimestamp = LocalDateTime.now(),
-			after = "{\"test\": \"test\"}"
+			after = afterData
 		)
 
 		repository.upsert(data)
@@ -46,6 +51,8 @@ class ArenaDataRepositoryTest : FunSpec({
 		stored shouldNotBe null
 		stored.id shouldNotBe -1
 		stored.arenaId shouldBe data.arenaId
+		stored.before shouldBe null
+		stored.after shouldBe afterData
 	}
 
 	test("Upserting a Inserted object should modify it") {
@@ -55,7 +62,7 @@ class ArenaDataRepositoryTest : FunSpec({
 			operation = AmtOperation.CREATED,
 			operationPosition = "1",
 			operationTimestamp = LocalDateTime.now(),
-			after = "{\"test\": \"test\"}"
+			after = mapper.readTree("{\"test\": \"test\"}".toByteArray())
 		)
 
 		repository.upsert(data)

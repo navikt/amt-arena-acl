@@ -35,7 +35,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("AKTUELL", null, null, null) shouldBe VENTER_PA_OPPSTART
 	}
 	"status - AKTUELL og har startdato i fortid - returnerer GJENNOMFORES" {
-		converter.convert("AKTUELL", yesterday, null, null) shouldBe GJENNOMFORES
+		converter.convert("AKTUELL", yesterday, null, null) shouldBe DELTAR
 	}
 	"status - AKTUELL og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
 		converter.convert("AKTUELL", tomorrow, null, null) shouldBe VENTER_PA_OPPSTART
@@ -44,7 +44,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("AKTUELL", yesterday.minusDays(1), yesterday, null) shouldBe HAR_SLUTTET
 	}
 	"status - AKTUELL og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		converter.convert("AKTUELL", yesterday, tomorrow, null) shouldBe GJENNOMFORES
+		converter.convert("AKTUELL", yesterday, tomorrow, null) shouldBe DELTAR
 	}
 
 	"status - AVSLAG og mangler startdato - returnerer IKKE_AKTUELL" {
@@ -82,7 +82,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("GJENN", null, null, null) shouldBe VENTER_PA_OPPSTART
 	}
 	"status - GJENN og har startdato i fortid - returnerer GJENNOMFORES" {
-		converter.convert("GJENN", yesterday, null, null) shouldBe GJENNOMFORES
+		converter.convert("GJENN", yesterday, null, null) shouldBe DELTAR
 	}
 	"status - GJENN og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
 		converter.convert("GJENN", tomorrow, null, null) shouldBe VENTER_PA_OPPSTART
@@ -91,7 +91,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("GJENN", yesterday.minusDays(1), yesterday, null) shouldBe HAR_SLUTTET
 	}
 	"status - GJENN og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		converter.convert("GJENN", yesterday, tomorrow, null) shouldBe GJENNOMFORES
+		converter.convert("GJENN", yesterday, tomorrow, null) shouldBe DELTAR
 	}
 
 
@@ -146,7 +146,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("INFOMOETE", null, null, null) shouldBe VENTER_PA_OPPSTART
 	}
 	"status - INFOMOETE og har startdato i fortid - returnerer GJENNOMFORES" {
-		converter.convert("INFOMOETE", yesterday, null, null) shouldBe GJENNOMFORES
+		converter.convert("INFOMOETE", yesterday, null, null) shouldBe DELTAR
 	}
 	"status - INFOMOETE og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
 		converter.convert("INFOMOETE", tomorrow, null, null) shouldBe VENTER_PA_OPPSTART
@@ -155,14 +155,14 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("INFOMOETE", yesterday.minusDays(1), yesterday, null) shouldBe HAR_SLUTTET
 	}
 	"status - INFOMOETE og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		converter.convert("INFOMOETE", yesterday, tomorrow, null) shouldBe GJENNOMFORES
+		converter.convert("INFOMOETE", yesterday, tomorrow, null) shouldBe DELTAR
 	}
 
 	"status - JATAKK - returnerer VENTER_PÅ_OPPSTART" {
 		converter.convert("JATAKK", null, null, null) shouldBe VENTER_PA_OPPSTART
 	}
 	"status - JATAKK og har startdato i fortid - returnerer GJENNOMFORES" {
-		converter.convert("JATAKK", yesterday, null, null) shouldBe GJENNOMFORES
+		converter.convert("JATAKK", yesterday, null, null) shouldBe DELTAR
 	}
 	"status - JATAKK og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
 		converter.convert("JATAKK", tomorrow, null, null) shouldBe VENTER_PA_OPPSTART
@@ -171,7 +171,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("JATAKK", yesterday.minusDays(1), yesterday, null) shouldBe HAR_SLUTTET
 	}
 	"status - JATAKK og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		converter.convert("JATAKK", yesterday, tomorrow, null) shouldBe GJENNOMFORES
+		converter.convert("JATAKK", yesterday, tomorrow, null) shouldBe DELTAR
 	}
 
 	"status - NEITAKK - returnerer IKKE_AKTUELL" {
@@ -183,7 +183,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("TILBUD", null, null, null) shouldBe VENTER_PA_OPPSTART
 	}
 	"status - TILBUD og har startdato i fortid - returnerer GJENNOMFORES" {
-		converter.convert("TILBUD", yesterday, null, null) shouldBe GJENNOMFORES
+		converter.convert("TILBUD", yesterday, null, null) shouldBe DELTAR
 	}
 	"status - TILBUD og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
 		converter.convert("TILBUD", tomorrow, null, null) shouldBe VENTER_PA_OPPSTART
@@ -192,7 +192,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("TILBUD", yesterday.minusDays(1), yesterday, null) shouldBe HAR_SLUTTET
 	}
 	"status - TILBUD og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		converter.convert("TILBUD", yesterday, tomorrow, null) shouldBe GJENNOMFORES
+		converter.convert("TILBUD", yesterday, tomorrow, null) shouldBe DELTAR
 	}
 
 
@@ -200,7 +200,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("VENTELISTE", null, null, null) shouldBe VENTER_PA_OPPSTART
 	}
 	"status - VENTELISTE og har startdato i fortid - returnerer GJENNOMFORES" {
-		converter.convert("VENTELISTE", yesterday, null, null) shouldBe GJENNOMFORES
+		converter.convert("VENTELISTE", yesterday, null, null) shouldBe DELTAR
 	}
 	"status - VENTELISTE og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
 		converter.convert("VENTELISTE", tomorrow, null, null) shouldBe VENTER_PA_OPPSTART
@@ -209,7 +209,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("VENTELISTE", yesterday.minusDays(1), yesterday, null) shouldBe HAR_SLUTTET
 	}
 	"status - VENTELISTE og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		converter.convert("VENTELISTE", yesterday, tomorrow, null) shouldBe GJENNOMFORES
+		converter.convert("VENTELISTE", yesterday, tomorrow, null) shouldBe DELTAR
 	}
 
 })
