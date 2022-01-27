@@ -34,6 +34,8 @@ spec:
   kafka:
     pool: nav-dev
   env:
+    - name: AMT_ARENA_ORDS_PROXY_SCOPE
+      value: api://dev-fss.amt.amt-arena-ords-proxy/.default
     - name: POAO_GCP_PROXY_SCOPE
       value: api://dev-fss.pto.poao-gcp-proxy/.default
     - name: POAO_GCP_PROXY_URL

@@ -13,15 +13,19 @@ open class ArenaOrdsProxyClientConfiguration {
 	lateinit var url: String
 
 	@Value("\${poao-gcp-proxy.scope}")
-	lateinit var scope: String
+	lateinit var poaoGcpProxyScope: String
+
+	@Value("\${amt-arena-ords-proxy.scope}")
+	lateinit var ordsProxyScope: String
 
 	@Bean
 	open fun arenaOrdsProxyConnector(
 		scopedTokenProvider: ScopedTokenProvider
 	): ArenaOrdsProxyClient {
 		return ArenaOrdsProxyClientImpl(
-			tokenProvider = { scopedTokenProvider.getToken(scope) },
-			arenaOrdsProxyUrl = "$url/proxy/amt-arena-ords-proxy"
+			arenaOrdsProxyUrl = "$url/proxy/amt-arena-ords-proxy",
+			proxyTokenProvider = { scopedTokenProvider.getToken(poaoGcpProxyScope) },
+			ordsProxyTokenProvider = { scopedTokenProvider.getToken(ordsProxyScope) },
 		)
 	}
 
