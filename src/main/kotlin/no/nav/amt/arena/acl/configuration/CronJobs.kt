@@ -67,4 +67,11 @@ open class CronJobs(
 
 			}
 	}
+
+	@Scheduled(cron = "0 0 * * * *") // Hver time
+	open fun deleteIgnoredArenaData() {
+		val rowsDeleted = arenaDataRepository.deleteAllIgnoredData()
+		logger.info("Slettet ignorert data fra arena_data rows=${rowsDeleted}")
+	}
+
 }

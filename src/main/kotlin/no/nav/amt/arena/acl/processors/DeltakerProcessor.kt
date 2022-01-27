@@ -43,7 +43,7 @@ open class DeltakerProcessor(
 		val gjennomforingInfo = idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, tiltakGjennomforingId)
 
 		if (gjennomforingInfo == null) {
-			logger.debug("Tiltakgjennomføring $tiltakGjennomforingId er ikke håndtert, kan derfor ikke håndtere Deltaker med Arena ID ${arenaDeltaker.TILTAKDELTAKER_ID} enda.")
+			logger.info("Tiltakgjennomføring $tiltakGjennomforingId er ikke håndtert, kan derfor ikke håndtere deltaker med Arena ID ${arenaDeltaker.TILTAKDELTAKER_ID} enda")
 			repository.upsert(data.retry("Tiltakgjennomføring ($tiltakGjennomforingId) er ikke håndtert"))
 			return
 		}
@@ -63,7 +63,7 @@ open class DeltakerProcessor(
 		)
 
 		if (ignored) {
-			logger.debug("Deltaker med med id ${arenaDeltaker.TILTAKDELTAKER_ID} er ikke støttet og sendes ikke videre")
+			logger.info("Deltaker med med id ${arenaDeltaker.TILTAKDELTAKER_ID} er ikke støttet og sendes ikke videre")
 			insertTranslation(data.arenaTableName, data.arenaId, amtDeltaker, ignored)
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
 			return

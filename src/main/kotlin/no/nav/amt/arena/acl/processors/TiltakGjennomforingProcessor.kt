@@ -54,7 +54,7 @@ open class TiltakGjennomforingProcessor(
 		}
 
 		if (isIgnored(arenaGjennomforing)) {
-			logger.debug("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
+			logger.info("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
 			insertTranslation(data, gjennomforingId, isIgnored(arenaGjennomforing))
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
 			return
@@ -62,8 +62,9 @@ open class TiltakGjennomforingProcessor(
 
 		val tiltakskode = arenaGjennomforing.TILTAKSKODE
 		val tiltak = tiltakRepository.getByKode(tiltakskode)
+
 		if (tiltak == null) {
-			logger.debug("Tiltak $tiltakskode er ikke håndtert, kan derfor ikke håndtere gjennomføring med Arena ID ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} enda.")
+			logger.info("Tiltak $tiltakskode er ikke håndtert, kan derfor ikke håndtere gjennomføring med Arena ID ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} enda.")
 			repository.upsert(data.retry("Tiltaket ($tiltakskode) er ikke håndtert"))
 			return
 		}
