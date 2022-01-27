@@ -10,6 +10,7 @@ import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
 @Component
@@ -22,24 +23,23 @@ open class TiltakProcessor(
 		.registerModule(JavaTimeModule())
 		.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
+	private val logger = LoggerFactory.getLogger(javaClass)
+
 	fun handle(data: ArenaData) {
 		val arenaTiltak = getMainObject(data)
 
-		when (data.operation) {
-			AmtOperation.CREATED, AmtOperation.MODIFIED -> {
-				repository.upsert(
-					kode = arenaTiltak.TILTAKSKODE,
-					navn = arenaTiltak.TILTAKSNAVN
-				)
-			}
-			AmtOperation.DELETED -> {
-				repository.delete(
-					kode = arenaTiltak.TILTAKSKODE
-				)
-			}
+		if (data.operation == AmtOperation.DELETED) {
+			logger.error("Implementation for delete elements are not implemented. Cannot handle arena id ${data.arenaId} from table ${data.arenaTableName} at position ${data.operationPosition}.")
+			arenaDataRepository.upsert(data.markAsFailed("Implementation of DELETE is not implemented."))
+		} else {
+			repository.upsert(
+				kode = arenaTiltak.TILTAKSKODE,
+				navn = arenaTiltak.TILTAKSNAVN
+			)
+
+			arenaDataRepository.upsert(data.markAsHandled())
 		}
 
-		arenaDataRepository.upsert(data.markAsHandled())
 	}
 
 	private fun getMainObject(data: ArenaData): ArenaTiltak {

@@ -121,14 +121,7 @@ class TiltakProcessorTest : FunSpec({
 			arenaDataRepository.get(TILTAK_TABLE_NAME, AmtOperation.DELETED, deletePosition)
 		}
 
-		arenaDataRepositoryEntry.before shouldBe delete.before
-		arenaDataRepositoryEntry.after shouldBe null
-		arenaDataRepositoryEntry.operation shouldBe AmtOperation.DELETED
-		arenaDataRepositoryEntry.id shouldNotBe -1
-
-		val tiltakRepositoryEntry = tiltakRepository.getByKode(tiltakKode)
-
-		tiltakRepositoryEntry shouldBe null
+		arenaDataRepositoryEntry.ingestStatus shouldBe IngestStatus.FAILED
 	}
 
 
