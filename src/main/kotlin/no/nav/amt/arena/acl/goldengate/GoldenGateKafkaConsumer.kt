@@ -2,6 +2,7 @@ package no.nav.amt.arena.acl.goldengate
 
 import no.nav.amt.arena.acl.kafka.KafkaProperties
 import no.nav.amt.arena.acl.kafka.KafkaTopicProperties
+import no.nav.amt.arena.acl.services.ArenaMessageProcessorService
 import no.nav.common.kafka.consumer.KafkaConsumerClient
 import no.nav.common.kafka.consumer.util.KafkaConsumerClientBuilder
 import no.nav.common.kafka.consumer.util.deserializer.Deserializers.stringDeserializer
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Component
 open class GoldenGateKafkaConsumer(
 	kafkaTopicProperties: KafkaTopicProperties,
 	kafkaProperties: KafkaProperties,
-	private val arenaMessageProcessor: ArenaMessageProcessor,
+	private val arenaMessageProcessorService: ArenaMessageProcessorService,
 ) {
 	private val client: KafkaConsumerClient
 
@@ -27,7 +28,7 @@ open class GoldenGateKafkaConsumer(
 					topic,
 					stringDeserializer(),
 					stringDeserializer(),
-					arenaMessageProcessor::handleArenaGoldenGateRecord
+					arenaMessageProcessorService::handleArenaGoldenGateRecord
 				)
 		}
 

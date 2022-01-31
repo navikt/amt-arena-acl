@@ -46,6 +46,8 @@ open class TiltakGjennomforingProcessor(
 		val gjennomforingId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
 			?: UUID.randomUUID()
 
+		val isGjennomforingIgnored = isIgnored(arenaGjennomforing)
+
 		if (ugyldigGjennomforing(arenaGjennomforing)) {
 			logger.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaTiltakgjennomforingId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}")
 			insertTranslation(data, gjennomforingId, true)
@@ -53,9 +55,9 @@ open class TiltakGjennomforingProcessor(
 			return
 		}
 
-		if (isIgnored(arenaGjennomforing)) {
+		if (isGjennomforingIgnored) {
 			logger.info("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
-			insertTranslation(data, gjennomforingId, isIgnored(arenaGjennomforing))
+			insertTranslation(data, gjennomforingId, true)
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
 			return
 		}
@@ -77,7 +79,7 @@ open class TiltakGjennomforingProcessor(
 			virksomhetsnummer = virksomhetsnummer
 		)
 
-		val translation = insertTranslation(data, gjennomforingId, isIgnored(arenaGjennomforing))
+		val translation = insertTranslation(data, gjennomforingId, isGjennomforingIgnored)
 
 		if (translation.first == Creation.EXISTED) {
 			val digest = getDigest(amtGjennomforing)
