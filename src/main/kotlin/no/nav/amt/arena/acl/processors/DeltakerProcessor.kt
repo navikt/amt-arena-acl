@@ -82,9 +82,12 @@ open class DeltakerProcessor(
 			payload = arenaDeltaker.toAmtDeltaker(amtDeltakerId, gjennomforingInfo.amtId, personIdent)
 		)
 
-		send(amtDeltaker.gjennomforingId, objectMapper.writeValueAsString(amtData))
+		send(amtDeltaker.id, objectMapper.writeValueAsString(amtData))
 		repository.upsert(data.markAsHandled())
-		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Deltaker with id $amtDeltakerId Sent.")
+		logger.info(
+			"[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}]"
+				+ " [Gjennomføring: ${amtDeltaker.gjennomforingId}] Deltaker with id $amtDeltakerId sent"
+		)
 	}
 
 	private fun insertTranslation(
