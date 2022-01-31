@@ -2,9 +2,9 @@ package no.nav.amt.arena.acl.configuration
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
-import no.nav.amt.arena.acl.ArenaMessageProcessorService
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.services.ArenaMessageProcessorService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -67,4 +67,11 @@ open class CronJobs(
 
 			}
 	}
+
+	@Scheduled(cron = "0 0 * * * *") // Hver time
+	open fun deleteIgnoredArenaData() {
+		val rowsDeleted = arenaDataRepository.deleteAllIgnoredData()
+		logger.info("Slettet ignorert data fra arena_data rows=${rowsDeleted}")
+	}
+
 }

@@ -160,6 +160,15 @@ open class ArenaDataRepository(
 			rowMapper
 		)
 	}
+
+	fun deleteAllIgnoredData(): Int {
+		val sql = """
+			DELETE FROM arena_data WHERE ingest_status = 'IGNORED'
+		""".trimIndent()
+
+		return template.update(sql, emptyMap<String, Any>())
+	}
+
 }
 
 private fun ArenaData.asParameterSource() = MapSqlParameterSource().addValues(

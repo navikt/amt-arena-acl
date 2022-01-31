@@ -78,4 +78,49 @@ class ArenaDataRepositoryTest : FunSpec({
 		updated.ingestAttempts shouldBe 1
 		updated.lastAttempted shouldNotBe null
 	}
+
+	test("Should delete all ignored arena data") {
+		val afterData = mapper.readTree("{\"test\": \"test\"}".toByteArray())
+
+		val data1 = ArenaData(
+			arenaTableName = "Table",
+			arenaId = "ARENA_ID",
+			operation = AmtOperation.CREATED,
+			operationPosition = "1",
+			operationTimestamp = LocalDateTime.now(),
+			after = afterData
+		)
+
+		val data2 = ArenaData(
+			arenaTableName = "Table",
+			arenaId = "ARENA_ID",
+			operation = AmtOperation.CREATED,
+			operationPosition = "2",
+			operationTimestamp = LocalDateTime.now(),
+			ingestStatus = IngestStatus.IGNORED,
+			after = afterData
+		)
+
+		val data3 = ArenaData(
+			arenaTableName = "Table",
+			arenaId = "ARENA_ID",
+			operation = AmtOperation.CREATED,
+			operationPosition = "3",
+			operationTimestamp = LocalDateTime.now(),
+			ingestStatus = IngestStatus.IGNORED,
+			after = afterData
+		)
+
+		repository.upsert(data1)
+		repository.upsert(data2)
+		repository.upsert(data3)
+
+		val rowsDeleted = repository.deleteAllIgnoredData()
+
+		val allData = repository.getAll()
+
+		rowsDeleted shouldBe 2
+		allData.size shouldBe 1
+	}
+
 })
