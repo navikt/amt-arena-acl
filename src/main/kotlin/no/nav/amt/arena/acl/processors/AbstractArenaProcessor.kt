@@ -49,7 +49,12 @@ abstract class AbstractArenaProcessor<T>(
 
 		timer.record {
 			try {
-				handleEntry(data)
+				if (data.operation == AmtOperation.DELETED) {
+					logger.error("Implementation for delete elements are not implemented. Cannot handle arena id ${data.arenaId} from table ${data.arenaTableName} at position ${data.operationPosition}.")
+					repository.upsert(data.markAsFailed("Implementation of DELETE is not implemented."))
+				} else {
+					handleEntry(data)
+				}
 			} catch (e: Exception) {
 				if (data.ingestAttempts >= MAX_INGEST_ATTEMPTS) {
 					logger.error("[arena_data_id ${data.id}]: ${e.message}", e)
