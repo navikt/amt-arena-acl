@@ -43,12 +43,14 @@ open class DeltakerProcessor(
 		val gjennomforingInfo = idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, tiltakGjennomforingId)
 
 		if (gjennomforingInfo == null) {
-			logger.debug("Tiltakgjennomføring $tiltakGjennomforingId er ikke håndtert, kan derfor ikke håndtere Deltaker med Arena ID ${arenaDeltaker.TILTAKDELTAKER_ID} enda.")
+			logger.info("Tiltakgjennomføring $tiltakGjennomforingId er ikke håndtert, kan derfor ikke håndtere deltaker med Arena ID ${arenaDeltaker.TILTAKDELTAKER_ID} enda")
 			repository.upsert(data.retry("Tiltakgjennomføring ($tiltakGjennomforingId) er ikke håndtert"))
 			return
+		} else if (gjennomforingInfo.ignored) {
+			logger.info("Deltaker med med id ${arenaDeltaker.TILTAKDELTAKER_ID} er ikke støttet og sendes ikke videre")
+			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
+			return
 		}
-
-		val ignored = gjennomforingInfo.ignored
 
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.PERSON_ID.toString())
 			?: throw IllegalStateException("Expected Person with ArenaId ${arenaDeltaker.PERSON_ID} to exist")
@@ -62,14 +64,7 @@ open class DeltakerProcessor(
 			personIdent = personIdent
 		)
 
-		if (ignored) {
-			logger.debug("Deltaker med med id ${arenaDeltaker.TILTAKDELTAKER_ID} er ikke støttet og sendes ikke videre")
-			insertTranslation(data.arenaTableName, data.arenaId, amtDeltaker, ignored)
-			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
-			return
-		}
-
-		val deltakerInfo = insertTranslation(data.arenaTableName, data.arenaId, amtDeltaker, ignored)
+		val deltakerInfo = insertTranslation(data.arenaTableName, data.arenaId, amtDeltaker)
 
 		if (deltakerInfo.first == Creation.EXISTED) {
 			val digest = getDigest(amtDeltaker)
@@ -87,16 +82,18 @@ open class DeltakerProcessor(
 			payload = arenaDeltaker.toAmtDeltaker(amtDeltakerId, gjennomforingInfo.amtId, personIdent)
 		)
 
-		send(amtDeltaker.gjennomforingId, objectMapper.writeValueAsString(amtData))
+		send(amtDeltaker.id, objectMapper.writeValueAsString(amtData))
 		repository.upsert(data.markAsHandled())
-		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Deltaker with id $amtDeltakerId Sent.")
+		logger.info(
+			"[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}]"
+				+ " [Gjennomføring: ${amtDeltaker.gjennomforingId}] Deltaker with id $amtDeltakerId sent"
+		)
 	}
 
 	private fun insertTranslation(
 		table: String,
 		arenaId: String,
 		deltaker: AmtDeltaker,
-		ignored: Boolean
 	): Pair<Creation, ArenaDataIdTranslation> {
 		val exists = idTranslationRepository.get(table, arenaId)
 
@@ -108,7 +105,7 @@ open class DeltakerProcessor(
 					amtId = deltaker.id,
 					arenaTableName = table,
 					arenaId = arenaId,
-					ignored = ignored,
+					ignored = false,
 					getDigest(deltaker)
 				)
 			)

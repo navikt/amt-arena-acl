@@ -31,7 +31,6 @@ class DeltakerProcessorTest : FunSpec({
 
 	val dataSource = SingletonPostgresContainer.getDataSource()
 
-	val statusConverter = DeltakerStatusConverter(SimpleMeterRegistry())
 	val ordsClient = mock<ArenaOrdsProxyClient> {
 		on { hentFnr(anyString()) } doReturn "01010051234"
 	}

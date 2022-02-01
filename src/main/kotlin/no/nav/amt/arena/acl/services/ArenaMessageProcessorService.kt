@@ -1,14 +1,17 @@
-package no.nav.amt.arena.acl
+package no.nav.amt.arena.acl.services
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
+import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
-import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.processors.TiltakGjennomforingProcessor
+import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.TILTAKGJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -25,35 +28,42 @@ open class ArenaMessageProcessorService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	private val mapper = jacksonObjectMapper()
+
 	companion object {
 		private const val WAIT_MINUTES_BASE = 2
 	}
 
-	fun processMessages() {
-		process(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.NEW))
-		process(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.NEW))
-		process(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.NEW))
+	fun handleArenaGoldenGateRecord(record: ConsumerRecord<String, String>) {
+		val data = mapper.readValue(record.value(), ArenaWrapper::class.java).toArenaData()
+		processEntry(data)
+	}
 
-		process(filterRetry(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.RETRY)))
-		process(filterRetry(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.RETRY)))
-		process(filterRetry(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.RETRY)))
+	fun processMessages() {
+		processBatch(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.NEW))
+		processBatch(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.NEW))
+		processBatch(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.NEW))
+
+		processBatch(filterRetry(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.RETRY)))
+		processBatch(filterRetry(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.RETRY)))
+		processBatch(filterRetry(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.RETRY)))
 	}
 
 	fun processFailedMessages() {
-		process(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.FAILED))
-		process(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.FAILED))
-		process(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.FAILED))
+		processBatch(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.FAILED))
+		processBatch(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.FAILED))
+		processBatch(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.FAILED))
 	}
 
-	private fun process(messages: List<ArenaData>) {
+	private fun processBatch(entries: List<ArenaData>) {
 		val start = Instant.now()
-		messages.forEach {
-			proccessEntry(it)
+		entries.forEach {
+			processEntry(it)
 		}
-		log(start, messages)
+		log(start, entries)
 	}
 
-	private fun proccessEntry(entry: ArenaData) {
+	private fun processEntry(entry: ArenaData) {
 		when (entry.arenaTableName) {
 			TILTAK_TABLE_NAME -> tiltakProcessor.handle(entry)
 			TILTAKGJENNOMFORING_TABLE_NAME -> tiltakGjennomforingProcessor.handle(entry)
