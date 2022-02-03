@@ -21,6 +21,7 @@ import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
+import org.springframework.util.DigestUtils
 import java.util.*
 
 @Component
@@ -41,6 +42,8 @@ open class TiltakGjennomforingProcessor(
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val statusConverter = GjennomforingStatusConverter()
 
+
+
 	override fun handleEntry(data: ArenaData) {
 		val arenaGjennomforing : ArenaTiltakGjennomforing = data.getMainObject()
 
@@ -53,11 +56,9 @@ open class TiltakGjennomforingProcessor(
 		val gjennomforingId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
 			?: UUID.randomUUID()
 
-		val isUnsupportedTiltakType = isUnsupportedTiltakType(arenaGjennomforing)
-
-		if (isUnsupportedTiltakType) {
+		if (isUnsupportedTiltakType(arenaGjennomforing)) {
 			logger.info("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
-			insertTranslation(data, gjennomforingId, true)
+			insertTranslation(data, gjennomforingId, true, gjennomforingId::digest)
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
 			return
 		}
@@ -86,10 +87,10 @@ open class TiltakGjennomforingProcessor(
 			virksomhetsnummer = virksomhetsnummer
 		)
 
-		val translation = insertTranslation(data, gjennomforingId, isUnsupportedTiltakType)
+		val translation = insertTranslation(data, gjennomforingId, false, amtGjennomforing::digest)
 
 		if (translation.first == Creation.EXISTED) {
-			val digest = getDigest(amtGjennomforing)
+			val digest = amtGjennomforing.digest()
 
 			if (translation.second.currentHash == digest) {
 				logger.info("Gjennomføring med kode $gjennomforingId sendes ikke videre fordi det allerede er sendt (Samme hash)")
@@ -116,7 +117,8 @@ open class TiltakGjennomforingProcessor(
 	private fun insertTranslation(
 		data: ArenaData,
 		gjennomforingId: UUID,
-		ignored: Boolean
+		ignored: Boolean,
+		digestor: () -> String
 	): Pair<Creation, ArenaDataIdTranslation> {
 		val exists = idTranslationRepository.get(data.arenaTableName, data.arenaId)
 
@@ -129,7 +131,7 @@ open class TiltakGjennomforingProcessor(
 					arenaTableName = data.arenaTableName,
 					arenaId = data.arenaId,
 					ignored = ignored,
-					getDigest(gjennomforingId)
+					digestor()
 				)
 			)
 
@@ -161,3 +163,5 @@ open class TiltakGjennomforingProcessor(
 	private fun ugyldigGjennomforing(data: ArenaTiltakGjennomforing) =
 		data.ARBGIV_ID_ARRANGOR == null || data.LOKALTNAVN == null
 }
+
+private fun UUID.digest() = DigestUtils.md5DigestAsHex(this.toString().toByteArray())
