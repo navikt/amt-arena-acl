@@ -1,10 +1,10 @@
 package no.nav.amt.arena.acl.repositories
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.dto.LogStatusCountDto
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -15,7 +15,7 @@ open class ArenaDataRepository(
 	private val template: NamedParameterJdbcTemplate,
 ) {
 
-	private val mapper = jacksonObjectMapper()
+	private val mapper = ObjectMapperFactory.get()
 
 	private val rowMapper = RowMapper { rs, _ ->
 		val before = if (rs.getBytes("before") != null)
@@ -182,8 +182,8 @@ private fun ArenaData.asParameterSource() = MapSqlParameterSource().addValues(
 		"ingested_timestamp" to ingestedTimestamp,
 		"ingest_attempts" to ingestAttempts,
 		"last_attempted" to lastAttempted,
-		"before" to if (before != null) jacksonObjectMapper().writeValueAsString(before) else null,
-		"after" to if (after != null) jacksonObjectMapper().writeValueAsString(after) else null,
+		"before" to if (before != null) ObjectMapperFactory.get().writeValueAsString(before) else null,
+		"after" to if (after != null) ObjectMapperFactory.get().writeValueAsString(after) else null,
 		"note" to note
 	)
 )

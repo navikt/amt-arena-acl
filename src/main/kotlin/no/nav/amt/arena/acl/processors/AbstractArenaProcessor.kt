@@ -1,15 +1,13 @@
 package no.nav.amt.arena.acl.processors
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import no.nav.common.kafka.producer.KafkaProducerClient
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
@@ -29,9 +27,7 @@ abstract class AbstractArenaProcessor<T>(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	protected val objectMapper = jacksonObjectMapper()
-		.registerModule(JavaTimeModule())
-		.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+	protected val objectMapper = ObjectMapperFactory.get()
 
 	companion object {
 		private const val MAX_INGEST_ATTEMPTS = 10

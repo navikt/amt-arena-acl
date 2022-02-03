@@ -1,13 +1,12 @@
 package no.nav.amt.arena.acl.processors
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.MapperFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
 import java.time.LocalDate
@@ -103,8 +102,7 @@ private fun createArenaData(
 
 private fun createTiltak(tiltakKode: String, tiltakNavn: String): JsonNode {
 
-	val mapper = jacksonObjectMapper()
-		.configure(MapperFeature.USE_STD_BEAN_NAMING, true)
+	val mapper = ObjectMapperFactory.get()
 
 	return mapper.valueToTree(
 		emptyArenaTiltak().copy(
@@ -128,8 +126,7 @@ private fun createDeltaker(
 ): JsonNode {
 	val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
-	val mapper = jacksonObjectMapper()
-		.configure(MapperFeature.USE_STD_BEAN_NAMING, true)
+	val mapper = ObjectMapperFactory.get()
 
 	return mapper.valueToTree(
 		emptyArenaTiltakDeltaker().copy(

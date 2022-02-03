@@ -2,7 +2,6 @@ package no.nav.amt.arena.acl.repositories
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -11,6 +10,7 @@ import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.time.LocalDateTime
@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 class ArenaDataRepositoryTest : FunSpec({
 
 	val dataSource = SingletonPostgresContainer.getDataSource()
-	val mapper = jacksonObjectMapper()
+	val mapper = ObjectMapperFactory.get()
 
 
 	lateinit var repository: ArenaDataRepository
