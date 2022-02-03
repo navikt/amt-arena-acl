@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.services
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.StringSpec
 import io.mockk.every
@@ -15,6 +14,7 @@ import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.TiltakGjennomforingProcessor
 import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -23,7 +23,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 
 	val dataSource = SingletonPostgresContainer.getDataSource()
 
-	val objectMapper = jacksonObjectMapper()
+	val objectMapper = ObjectMapperFactory.get()
 
 	lateinit var arenaDataRepository: ArenaDataRepository
 

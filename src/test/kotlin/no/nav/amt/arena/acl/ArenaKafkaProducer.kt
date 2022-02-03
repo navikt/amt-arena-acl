@@ -1,8 +1,8 @@
 package no.nav.amt.arena.acl
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import no.nav.common.kafka.util.KafkaPropertiesBuilder
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -24,7 +24,7 @@ class ArenaKafkaProducer {
 	private val kafkaProducer = KafkaProducerClientImpl<String, String>(getKafkaProperties())
 
 	fun send(jsonFilePath: String, topic: String) {
-		val objectMapper = jacksonObjectMapper()
+		val objectMapper = ObjectMapperFactory.get()
 		val jsonFileContent = this::class.java.classLoader.getResource(jsonFilePath).readText()
 
 		val data: List<JsonNode> = objectMapper.readValue(jsonFileContent)

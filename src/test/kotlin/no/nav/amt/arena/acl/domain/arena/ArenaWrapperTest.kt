@@ -1,17 +1,17 @@
 package no.nav.amt.arena.acl.domain.arena
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import java.time.LocalDateTime
 import java.time.Month
 
 class ArenaWrapperTest : FunSpec({
 
 	test("Deserialiser Deltaker (Update)") {
-		val mapper = jacksonObjectMapper()
+		val mapper = ObjectMapperFactory.get()
 		val data = mapper.readValue(deltakerUpdate, ArenaWrapper::class.java)
 
 		data.arenaId shouldBe "6412863"
@@ -27,7 +27,7 @@ class ArenaWrapperTest : FunSpec({
 	}
 
 	test("til ArenaData modell") {
-		val mapper = jacksonObjectMapper()
+		val mapper = ObjectMapperFactory.get()
 
 		val wrapper = mapper.readValue(deltakerUpdate, ArenaWrapper::class.java)
 		val arenaData = wrapper.toArenaData()

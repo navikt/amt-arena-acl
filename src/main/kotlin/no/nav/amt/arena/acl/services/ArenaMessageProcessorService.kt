@@ -1,6 +1,5 @@
 package no.nav.amt.arena.acl.services
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
@@ -8,6 +7,7 @@ import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.TiltakGjennomforingProcessor
 import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import no.nav.amt.arena.acl.utils.TILTAKGJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
@@ -28,7 +28,7 @@ open class ArenaMessageProcessorService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	private val mapper = jacksonObjectMapper()
+	private val mapper = ObjectMapperFactory.get()
 
 	companion object {
 		private const val WAIT_MINUTES_BASE = 2

@@ -3,9 +3,9 @@ package no.nav.amt.arena.acl.domain.arena
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -64,7 +64,7 @@ data class ArenaWrapper(
 	}
 
 	private fun <T> getPayload(clazz: Class<T>): T {
-		val objectMapper = jacksonObjectMapper()
+		val objectMapper = ObjectMapperFactory.get()
 
 		val data = when (operation) {
 			ArenaOperation.I -> after

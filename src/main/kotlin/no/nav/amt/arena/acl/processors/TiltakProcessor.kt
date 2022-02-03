@@ -1,15 +1,13 @@
 package no.nav.amt.arena.acl.processors
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -19,9 +17,7 @@ open class TiltakProcessor(
 	private val repository: TiltakRepository,
 ) {
 
-	private val objectMapper = jacksonObjectMapper()
-		.registerModule(JavaTimeModule())
-		.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+	private val objectMapper = ObjectMapperFactory.get()
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
