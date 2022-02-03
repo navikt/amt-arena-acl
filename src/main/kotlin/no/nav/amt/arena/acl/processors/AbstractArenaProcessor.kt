@@ -1,6 +1,5 @@
 package no.nav.amt.arena.acl.processors
 
-import com.fasterxml.jackson.databind.JsonNode
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.ArenaData
@@ -68,14 +67,6 @@ abstract class AbstractArenaProcessor<T>(
 
 	protected abstract fun handleEntry(data: ArenaData)
 
-	protected fun getMainObject(data: ArenaData): T {
-		return when (data.operation) {
-			AmtOperation.CREATED -> jsonObject(data.after)
-			AmtOperation.MODIFIED -> jsonObject(data.after)
-			AmtOperation.DELETED -> jsonObject(data.before)
-		}
-			?: throw IllegalArgumentException("Expected ${data.arenaTableName} id ${data.arenaId} to have before or after correctly set.")
-	}
 
 	protected fun getDigest(data: Any): String {
 		return DigestUtils.md5DigestAsHex(objectMapper.writeValueAsString(data).toByteArray())
@@ -89,23 +80,6 @@ abstract class AbstractArenaProcessor<T>(
 				data
 			)
 		)
-	}
-
-	private fun jsonObject(node: JsonNode?): T? {
-		if (node == null) {
-			return null
-		}
-
-		return objectMapper.treeToValue(node, clazz)
-	}
-
-
-	protected fun <T> jsonObject(string: String?, clazz: Class<T>): T? {
-		if (string == null) {
-			return null
-		}
-
-		return objectMapper.readValue(string, clazz)
 	}
 
 	protected fun isSupportedTiltak(tiltakskode: String): Boolean {

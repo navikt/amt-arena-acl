@@ -2,6 +2,7 @@ package no.nav.amt.arena.acl.domain
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import java.time.LocalDateTime
 
 enum class IngestStatus {
@@ -28,6 +29,8 @@ data class ArenaData(
 	val note: String? = null
 ) {
 
+	val objectMapper = ObjectMapperFactory.get()
+
 	fun markAsIgnored(reason: String? = null) = this.copy(ingestStatus = IngestStatus.IGNORED, note = reason)
 
 	fun markAsHandled() = this.copy(
@@ -49,4 +52,23 @@ data class ArenaData(
 		lastAttempted = LocalDateTime.now(),
 		note = reason
 	)
+
+	inline fun <reified T> getMainObject(): T {
+		return when (operation) {
+			AmtOperation.CREATED -> jsonObject<T>(after)
+			AmtOperation.MODIFIED -> jsonObject<T>(after)
+			AmtOperation.DELETED -> jsonObject<T>(before)
+		}
+			?: throw IllegalArgumentException("Expected ${arenaTableName} id ${arenaId} to have before or after correctly set.")
+	}
+
+	inline fun <reified T> jsonObject(node: JsonNode?): T? {
+		if (node == null) {
+			return null
+		}
+
+		return objectMapper.treeToValue(node, T::class.java)
+	}
+
+
 }
