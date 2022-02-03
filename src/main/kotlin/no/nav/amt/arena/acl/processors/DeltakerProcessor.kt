@@ -37,7 +37,7 @@ open class DeltakerProcessor(
 	private val statusEndretDatoConverter = DeltakerEndretDatoConverter()
 
 	override fun handleEntry(data: ArenaData) {
-		val arenaDeltaker = getMainObject(data)
+		val arenaDeltaker: ArenaTiltakDeltaker = data.getMainObject()
 		val tiltakGjennomforingId = arenaDeltaker.TILTAKGJENNOMFORING_ID.toString()
 
 		val gjennomforingInfo = idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, tiltakGjennomforingId)

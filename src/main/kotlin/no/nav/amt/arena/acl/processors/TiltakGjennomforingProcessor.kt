@@ -41,7 +41,7 @@ open class TiltakGjennomforingProcessor(
 	private val statusConverter = GjennomforingStatusConverter()
 
 	override fun handleEntry(data: ArenaData) {
-		val arenaGjennomforing = getMainObject(data)
+		val arenaGjennomforing : ArenaTiltakGjennomforing = data.getMainObject()
 
 		val gjennomforingId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
 			?: UUID.randomUUID()
