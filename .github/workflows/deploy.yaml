@@ -1,4 +1,4 @@
-name: Deploy to dev
+name: Deploy application
 on:
   workflow_dispatch: # This workflow can be triggered manually from: https://github.com/navikt/amt-arena-acl/actions/workflows/deploy.yaml
   push:
