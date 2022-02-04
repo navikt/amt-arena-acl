@@ -34,7 +34,8 @@ fun String?.asTime(): LocalTime {
 		return LocalTime.of(hour.toInt(), minutes.toInt())
 	}
 
-	if (this != null) logger.warn("Det er ikke implementert en handler for klokketid, pattern: $this")
+	logger.warn("Det er ikke implementert en handler for klokketid, pattern: $this")
+
 	return LocalTime.MIDNIGHT
 }
 
