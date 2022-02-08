@@ -23,7 +23,7 @@ data class ArenaWrapper(
 	val operation: ArenaOperation,
 
 	@JsonProperty("op_ts")
-	private val operationTimestampString: String,
+	val operationTimestampString: String,
 
 	@JsonProperty("pos")
 	val operationPosition: String,
