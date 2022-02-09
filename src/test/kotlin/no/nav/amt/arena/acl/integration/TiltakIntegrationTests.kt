@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.integration
 
-import io.kotest.matchers.shouldBe
 import no.nav.amt.arena.acl.domain.IngestStatus
+import no.nav.amt.arena.acl.integration.utils.TiltakIntegrationTestInput
 import org.junit.jupiter.api.Test
 import java.util.*
 
@@ -12,30 +12,25 @@ class TiltakIntegrationTests : IntegrationTestBase() {
 		val kode = UUID.randomUUID().toString()
 		val navn = UUID.randomUUID().toString()
 
-		val result = nyttTiltak(kode, navn)
-
-		result.arenaData.ingestStatus shouldBe IngestStatus.HANDLED
-		result.arenaData.arenaId shouldBe kode
-
-		result.tiltak.kode shouldBe kode
-		result.tiltak.navn shouldBe navn
+		tiltak()
+			.nyttTiltak(TiltakIntegrationTestInput(getPosition(), kode, navn))
+			.shouldHaveIngestStatus(IngestStatus.HANDLED)
+			.shouldHaveKode(kode)
+			.shouldHaveNavn(navn)
 	}
 
 	@Test
 	fun oppdaterTiltakOppdatererTiltakIDatabasen() {
 		val kode = UUID.randomUUID().toString()
 		val navn = UUID.randomUUID().toString()
-
-		nyttTiltak(kode, navn)
-
 		val oppdatertNavn = UUID.randomUUID().toString()
-		val updatedResult = oppdaterTiltak(kode, navn, oppdatertNavn)
 
-		updatedResult.arenaData.ingestStatus shouldBe IngestStatus.HANDLED
-		updatedResult.arenaData.arenaId shouldBe kode
-
-		updatedResult.tiltak.kode shouldBe kode
-		updatedResult.tiltak.navn shouldBe oppdatertNavn
+		tiltak()
+			.nyttTiltak(TiltakIntegrationTestInput(getPosition(), kode, navn))
+			.oppdaterTiltak(getPosition(), oppdatertNavn)
+			.shouldHaveIngestStatus(IngestStatus.HANDLED)
+			.shouldHaveKode(kode)
+			.shouldHaveNavn(oppdatertNavn)
 	}
 
 	@Test
@@ -43,14 +38,13 @@ class TiltakIntegrationTests : IntegrationTestBase() {
 		val kode = UUID.randomUUID().toString()
 		val navn = UUID.randomUUID().toString()
 
-		nyttTiltak(kode, navn)
-		val result = slettTiltak(kode, navn)
-
-		result.arenaData.ingestStatus shouldBe IngestStatus.FAILED
-		result.arenaData.note shouldBe "Implementation of DELETE is not implemented."
-
-		result.tiltak.kode shouldBe kode
-		result.tiltak.navn shouldBe navn
+		tiltak()
+			.nyttTiltak(TiltakIntegrationTestInput(getPosition(), kode, navn))
+			.slettTiltak(getPosition())
+			.shouldHaveIngestStatus(IngestStatus.FAILED)
+			.shouldHaveNote("Implementation of DELETE is not implemented.")
+			.shouldHaveKode(kode)
+			.shouldHaveNavn(navn)
 	}
 
 }

@@ -1,7 +1,10 @@
 package no.nav.amt.arena.acl.integration.utils
 
 import com.fasterxml.jackson.databind.JsonNode
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.ArenaData
+import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.arena.ArenaOperation
@@ -17,8 +20,9 @@ import org.junit.jupiter.api.fail
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
-class IntegrationTestTiltakUtils(
+class TiltakIntegrationTestHandler(
 	private val kafkaProducer: KafkaProducerClientImpl<String, String>,
 	private val arenaDataRepository: ArenaDataRepository,
 	private val tiltakRepository: TiltakRepository
@@ -26,6 +30,9 @@ class IntegrationTestTiltakUtils(
 
 	private val topic = "tiltak"
 	private val logger = LoggerFactory.getLogger(javaClass)
+
+	private var currentInput: TiltakIntegrationTestInput? = null
+	private var currentResult: TiltakIntegrationTestResult? = null
 
 	companion object {
 		private const val GENERIC_STRING = "STRING_NOT_SET"
@@ -37,58 +44,90 @@ class IntegrationTestTiltakUtils(
 	}
 
 	fun nyttTiltak(
-		position: Int,
-		kode: String,
-		navn: String
-	): TiltakIntegrationTestResult {
+		input: TiltakIntegrationTestInput
+	): TiltakIntegrationTestHandler {
 		val wrapper = ArenaWrapper(
-			table = "SIAMO.TILTAK",
+			table = TILTAK_TABLE_NAME,
 			operation = ArenaOperation.I,
 			operationTimestampString = LocalDateTime.now().format(opTsFormatter),
-			operationPosition = "$position",
+			operationPosition = input.position,
 			before = null,
-			after = tiltakPayload(kode, navn)
+			after = tiltakPayload(input.kode, input.navn)
 		)
 
-		return sendAndGet(wrapper, kode)
+		currentInput = input
+		currentResult = getResult(wrapper, input.kode)
+
+		return this
 	}
 
 	fun oppdaterTiltak(
-		position: Int,
-		kode: String,
-		gammeltNavn: String,
+		position: String,
 		nyttNavn: String
-	): TiltakIntegrationTestResult {
+	): TiltakIntegrationTestHandler {
+		val i = currentInput ?: throw IllegalStateException("Kan ikke oppdatere tiltak uten først å opprette det")
+
 		val wrapper = ArenaWrapper(
-			table = "SIAMO.TILTAK",
+			table = TILTAK_TABLE_NAME,
 			operation = ArenaOperation.U,
 			operationTimestampString = LocalDateTime.now().format(opTsFormatter),
-			operationPosition = "$position",
-			before = tiltakPayload(kode, gammeltNavn),
-			after = tiltakPayload(kode, nyttNavn)
+			operationPosition = position,
+			before = tiltakPayload(i.kode, i.navn),
+			after = tiltakPayload(i.kode, nyttNavn)
 		)
 
-		return sendAndGet(wrapper, kode)
+		currentInput = i.copy(position = position, navn = nyttNavn)
+		currentResult = getResult(wrapper, i.kode)
+
+		return this
 	}
 
 	fun slettTiltak(
-		position: Int,
-		kode: String,
-		navn: String
-	): TiltakIntegrationTestResult {
+		position: String
+	): TiltakIntegrationTestHandler {
+		val i = currentInput ?: throw IllegalStateException("Kan ikke slette tiltak uten først å opprette det")
+
 		val wrapper = ArenaWrapper(
-			table = "SIAMO.TILTAK",
+			table = TILTAK_TABLE_NAME,
 			operation = ArenaOperation.D,
 			operationTimestampString = LocalDateTime.now().format(opTsFormatter),
-			operationPosition = "$position",
-			before = tiltakPayload(kode, navn),
+			operationPosition = position,
+			before = tiltakPayload(i.kode, i.navn),
 			after = null
 		)
 
-		return sendAndGet(wrapper, kode)
+		currentInput = i.copy(position = position)
+		currentResult = getResult(wrapper, i.kode)
+
+		return this
 	}
 
-	private fun sendAndGet(arenaWrapper: ArenaWrapper, kode: String): TiltakIntegrationTestResult {
+	fun shouldHaveIngestStatus(expected: IngestStatus): TiltakIntegrationTestHandler {
+		currentResult shouldNotBe null
+		currentResult!!.arenaData.ingestStatus shouldBe expected
+		return this
+	}
+
+	fun shouldHaveNote(expected: String): TiltakIntegrationTestHandler {
+		currentResult shouldNotBe null
+		currentResult!!.arenaData.note shouldBe expected
+		return this
+	}
+
+	fun shouldHaveKode(expected: String): TiltakIntegrationTestHandler {
+		currentResult shouldNotBe null
+		currentResult!!.tiltak.kode shouldBe expected
+		return this
+	}
+
+	fun shouldHaveNavn(expected: String): TiltakIntegrationTestHandler {
+		currentResult shouldNotBe null
+		currentResult!!.tiltak.navn shouldBe expected
+		return this
+	}
+
+
+	private fun getResult(arenaWrapper: ArenaWrapper, kode: String): TiltakIntegrationTestResult {
 		kafkaProducer.send(ProducerRecord(topic, objectMapper.writeValueAsString(arenaWrapper)))
 
 		val data = getArenaData(arenaWrapper.operation.toAmtOperation(), arenaWrapper.operationPosition)
@@ -170,6 +209,12 @@ class IntegrationTestTiltakUtils(
 	}
 
 }
+
+data class TiltakIntegrationTestInput(
+	val position: String,
+	val kode: String,
+	val navn: String = UUID.randomUUID().toString()
+)
 
 data class TiltakIntegrationTestResult(
 	val arenaData: ArenaData,

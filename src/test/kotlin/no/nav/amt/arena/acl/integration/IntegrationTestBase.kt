@@ -2,10 +2,8 @@ package no.nav.amt.arena.acl.integration
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.integration.kafka.SingletonKafkaProvider
-import no.nav.amt.arena.acl.integration.utils.IntegrationTestTiltakUtils
-import no.nav.amt.arena.acl.integration.utils.TiltakIntegrationTestResult
+import no.nav.amt.arena.acl.integration.utils.TiltakIntegrationTestHandler
 import no.nav.amt.arena.acl.kafka.KafkaProperties
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
@@ -45,31 +43,16 @@ abstract class IntegrationTestBase {
 		private var position = 0
 	}
 
-	fun nyttTiltak(kode: String, name: String): TiltakIntegrationTestResult {
-		return IntegrationTestTiltakUtils(
-			kafkaProducerClientImpl,
-			arenaDataRepository,
-			tiltakRepository
-		)
-			.nyttTiltak(position++, kode, name)
+	fun getPosition(): String {
+		return "${position++}"
 	}
 
-	fun oppdaterTiltak(kode: String, gammeltNavn: String, nyttNavn: String): TiltakIntegrationTestResult {
-		return IntegrationTestTiltakUtils(
+	fun tiltak(): TiltakIntegrationTestHandler {
+		return TiltakIntegrationTestHandler(
 			kafkaProducerClientImpl,
 			arenaDataRepository,
 			tiltakRepository
 		)
-			.oppdaterTiltak(position++, kode, gammeltNavn, nyttNavn)
-	}
-
-	fun slettTiltak(kode: String, navn: String): TiltakIntegrationTestResult {
-		return IntegrationTestTiltakUtils(
-			kafkaProducerClientImpl,
-			arenaDataRepository,
-			tiltakRepository
-		)
-			.slettTiltak(position++, kode, navn)
 	}
 }
 
