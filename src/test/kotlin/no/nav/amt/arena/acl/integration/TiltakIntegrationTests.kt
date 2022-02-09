@@ -27,6 +27,7 @@ class TiltakIntegrationTests : IntegrationTestBase() {
 
 		tiltak()
 			.nyttTiltak(TiltakIntegrationTestInput(getPosition(), kode, navn))
+			.shouldHaveIngestStatus(IngestStatus.HANDLED)
 			.oppdaterTiltak(getPosition(), oppdatertNavn)
 			.shouldHaveIngestStatus(IngestStatus.HANDLED)
 			.shouldHaveKode(kode)
@@ -40,6 +41,7 @@ class TiltakIntegrationTests : IntegrationTestBase() {
 
 		tiltak()
 			.nyttTiltak(TiltakIntegrationTestInput(getPosition(), kode, navn))
+			.shouldHaveIngestStatus(IngestStatus.HANDLED)
 			.slettTiltak(getPosition())
 			.shouldHaveIngestStatus(IngestStatus.FAILED)
 			.shouldHaveNote("Implementation of DELETE is not implemented.")

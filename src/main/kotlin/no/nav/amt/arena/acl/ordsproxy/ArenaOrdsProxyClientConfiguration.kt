@@ -5,7 +5,9 @@ import no.nav.amt.arena.acl.ordsproxy.token_provider.ScopedTokenProvider
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 
+@Profile("default")
 @Configuration
 open class ArenaOrdsProxyClientConfiguration {
 

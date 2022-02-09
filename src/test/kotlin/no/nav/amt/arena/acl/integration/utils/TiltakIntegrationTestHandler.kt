@@ -31,8 +31,8 @@ class TiltakIntegrationTestHandler(
 	private val topic = "tiltak"
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	private var currentInput: TiltakIntegrationTestInput? = null
-	private var currentResult: TiltakIntegrationTestResult? = null
+	var currentInput: TiltakIntegrationTestInput? = null
+	var currentResult: TiltakIntegrationTestResult? = null
 
 	companion object {
 		private const val GENERIC_STRING = "STRING_NOT_SET"
@@ -212,7 +212,7 @@ class TiltakIntegrationTestHandler(
 
 data class TiltakIntegrationTestInput(
 	val position: String,
-	val kode: String,
+	val kode: String = "INDOPPFAG",
 	val navn: String = UUID.randomUUID().toString()
 )
 

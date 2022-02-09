@@ -1,10 +1,13 @@
 package no.nav.amt.arena.acl.integration
 
+import ArenaOrdsProxyClient
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.amt.arena.acl.integration.kafka.SingletonKafkaProvider
+import no.nav.amt.arena.acl.integration.utils.GjennomforingIntegrationTestHandler
 import no.nav.amt.arena.acl.integration.utils.TiltakIntegrationTestHandler
 import no.nav.amt.arena.acl.kafka.KafkaProperties
+import no.nav.amt.arena.acl.ordsproxy.Arbeidsgiver
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
@@ -21,6 +24,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import javax.sql.DataSource
+
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -54,10 +58,18 @@ abstract class IntegrationTestBase {
 			tiltakRepository
 		)
 	}
+
+	fun gjennomforing(): GjennomforingIntegrationTestHandler {
+		return GjennomforingIntegrationTestHandler(
+			kafkaProducerClientImpl,
+			arenaDataRepository
+		)
+	}
 }
 
 @TestConfiguration
-open class IntegrationTestConfiguration {
+open class IntegrationTestConfiguration(
+) {
 	private val log = LoggerFactory.getLogger(this::class.java)
 	private val postgresDockerImageName = "postgres:12-alpine"
 
@@ -69,6 +81,27 @@ open class IntegrationTestConfiguration {
 	@Bean
 	open fun kafkaProperties(): KafkaProperties {
 		return SingletonKafkaProvider.getKafkaProperties()
+	}
+
+	//TODO Should be a WireMock instead
+	@Bean
+	open fun ordsProxyClient(): ArenaOrdsProxyClient {
+
+		return object : ArenaOrdsProxyClient {
+			override fun hentFnr(arenaPersonId: String): String? {
+				return "12345"
+			}
+
+			override fun hentArbeidsgiver(arenaArbeidsgiverId: String): Arbeidsgiver? {
+				return Arbeidsgiver("12345", "56789")
+			}
+
+			override fun hentVirksomhetsnummer(arenaArbeidsgiverId: String): String {
+				return "12345"
+			}
+
+		}
+
 	}
 
 	private var postgresContainer: PostgreSQLContainer<Nothing>? = null
