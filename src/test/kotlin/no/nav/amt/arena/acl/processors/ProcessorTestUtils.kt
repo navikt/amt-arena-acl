@@ -54,25 +54,29 @@ fun createNewDeltakerArenaData(
 	statusEndringDato: LocalDate? = null,
 	dagerPerUke: Int? = null,
 	prosentDeltid: Float = 0.0f,
-	registrertDato: LocalDateTime = LocalDateTime.now()
+	registrertDato: LocalDateTime = LocalDateTime.now(),
+	operation: AmtOperation = AmtOperation.CREATED
 ): ArenaData {
+	val deltaker = createDeltaker(
+		tiltakGjennomforingArenaId = tiltakGjennomforingArenaId,
+		deltakerArenaId = deltakerArenaId,
+		arenaPersonId = arenaPersonId,
+		oppstartDato = oppstartDato,
+		sluttDato = sluttDato,
+		deltakerStatusKode = deltakerStatusKode,
+		statusEndringDato = statusEndringDato,
+		dagerPerUke = dagerPerUke,
+		prosentDeltid = prosentDeltid,
+		registrertDato = registrertDato
+	)
+
 	return createArenaData(
 		position = position,
 		table = TILTAK_DELTAKER_TABLE_NAME,
-		operation = AmtOperation.CREATED,
+		operation = operation,
 		arenaId = deltakerArenaId.toString(),
-		after = createDeltaker(
-			tiltakGjennomforingArenaId = tiltakGjennomforingArenaId,
-			deltakerArenaId = deltakerArenaId,
-			arenaPersonId = arenaPersonId,
-			oppstartDato = oppstartDato,
-			sluttDato = sluttDato,
-			deltakerStatusKode = deltakerStatusKode,
-			statusEndringDato = statusEndringDato,
-			dagerPerUke = dagerPerUke,
-			prosentDeltid = prosentDeltid,
-			registrertDato = registrertDato
-		)
+		after = if (operation != AmtOperation.DELETED) deltaker else null,
+		before = if (operation != AmtOperation.CREATED) deltaker else null
 	)
 }
 
