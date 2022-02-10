@@ -4,12 +4,20 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 private typealias ConversionStrategy = (StatusDates) -> AmtDeltaker.Status
 
 open class DeltakerStatusConverter(
 	private val meterRegistry: MeterRegistry
 ) {
+
+	private val kanskjeFeilregistrert: ConversionStrategy = {
+		if (it.statusEndretSammeDagSomRegistrering())
+			AmtDeltaker.Status.FEILREGISTRERT
+		else
+			AmtDeltaker.Status.IKKE_AKTUELL
+	}
 
 	private val alltidIkkeAktuell: ConversionStrategy = {
 		AmtDeltaker.Status.IKKE_AKTUELL
@@ -31,7 +39,6 @@ open class DeltakerStatusConverter(
 	}
 
 	private val alleStatuser: Map<String, ConversionStrategy> = mapOf(
-
 		"DELAVB" to avsluttendeStatus, // Deltakelse avbrutt
 		"FULLF" to avsluttendeStatus, // Fullført
 		"GJENN_AVB" to avsluttendeStatus, // Gjennomføring avbrutt
@@ -45,20 +52,22 @@ open class DeltakerStatusConverter(
 		"AKTUELL" to gjennomforendeStatus, // Aktuell
 		"TILBUD" to gjennomforendeStatus, // Godkjent tiltaksplass
 
-		"IKKAKTUELL" to alltidIkkeAktuell, // Ikke aktuell
+		"IKKAKTUELL" to kanskjeFeilregistrert, // Ikke aktuell
 		"AVSLAG" to alltidIkkeAktuell, // Fått avslag
 		"NEITAKK" to alltidIkkeAktuell, // Takket nei til tilbud
 	)
 
 	internal fun convert(
 		deltakerStatusCode: String?,
+		deltakerRegistrertDato: LocalDateTime?,
 		startDato: LocalDate?,
 		sluttDato: LocalDate?,
 		datoStatusEndring: LocalDate?
 	): AmtDeltaker.Status {
 		requireNotNull(deltakerStatusCode) { "deltakerStatsKode kan ikke være null" }
+		requireNotNull(deltakerRegistrertDato) { "deltakerRegistrertDato kan ikke være null" }
 
-		return alleStatuser.getValue(deltakerStatusCode)(StatusDates(startDato, sluttDato, datoStatusEndring))
+		return alleStatuser.getValue(deltakerStatusCode)(StatusDates(startDato, sluttDato, datoStatusEndring, deltakerRegistrertDato))
 			.also {
 				meterRegistry.counter(
 					"amt.arena-acl.deltaker.status",
@@ -72,9 +81,11 @@ open class DeltakerStatusConverter(
 private data class StatusDates(
 	private val start: LocalDate?,
 	private val end: LocalDate?,
-	private val datoStatusEndring: LocalDate?
+	private val datoStatusEndring: LocalDate?,
+	private val deltakerRegistrertDato: LocalDateTime
 ) {
 
+	fun statusEndretSammeDagSomRegistrering() = datoStatusEndring != null && datoStatusEndring == deltakerRegistrertDato.toLocalDate()
 	fun startDatoPassert() = start?.isBefore(LocalDate.now()) ?: false
 	fun sluttDatoPassert() = end?.isBefore(LocalDate.now()) ?: false
 	fun endretEtterStartDato() = start != null && datoStatusEndring?.isAfter(start) ?: false
