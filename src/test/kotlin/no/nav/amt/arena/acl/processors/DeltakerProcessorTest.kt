@@ -182,6 +182,22 @@ class DeltakerProcessorTest : FunSpec({
 
 		getAndCheckArenaDataRepositoryEntry(AmtOperation.CREATED, position, IngestStatus.IGNORED)
 	}
+
+	test("Should process deleted deltaker") {
+		val position = UUID.randomUUID().toString()
+
+		deltakerProcessor.handle(
+			createNewDeltakerArenaData(
+				position = position,
+				tiltakGjennomforingArenaId = nonIgnoredGjennomforingArenaId,
+				deltakerArenaId = 1L,
+				operation = AmtOperation.DELETED
+			)
+		)
+
+		getAndCheckArenaDataRepositoryEntry(AmtOperation.DELETED, position, IngestStatus.HANDLED)
+	}
+
 })
 
 

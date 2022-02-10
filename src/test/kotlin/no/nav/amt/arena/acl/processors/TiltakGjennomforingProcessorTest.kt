@@ -131,6 +131,28 @@ class TiltakGjennomforingProcessorTest {
 
 	}
 
+	@Test
+	fun `handleEntry() - operation type delete - legges til i failed liste`() {
+		val arenaId = "1234567"
+		val opPos = "11223344"
+
+		val arenaData = ArenaData(
+			arenaTableName =  TILTAKGJENNOMFORING_TABLE_NAME,
+			arenaId =  arenaId,
+			operation =  AmtOperation.DELETED,
+			operationPosition =  opPos,
+			operationTimestamp =  LocalDateTime.now(),
+			before = arenaGjennomforingJson,
+		)
+
+		gjennomforingProcessor.handle(arenaData)
+
+		val translationData = translationRepository.get(arenaData.arenaTableName, arenaData.arenaId)
+		translationData shouldBe null
+
+		repository.get(arenaData.arenaTableName, AmtOperation.DELETED, opPos).ingestStatus shouldBe IngestStatus.FAILED
+	}
+
 	val arenaGjennomforingUgyldigJson = mapper.readTree("""
 		{
 		  "TILTAKGJENNOMFORING_ID": 3728063,
