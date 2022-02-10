@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.processors
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
@@ -44,12 +43,7 @@ abstract class AbstractArenaProcessor<T>(
 
 		timer.record {
 			try {
-				if (data.operation == AmtOperation.DELETED) {
-					logger.error("Implementation for delete elements are not implemented. Cannot handle arena id ${data.arenaId} from table ${data.arenaTableName} at position ${data.operationPosition}.")
-					repository.upsert(data.markAsFailed("Implementation of DELETE is not implemented."))
-				} else {
-					handleEntry(data)
-				}
+				handleEntry(data)
 			} catch (e: Exception) {
 				if (data.ingestAttempts >= MAX_INGEST_ATTEMPTS) {
 					logger.error("[arena_data_id ${data.id}]: ${e.message}", e)

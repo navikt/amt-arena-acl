@@ -59,7 +59,7 @@ data class ArenaData(
 			AmtOperation.MODIFIED -> jsonObject<T>(after)
 			AmtOperation.DELETED -> jsonObject<T>(before)
 		}
-			?: throw IllegalArgumentException("Expected ${arenaTableName} id ${arenaId} to have before or after correctly set.")
+			?: throw IllegalArgumentException("Expected $arenaTableName id $arenaId to have before or after correctly set")
 	}
 
 	inline fun <reified T> jsonObject(node: JsonNode?): T? {

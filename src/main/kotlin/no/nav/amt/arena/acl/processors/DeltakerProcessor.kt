@@ -122,6 +122,8 @@ open class DeltakerProcessor(
 		gjennomforingId: UUID,
 		personIdent: String
 	): AmtDeltaker {
+		val registrertDato = REG_DATO.asLocalDateTime()
+
 		return AmtDeltaker(
 			id = amtDeltakerId,
 			gjennomforingId = gjennomforingId,
@@ -129,14 +131,15 @@ open class DeltakerProcessor(
 			startDato = DATO_FRA?.asLocalDate(),
 			sluttDato = DATO_TIL?.asLocalDate(),
 			status = statusConverter.convert(
-				DELTAKERSTATUSKODE,
-				DATO_FRA?.asLocalDate(),
-				DATO_TIL?.asLocalDate(),
-				DATO_STATUSENDRING?.asLocalDate()
+				deltakerStatusCode = DELTAKERSTATUSKODE,
+				deltakerRegistrertDato = registrertDato,
+				startDato = DATO_FRA?.asLocalDate(),
+				sluttDato = DATO_TIL?.asLocalDate(),
+				datoStatusEndring = DATO_STATUSENDRING?.asLocalDate()
 			),
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
-			registrertDato = REG_DATO.asLocalDateTime(),
+			registrertDato = registrertDato,
 			statusEndretDato = statusEndretDatoConverter.convert(
 				deltakerStatus = DELTAKERSTATUSKODE,
 				datoStatusEndring = DATO_STATUSENDRING?.asLocalDateTime(),
