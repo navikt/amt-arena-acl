@@ -8,6 +8,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
 import javax.sql.DataSource
+import kotlin.math.hypot
 
 object SingletonPostgresContainer {
 

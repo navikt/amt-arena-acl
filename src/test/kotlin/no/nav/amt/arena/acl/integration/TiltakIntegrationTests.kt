@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.integration
 
+import io.kotest.matchers.shouldBe
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.integration.utils.TiltakIntegrationTestInput
 import org.junit.jupiter.api.Test
@@ -14,9 +15,9 @@ class TiltakIntegrationTests : IntegrationTestBase() {
 
 		tiltak()
 			.nyttTiltak(TiltakIntegrationTestInput(getPosition(), kode, navn))
-			.shouldHaveIngestStatus(IngestStatus.HANDLED)
-			.shouldHaveKode(kode)
-			.shouldHaveNavn(navn)
+			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
+			.tiltak { data, currentInput -> data.kode shouldBe currentInput.kode }
+			.tiltak { data, currentInput -> data.navn shouldBe currentInput.navn }
 	}
 
 	@Test
@@ -27,11 +28,11 @@ class TiltakIntegrationTests : IntegrationTestBase() {
 
 		tiltak()
 			.nyttTiltak(TiltakIntegrationTestInput(getPosition(), kode, navn))
-			.shouldHaveIngestStatus(IngestStatus.HANDLED)
+			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
 			.oppdaterTiltak(getPosition(), oppdatertNavn)
-			.shouldHaveIngestStatus(IngestStatus.HANDLED)
-			.shouldHaveKode(kode)
-			.shouldHaveNavn(oppdatertNavn)
+			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
+			.tiltak { data, currentInput -> data.kode shouldBe currentInput.kode }
+			.tiltak { data, currentInput -> data.navn shouldBe currentInput.navn }
 	}
 
 	@Test
@@ -41,12 +42,12 @@ class TiltakIntegrationTests : IntegrationTestBase() {
 
 		tiltak()
 			.nyttTiltak(TiltakIntegrationTestInput(getPosition(), kode, navn))
-			.shouldHaveIngestStatus(IngestStatus.HANDLED)
+			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
 			.slettTiltak(getPosition())
-			.shouldHaveIngestStatus(IngestStatus.FAILED)
-			.shouldHaveNote("Implementation of DELETE is not implemented.")
-			.shouldHaveKode(kode)
-			.shouldHaveNavn(navn)
+			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.FAILED }
+			.arenaData { data, _ -> data.note shouldBe "Implementation of DELETE is not implemented." }
+			.tiltak { data, _ -> data.kode shouldBe kode }
+			.tiltak { data, _ -> data.navn shouldBe navn }
 	}
 
 }

@@ -15,7 +15,6 @@ import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -23,11 +22,8 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit4.SpringRunner
 import javax.sql.DataSource
 
-
-@RunWith(SpringRunner::class)
 @SpringBootTest
 @Import(IntegrationTestConfiguration::class)
 @ActiveProfiles("integration")
@@ -64,6 +60,7 @@ abstract class IntegrationTestBase {
 	@AfterEach
 	fun cleanup() {
 		KafkaAmtIntegrationConsumer.reset()
+		tiltakRepository.invalidateCache()
 	}
 
 	fun getPosition(): String {

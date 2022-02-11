@@ -1,5 +1,7 @@
 package no.nav.amt.arena.acl.integration
 
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.integration.utils.GjennomforingIntegrationTestInput
@@ -21,7 +23,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 					position = getPosition(),
 				)
 			)
-			.shouldHaveIngestStatus(IngestStatus.HANDLED)
+			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
 
 		gjennomforing()
 			.nyGjennomforing(
@@ -30,9 +32,28 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 					gjennomforingId = gjennomforingId
 				)
 			)
-			.shouldHaveIngestStatus(IngestStatus.HANDLED)
-			.outputShouldHaveOperation(AmtOperation.CREATED)
-			.validateOutput()
+			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
+			.output { data, _ -> data.operation shouldBe AmtOperation.CREATED }
+			.result { result, _ -> result.translation!!.amtId shouldBe result.output!!.payload!!.id }
+	}
+
+	@Test
+	fun tiltakKommerEtterGjennomforingBlirSendtVedNesteJobb() {
+		val gjennomforingId = Random().nextLong()
+
+		gjennomforing()
+			.nyGjennomforing(
+				GjennomforingIntegrationTestInput(
+					position = getPosition(),
+					gjennomforingId = gjennomforingId
+				)
+			)
+			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.RETRY }
+			.arenaData { data, _ -> data.ingestAttempts shouldBe 1 }
+			.arenaData { data, _ -> data.lastAttempted shouldNotBe null }
+			.shouldNotHaveTranslation()
+			.shouldNotHaveOutput()
+
 	}
 
 }

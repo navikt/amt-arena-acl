@@ -102,30 +102,23 @@ class TiltakIntegrationTestHandler(
 		return this
 	}
 
-	fun shouldHaveIngestStatus(expected: IngestStatus): TiltakIntegrationTestHandler {
+	fun arenaData(check: (data: ArenaData, currentInput: TiltakIntegrationTestInput) -> Unit): TiltakIntegrationTestHandler {
 		currentResult shouldNotBe null
-		currentResult!!.arenaData.ingestStatus shouldBe expected
+		currentResult!!.arenaData shouldNotBe null
+		currentInput shouldNotBe null
+		check.invoke(currentResult!!.arenaData, currentInput!!)
+
 		return this
 	}
 
-	fun shouldHaveNote(expected: String): TiltakIntegrationTestHandler {
+	fun tiltak(check:(data: AmtTiltak, currentInput: TiltakIntegrationTestInput) -> Unit): TiltakIntegrationTestHandler {
 		currentResult shouldNotBe null
-		currentResult!!.arenaData.note shouldBe expected
+		currentResult!!.tiltak shouldNotBe null
+		currentInput shouldNotBe null
+		check.invoke(currentResult!!.tiltak, currentInput!!)
+
 		return this
 	}
-
-	fun shouldHaveKode(expected: String): TiltakIntegrationTestHandler {
-		currentResult shouldNotBe null
-		currentResult!!.tiltak.kode shouldBe expected
-		return this
-	}
-
-	fun shouldHaveNavn(expected: String): TiltakIntegrationTestHandler {
-		currentResult shouldNotBe null
-		currentResult!!.tiltak.navn shouldBe expected
-		return this
-	}
-
 
 	private fun getResult(arenaWrapper: ArenaWrapper, kode: String): TiltakIntegrationTestResult {
 		kafkaProducer.send(ProducerRecord(topic, objectMapper.writeValueAsString(arenaWrapper)))

@@ -5,7 +5,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
-import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
@@ -77,28 +76,52 @@ class GjennomforingIntegrationTestHandler(
 		return this
 	}
 
-	fun shouldHaveIngestStatus(expected: IngestStatus): GjennomforingIntegrationTestHandler {
+	fun result(check: (result: GjennomforingIntegrationTestResult, currentInput: GjennomforingIntegrationTestInput) -> Unit): GjennomforingIntegrationTestHandler {
 		currentResult shouldNotBe null
-		currentResult!!.arenaData.ingestStatus shouldBe expected
+		currentInput shouldNotBe null
+		check.invoke(currentResult!!, currentInput!!)
+
 		return this
 	}
 
-	fun outputShouldHaveOperation(expected: AmtOperation): GjennomforingIntegrationTestHandler {
+	fun arenaData(check: (data: ArenaData, currentInput: GjennomforingIntegrationTestInput) -> Unit): GjennomforingIntegrationTestHandler {
 		currentResult shouldNotBe null
-		currentResult!!.output shouldNotBe null
-		currentResult!!.output!!.operation shouldBe expected
+		currentResult!!.arenaData shouldNotBe null
+		currentInput shouldNotBe null
+		check.invoke(currentResult!!.arenaData, currentInput!!)
+
 		return this
 	}
 
-	fun validateOutput(): GjennomforingIntegrationTestHandler {
+	fun translation(check: (data: ArenaDataIdTranslation, currentInput: GjennomforingIntegrationTestInput) -> Unit): GjennomforingIntegrationTestHandler {
 		currentResult shouldNotBe null
-		currentResult!!.output shouldNotBe null
 		currentResult!!.translation shouldNotBe null
+		currentInput shouldNotBe null
+		check.invoke(currentResult!!.translation!!, currentInput!!)
 
-		val output = currentResult!!.output!!.payload!!
-		output.id shouldBe currentResult!!.translation!!.amtId
-		output.navn shouldBe currentInput!!.navn
-		output.tiltak.kode shouldBe currentInput!!.tiltakKode
+		return this
+	}
+
+	fun output(check: (data: AmtWrapper<AmtGjennomforing>, currentInput: GjennomforingIntegrationTestInput) -> Unit): GjennomforingIntegrationTestHandler {
+		currentResult shouldNotBe null
+		currentResult!!.output shouldNotBe null
+		currentInput shouldNotBe null
+		check.invoke(currentResult!!.output!!, currentInput!!)
+
+		return this
+	}
+
+	fun shouldNotHaveTranslation(): GjennomforingIntegrationTestHandler {
+		currentResult shouldNotBe null
+		currentResult!!.translation shouldBe null
+
+		return this
+	}
+
+	fun shouldNotHaveOutput(): GjennomforingIntegrationTestHandler {
+		currentResult shouldNotBe null
+		currentResult!!.output shouldBe null
+
 		return this
 	}
 

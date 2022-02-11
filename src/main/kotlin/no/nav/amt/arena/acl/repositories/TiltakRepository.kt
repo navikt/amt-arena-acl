@@ -59,16 +59,6 @@ open class TiltakRepository(
 			?: throw NoSuchElementException("Tiltak med kode $kode kan ikke hentes fra databasen.")
 	}
 
-	fun delete(kode: String) {
-		val sql = """
-			DELETE FROM arena_tiltak
-			WHERE kode = :kode
-		""".trimIndent()
-
-		template.update(sql, singletonParameterMap("kode", kode))
-		cache.invalidate(kode)
-	}
-
 	fun getByKode(kode: String): AmtTiltak? {
 		val cachedTiltak = cache.getIfPresent(kode)
 
@@ -93,6 +83,11 @@ open class TiltakRepository(
 
 	fun getCache(): Cache<String, AmtTiltak> {
 		return cache
+	}
+
+	//TODO Burde flytte cache ut i egen komponent. Brukes kun i integrasjonstest grunnet dårlig sletting av database
+	internal fun invalidateCache() {
+		cache.invalidateAll()
 	}
 
 
