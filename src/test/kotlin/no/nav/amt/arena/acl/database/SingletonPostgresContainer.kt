@@ -17,14 +17,8 @@ object SingletonPostgresContainer {
 
 	private var postgresContainer: PostgreSQLContainer<Nothing>? = null
 
-	private var containerDataSource: DataSource? = null
-
 	fun getDataSource(): DataSource {
-		if (containerDataSource == null) {
-			containerDataSource = createDataSource(getContainer())
-		}
-
-		return containerDataSource!!
+		return createDataSource(getContainer())
 	}
 
 	private fun getContainer(): PostgreSQLContainer<Nothing> {

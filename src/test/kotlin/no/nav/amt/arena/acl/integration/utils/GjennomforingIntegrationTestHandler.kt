@@ -1,11 +1,19 @@
 package no.nav.amt.arena.acl.integration.utils
 
 import com.fasterxml.jackson.databind.JsonNode
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.ArenaData
+import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
+import no.nav.amt.arena.acl.domain.IngestStatus
+import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaOperation
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakGjennomforing
 import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
+import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
+import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import no.nav.amt.arena.acl.utils.TILTAKGJENNOMFORING_TABLE_NAME
@@ -22,6 +30,7 @@ import java.util.*
 class GjennomforingIntegrationTestHandler(
 	private val kafkaProducer: KafkaProducerClientImpl<String, String>,
 	private val arenaDataRepository: ArenaDataRepository,
+	private val translationRepository: ArenaDataIdTranslationRepository
 ) {
 
 	private val topic = "gjennomforing"
@@ -30,6 +39,16 @@ class GjennomforingIntegrationTestHandler(
 	var currentInput: GjennomforingIntegrationTestInput? = null
 	var currentResult: GjennomforingIntegrationTestResult? = null
 
+	val outputMessages = mutableListOf<AmtWrapper<AmtGjennomforing>>()
+
+	init {
+		setupMessageReader()
+	}
+
+	private fun setupMessageReader() {
+		KafkaAmtIntegrationConsumer.subscribeGjennomforing { outputMessages.add(it) }
+	}
+
 	companion object {
 		private const val GENERIC_STRING = "STRING_NOT_SET"
 		private const val GENERIC_INT = Int.MIN_VALUE
@@ -37,7 +56,7 @@ class GjennomforingIntegrationTestHandler(
 		private const val GENERIC_FLOAT = Float.MIN_VALUE
 
 		private val opTsFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
-		private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+		private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
 		val objectMapper = ObjectMapperFactory.get()
 	}
@@ -58,6 +77,31 @@ class GjennomforingIntegrationTestHandler(
 		return this
 	}
 
+	fun shouldHaveIngestStatus(expected: IngestStatus): GjennomforingIntegrationTestHandler {
+		currentResult shouldNotBe null
+		currentResult!!.arenaData.ingestStatus shouldBe expected
+		return this
+	}
+
+	fun outputShouldHaveOperation(expected: AmtOperation): GjennomforingIntegrationTestHandler {
+		currentResult shouldNotBe null
+		currentResult!!.output shouldNotBe null
+		currentResult!!.output!!.operation shouldBe expected
+		return this
+	}
+
+	fun validateOutput(): GjennomforingIntegrationTestHandler {
+		currentResult shouldNotBe null
+		currentResult!!.output shouldNotBe null
+		currentResult!!.translation shouldNotBe null
+
+		val output = currentResult!!.output!!.payload!!
+		output.id shouldBe currentResult!!.translation!!.amtId
+		output.navn shouldBe currentInput!!.navn
+		output.tiltak.kode shouldBe currentInput!!.tiltakKode
+		return this
+	}
+
 	private fun gjennomforingPayload(input: GjennomforingIntegrationTestInput): JsonNode {
 		val data = ArenaTiltakGjennomforing(
 			TILTAKGJENNOMFORING_ID = input.gjennomforingId,
@@ -65,8 +109,8 @@ class GjennomforingIntegrationTestHandler(
 			TILTAKSKODE = input.tiltakKode,
 			ANTALL_DELTAKERE = GENERIC_INT,
 			ANTALL_VARIGHET = GENERIC_INT,
-			DATO_FRA = dateFormatter.format(input.startDato),
-			DATO_TIL = dateFormatter.format(input.sluttDato),
+			DATO_FRA = dateFormatter.format(input.startDato.atStartOfDay()),
+			DATO_TIL = dateFormatter.format(input.sluttDato.atStartOfDay()),
 			FAGPLANKODE = GENERIC_STRING,
 			MAALEENHET_VARIGHET = GENERIC_STRING,
 			TEKST_FAGBESKRIVELSE = GENERIC_STRING,
@@ -83,8 +127,8 @@ class GjennomforingIntegrationTestHandler(
 			KOMMENTAR = GENERIC_STRING,
 			ARBGIV_ID_ARRANGOR = input.arbeidsgiverIdArrangor,
 			PROFILELEMENT_ID_GEOGRAFI = GENERIC_STRING,
-			KLOKKETID_FREMMOTE = GENERIC_STRING,
-			DATO_FREMMOTE = GENERIC_STRING,
+			KLOKKETID_FREMMOTE = null,
+			DATO_FREMMOTE = dateFormatter.format(LocalDateTime.now()),
 			BEGRUNNELSE_STATUS = GENERIC_STRING,
 			AVTALE_ID = GENERIC_LONG,
 			AKTIVITET_ID = GENERIC_LONG,
@@ -113,10 +157,14 @@ class GjennomforingIntegrationTestHandler(
 			)
 		)
 
-		val data = getArenaData(arenaWrapper.operation.toAmtOperation(), arenaWrapper.operationPosition)
+		val arenaData = getArenaData(arenaWrapper.operation.toAmtOperation(), arenaWrapper.operationPosition)
+		val translation = getTranslation(arenaData.arenaId)
+		val message = if (translation != null) getOutputMessage(translation.amtId) else null
 
 		return GjennomforingIntegrationTestResult(
-			data
+			arenaData,
+			translation,
+			message
 		)
 	}
 
@@ -148,6 +196,39 @@ class GjennomforingIntegrationTestHandler(
 		fail("Could not find Arena data in table $tableName with operation $operation and position $position")
 	}
 
+	private fun getTranslation(arenaId: String): ArenaDataIdTranslation? {
+		val tableName = TILTAKGJENNOMFORING_TABLE_NAME
+		var attempts = 0
+		while (attempts < 5) {
+			val data = translationRepository.get(tableName, arenaId)
+
+			if (data != null) {
+				return data
+			}
+
+			Thread.sleep(250)
+			attempts++
+		}
+
+		return null
+	}
+
+	private fun getOutputMessage(id: UUID): AmtWrapper<AmtGjennomforing>? {
+		var attempts = 0
+		while (attempts < 5) {
+			val data = outputMessages.firstOrNull { it.payload != null && (it.payload as AmtGjennomforing).id == id }
+
+			if (data != null) {
+				return data
+			}
+
+			Thread.sleep(250)
+			attempts++
+		}
+
+		return null
+	}
+
 }
 
 data class GjennomforingIntegrationTestInput(
@@ -163,5 +244,7 @@ data class GjennomforingIntegrationTestInput(
 )
 
 data class GjennomforingIntegrationTestResult(
-	val arenaData: ArenaData
+	val arenaData: ArenaData,
+	val translation: ArenaDataIdTranslation?,
+	val output: AmtWrapper<AmtGjennomforing>?
 )
