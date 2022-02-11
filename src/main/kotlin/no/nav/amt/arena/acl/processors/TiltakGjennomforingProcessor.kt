@@ -55,16 +55,17 @@ open class TiltakGjennomforingProcessor(
 
 		val isUnsupportedTiltakType = isUnsupportedTiltakType(arenaGjennomforing)
 
-		if (ugyldigGjennomforing(arenaGjennomforing)) {
-			logger.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaTiltakgjennomforingId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}")
-			repository.upsert(data.markAsIgnored())
-			return
-		}
-
 		if (isUnsupportedTiltakType) {
 			logger.info("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
 			insertTranslation(data, gjennomforingId, true)
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
+			return
+		}
+
+		if (ugyldigGjennomforing(arenaGjennomforing)) {
+			// Ikke sett til ignored i translation fordi da må man unignore når man får neste melding som kan være gyldig
+			logger.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaTiltakgjennomforingId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}")
+			repository.upsert(data.markAsIgnored())
 			return
 		}
 
