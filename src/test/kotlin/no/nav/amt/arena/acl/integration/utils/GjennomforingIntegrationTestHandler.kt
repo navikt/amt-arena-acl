@@ -125,6 +125,20 @@ class GjennomforingIntegrationTestHandler(
 		return this
 	}
 
+	fun updateResults(): GjennomforingIntegrationTestHandler {
+		val arenaData = getArenaData(currentResult!!.arenaData.operation, currentResult!!.arenaData.operationPosition)
+		val translation = getTranslation(arenaData.arenaId)
+		val message = if (translation != null) getOutputMessage(translation.amtId) else null
+
+		currentResult = GjennomforingIntegrationTestResult(
+			arenaData,
+			translation,
+			message
+		)
+
+		return this
+	}
+
 	private fun gjennomforingPayload(input: GjennomforingIntegrationTestInput): JsonNode {
 		val data = ArenaTiltakGjennomforing(
 			TILTAKGJENNOMFORING_ID = input.gjennomforingId,

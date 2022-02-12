@@ -12,6 +12,7 @@ import no.nav.amt.arena.acl.ordsproxy.Arbeidsgiver
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
+import no.nav.amt.arena.acl.services.ArenaMessageProcessorService
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -48,6 +49,9 @@ abstract class IntegrationTestBase {
 	@Autowired
 	lateinit var dataSource: DataSource
 
+	@Autowired
+	private lateinit var messageProcessor: ArenaMessageProcessorService
+
 	companion object {
 		private var position = 0
 	}
@@ -65,6 +69,10 @@ abstract class IntegrationTestBase {
 
 	fun getPosition(): String {
 		return "${position++}"
+	}
+
+	fun processMessages() {
+		messageProcessor.processMessages()
 	}
 
 	fun tiltak(): TiltakIntegrationTestHandler {

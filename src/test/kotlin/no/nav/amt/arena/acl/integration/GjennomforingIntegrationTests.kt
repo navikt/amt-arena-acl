@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.integration
 
+import io.kotest.fp.success
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.IngestStatus
@@ -41,7 +42,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	fun tiltakKommerEtterGjennomforingBlirSendtVedNesteJobb() {
 		val gjennomforingId = Random().nextLong()
 
-		gjennomforing()
+		val gjennomforing = gjennomforing()
 			.nyGjennomforing(
 				GjennomforingIntegrationTestInput(
 					position = getPosition(),
@@ -53,6 +54,21 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 			.arenaData { data, _ -> data.lastAttempted shouldNotBe null }
 			.shouldNotHaveTranslation()
 			.shouldNotHaveOutput()
+
+		tiltak()
+			.nyttTiltak(
+				TiltakIntegrationTestInput(
+					position = getPosition()
+				)
+			)
+
+		processMessages()
+
+		val d = gjennomforing.updateResults()
+//			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
+//			.arenaData { data, _ -> data.ingestedTimestamp shouldNotBe null }
+
+		success()
 
 	}
 
