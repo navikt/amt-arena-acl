@@ -6,6 +6,7 @@ import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.domain.Creation
 import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakGjennomforing
@@ -43,22 +44,28 @@ open class TiltakGjennomforingProcessor(
 	override fun handleEntry(data: ArenaData) {
 		val arenaGjennomforing : ArenaTiltakGjennomforing = data.getMainObject()
 
-		val gjennomforingId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
-			?: UUID.randomUUID()
-
-		val isGjennomforingIgnored = isIgnored(arenaGjennomforing)
-
-		if (ugyldigGjennomforing(arenaGjennomforing)) {
-			logger.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaTiltakgjennomforingId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}")
-			insertTranslation(data, gjennomforingId, true)
-			repository.upsert(data.markAsIgnored())
+		if (data.operation == AmtOperation.DELETED) {
+			logger.error("Implementation for deleted elements is not implemented for tiltakgjennomføring. Cannot handle arena id ${data.arenaId}")
+			repository.upsert(data.markAsFailed("Implementation of DELETE is not implemented"))
 			return
 		}
 
-		if (isGjennomforingIgnored) {
+		val gjennomforingId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
+			?: UUID.randomUUID()
+
+		val isUnsupportedTiltakType = isUnsupportedTiltakType(arenaGjennomforing)
+
+		if (isUnsupportedTiltakType) {
 			logger.info("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
 			insertTranslation(data, gjennomforingId, true)
-			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak."))
+			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
+			return
+		}
+
+		if (ugyldigGjennomforing(arenaGjennomforing)) {
+			// Ikke sett til ignored i translation fordi da må man unignore når man får neste melding som kan være gyldig
+			logger.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaTiltakgjennomforingId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}")
+			repository.upsert(data.markAsIgnored())
 			return
 		}
 
@@ -79,7 +86,7 @@ open class TiltakGjennomforingProcessor(
 			virksomhetsnummer = virksomhetsnummer
 		)
 
-		val translation = insertTranslation(data, gjennomforingId, isGjennomforingIgnored)
+		val translation = insertTranslation(data, gjennomforingId, isUnsupportedTiltakType)
 
 		if (translation.first == Creation.EXISTED) {
 			val digest = getDigest(amtGjennomforing)
@@ -102,7 +109,7 @@ open class TiltakGjennomforingProcessor(
 		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Gjennomføring with id $gjennomforingId Sent.")
 	}
 
-	private fun isIgnored(gjennomforing: ArenaTiltakGjennomforing): Boolean {
+	private fun isUnsupportedTiltakType(gjennomforing: ArenaTiltakGjennomforing): Boolean {
 		return !isSupportedTiltak(gjennomforing.TILTAKSKODE)
 	}
 

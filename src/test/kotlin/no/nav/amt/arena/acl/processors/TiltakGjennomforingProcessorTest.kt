@@ -84,8 +84,8 @@ class TiltakGjennomforingProcessorTest {
 	}
 
 	@Test
-	fun `handleEntry() - ugyldig gjennomføring - legges til i ignore liste`() {
-		val arenaId = "321"
+	fun `handleEntry() - ugyldig gjennomføring - legges ikke til i ignore liste`() {
+		val arenaId = "3210"
 		val opPos = "2"
 
 		val arenaData = ArenaData(
@@ -99,8 +99,7 @@ class TiltakGjennomforingProcessorTest {
 
 		gjennomforingProcessor.handle(arenaData)
 		val translationData = translationRepository.get(arenaData.arenaTableName, arenaData.arenaId)
-		translationData!!.arenaId shouldBe arenaId
-		translationData.ignored shouldBe true
+		translationData shouldBe null
 
 		repository.get(arenaData.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.IGNORED
 
@@ -129,6 +128,28 @@ class TiltakGjennomforingProcessorTest {
 
 		repository.get(arenaData.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.IGNORED
 
+	}
+
+	@Test
+	fun `handleEntry() - operation type delete - legges til i failed liste`() {
+		val arenaId = "1234567"
+		val opPos = "11223344"
+
+		val arenaData = ArenaData(
+			arenaTableName =  TILTAKGJENNOMFORING_TABLE_NAME,
+			arenaId =  arenaId,
+			operation =  AmtOperation.DELETED,
+			operationPosition =  opPos,
+			operationTimestamp =  LocalDateTime.now(),
+			before = arenaGjennomforingJson,
+		)
+
+		gjennomforingProcessor.handle(arenaData)
+
+		val translationData = translationRepository.get(arenaData.arenaTableName, arenaData.arenaId)
+		translationData shouldBe null
+
+		repository.get(arenaData.arenaTableName, AmtOperation.DELETED, opPos).ingestStatus shouldBe IngestStatus.FAILED
 	}
 
 	val arenaGjennomforingUgyldigJson = mapper.readTree("""
