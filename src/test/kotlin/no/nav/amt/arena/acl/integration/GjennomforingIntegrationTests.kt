@@ -41,6 +41,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	@Test
 	fun tiltakKommerEtterGjennomforingBlirSendtVedNesteJobb() {
 		val gjennomforingId = Random().nextLong()
+		val tiltakNavn = UUID.randomUUID().toString()
 
 		val gjennomforing = gjennomforing()
 			.nyGjennomforing(
@@ -58,18 +59,17 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 		tiltak()
 			.nyttTiltak(
 				TiltakIntegrationTestInput(
-					position = getPosition()
+					position = getPosition(),
+					navn = tiltakNavn
 				)
 			)
 
 		processMessages()
 
-		val d = gjennomforing.updateResults()
-//			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
-//			.arenaData { data, _ -> data.ingestedTimestamp shouldNotBe null }
-
-		success()
-
+		gjennomforing.updateResults()
+			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
+			.arenaData { data, _ -> data.ingestedTimestamp shouldNotBe null }
+			.output { data, _ -> data.payload!!.tiltak.navn shouldBe tiltakNavn }
 	}
 
 }

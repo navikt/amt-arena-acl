@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDateTime
 
 @Service
 open class ArenaMessageProcessorService(
@@ -30,10 +29,6 @@ open class ArenaMessageProcessorService(
 
 	private val mapper = ObjectMapperFactory.get()
 
-	companion object {
-		private const val WAIT_MINUTES_BASE = 2
-	}
-
 	fun handleArenaGoldenGateRecord(record: ConsumerRecord<String, String>) {
 		val data = mapper.readValue(record.value(), ArenaWrapper::class.java).toArenaData()
 		processEntry(data)
@@ -44,9 +39,9 @@ open class ArenaMessageProcessorService(
 		processBatch(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.NEW))
 		processBatch(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.NEW))
 
-		processBatch(filterRetry(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.RETRY)))
-		processBatch(filterRetry(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.RETRY)))
-		processBatch(filterRetry(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.RETRY)))
+		processBatch(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.RETRY))
+		processBatch(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.RETRY))
+		processBatch(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.RETRY))
 	}
 
 	fun processFailedMessages() {
@@ -69,17 +64,6 @@ open class ArenaMessageProcessorService(
 			TILTAKGJENNOMFORING_TABLE_NAME -> tiltakGjennomforingProcessor.handle(entry)
 			TILTAK_DELTAKER_TABLE_NAME -> deltakerProcessor.handle(entry)
 		}
-	}
-
-	private fun filterRetry(list: List<ArenaData>): List<ArenaData> {
-		return list
-			.filter { it.lastAttempted != null }
-			.filter {
-				it.lastAttempted!!.isBefore(
-					LocalDateTime.now()
-						.minusMinutes((WAIT_MINUTES_BASE + it.ingestAttempts).toLong())
-				)
-			}
 	}
 
 	private fun log(start: Instant, messages: List<ArenaData>) {
