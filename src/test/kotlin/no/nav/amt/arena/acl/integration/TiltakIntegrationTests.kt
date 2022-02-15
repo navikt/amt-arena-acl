@@ -2,7 +2,9 @@ package no.nav.amt.arena.acl.integration
 
 import io.kotest.matchers.shouldBe
 import no.nav.amt.arena.acl.domain.IngestStatus
-import no.nav.amt.arena.acl.integration.utils.TiltakIntegrationTestInput
+import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
+import no.nav.amt.arena.acl.integration.commands.tiltak.OppdaterTiltakCommand
+import no.nav.amt.arena.acl.integration.commands.tiltak.SlettTiltakCommand
 import org.junit.jupiter.api.Test
 import java.util.*
 
@@ -13,11 +15,10 @@ class TiltakIntegrationTests : IntegrationTestBase() {
 		val kode = UUID.randomUUID().toString()
 		val navn = UUID.randomUUID().toString()
 
-		tiltak()
-			.nyttTiltak(TiltakIntegrationTestInput(getPosition(), kode, navn))
-			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
-			.tiltak { data, currentInput -> data.kode shouldBe currentInput.kode }
-			.tiltak { data, currentInput -> data.navn shouldBe currentInput.navn }
+		tiltakExecutor.execute(NyttTiltakCommand(kode, navn))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.tiltak { it.kode shouldBe kode }
+			.tiltak { it.navn shouldBe navn }
 	}
 
 	@Test
@@ -26,13 +27,13 @@ class TiltakIntegrationTests : IntegrationTestBase() {
 		val navn = UUID.randomUUID().toString()
 		val oppdatertNavn = UUID.randomUUID().toString()
 
-		tiltak()
-			.nyttTiltak(TiltakIntegrationTestInput(getPosition(), kode, navn))
-			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
-			.oppdaterTiltak(getPosition(), oppdatertNavn)
-			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
-			.tiltak { data, currentInput -> data.kode shouldBe currentInput.kode }
-			.tiltak { data, currentInput -> data.navn shouldBe currentInput.navn }
+		tiltakExecutor.execute(NyttTiltakCommand(kode, navn))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+
+		tiltakExecutor.execute(OppdaterTiltakCommand(kode, navn, oppdatertNavn))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.tiltak { it.kode shouldBe kode }
+			.tiltak { it.navn shouldBe oppdatertNavn }
 	}
 
 	@Test
@@ -40,14 +41,14 @@ class TiltakIntegrationTests : IntegrationTestBase() {
 		val kode = UUID.randomUUID().toString()
 		val navn = UUID.randomUUID().toString()
 
-		tiltak()
-			.nyttTiltak(TiltakIntegrationTestInput(getPosition(), kode, navn))
-			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
-			.slettTiltak(getPosition())
-			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.FAILED }
-			.arenaData { data, _ -> data.note shouldBe "Implementation of DELETE is not implemented." }
-			.tiltak { data, _ -> data.kode shouldBe kode }
-			.tiltak { data, _ -> data.navn shouldBe navn }
+		tiltakExecutor.execute(NyttTiltakCommand(kode, navn))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+
+		tiltakExecutor.execute(SlettTiltakCommand(kode, navn))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.FAILED }
+			.arenaData { it.note shouldBe "Implementation of DELETE is not implemented." }
+			.tiltak { it.kode shouldBe kode }
+			.tiltak { it.navn shouldBe navn }
 	}
 
 }

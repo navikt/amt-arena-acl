@@ -3,10 +3,11 @@ package no.nav.amt.arena.acl.integration
 import ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
+import no.nav.amt.arena.acl.integration.executors.GjennomforingTestExecutor
+import no.nav.amt.arena.acl.integration.executors.TiltakTestExecutor
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.integration.kafka.SingletonKafkaProvider
 import no.nav.amt.arena.acl.integration.utils.GjennomforingIntegrationTestHandler
-import no.nav.amt.arena.acl.integration.utils.TiltakIntegrationTestHandler
 import no.nav.amt.arena.acl.kafka.KafkaProperties
 import no.nav.amt.arena.acl.ordsproxy.Arbeidsgiver
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
@@ -52,9 +53,11 @@ abstract class IntegrationTestBase {
 	@Autowired
 	private lateinit var messageProcessor: ArenaMessageProcessorService
 
-	companion object {
-		private var position = 0
-	}
+	@Autowired
+	lateinit var tiltakExecutor: TiltakTestExecutor
+
+	@Autowired
+	lateinit var gjennomforingExecutor: GjennomforingTestExecutor
 
 	@BeforeEach
 	fun beforeEach() {
@@ -63,24 +66,11 @@ abstract class IntegrationTestBase {
 
 	@AfterEach
 	fun cleanup() {
-		KafkaAmtIntegrationConsumer.reset()
 		tiltakRepository.invalidateCache()
-	}
-
-	fun getPosition(): String {
-		return "${position++}"
 	}
 
 	fun processMessages() {
 		messageProcessor.processMessages()
-	}
-
-	fun tiltak(): TiltakIntegrationTestHandler {
-		return TiltakIntegrationTestHandler(
-			kafkaProducerClientImpl,
-			arenaDataRepository,
-			tiltakRepository
-		)
 	}
 
 	fun gjennomforing(): GjennomforingIntegrationTestHandler {
@@ -98,6 +88,24 @@ open class IntegrationTestConfiguration(
 
 	@Value("\${app.env.amtTopic}")
 	lateinit var consumerTopic: String
+
+	@Bean
+	open fun tiltakExecutor(
+		kafkaProducer: KafkaProducerClientImpl<String, String>,
+		arenaDataRepository: ArenaDataRepository,
+		tiltakRepository: TiltakRepository
+	): TiltakTestExecutor {
+		return TiltakTestExecutor(kafkaProducer, arenaDataRepository, tiltakRepository)
+	}
+
+	@Bean
+	open fun gjennomforingExecutor(
+		kafkaProducer: KafkaProducerClientImpl<String, String>,
+		arenaDataRepository: ArenaDataRepository,
+		translationRepository: ArenaDataIdTranslationRepository
+	): GjennomforingTestExecutor {
+		return GjennomforingTestExecutor(kafkaProducer, arenaDataRepository, translationRepository)
+	}
 
 	@Bean
 	open fun dataSource(): DataSource {

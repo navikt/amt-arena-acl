@@ -1,12 +1,12 @@
 package no.nav.amt.arena.acl.integration
 
-import io.kotest.fp.success
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
-import no.nav.amt.arena.acl.integration.utils.GjennomforingIntegrationTestInput
-import no.nav.amt.arena.acl.integration.utils.TiltakIntegrationTestInput
+import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingInput
+import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCommand
+import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
 import org.junit.jupiter.api.Test
 import java.util.*
 
@@ -16,60 +16,44 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 	@Test
 	fun leggTilNyGjennomforing() {
-		val gjennomforingId = Random().nextLong()
+		val gjennomforingInput = GjennomforingInput(
+			gjennomforingId = Random().nextLong()
+		)
 
-		tiltak()
-			.nyttTiltak(
-				TiltakIntegrationTestInput(
-					position = getPosition(),
-				)
-			)
-			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
+		tiltakExecutor.execute(NyttTiltakCommand(navn = UUID.randomUUID().toString()))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 
-		gjennomforing()
-			.nyGjennomforing(
-				GjennomforingIntegrationTestInput(
-					position = getPosition(),
-					gjennomforingId = gjennomforingId
-				)
-			)
-			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
-			.output { data, _ -> data.operation shouldBe AmtOperation.CREATED }
-			.result { result, _ -> result.translation!!.amtId shouldBe result.output!!.payload!!.id }
+		gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.output { it.operation shouldBe AmtOperation.CREATED }
+			.result { _, translation, output -> translation!!.amtId shouldBe output!!.payload!!.id }
 	}
 
 	@Test
 	fun tiltakKommerEtterGjennomforingBlirSendtVedNesteJobb() {
-		val gjennomforingId = Random().nextLong()
 		val tiltakNavn = UUID.randomUUID().toString()
 
-		val gjennomforing = gjennomforing()
-			.nyGjennomforing(
-				GjennomforingIntegrationTestInput(
-					position = getPosition(),
-					gjennomforingId = gjennomforingId
-				)
+		val command = NyGjennomforingCommand(
+			GjennomforingInput(
+				gjennomforingId = Random().nextLong()
 			)
-			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.RETRY }
-			.arenaData { data, _ -> data.ingestAttempts shouldBe 1 }
-			.arenaData { data, _ -> data.lastAttempted shouldNotBe null }
-			.shouldNotHaveTranslation()
-			.shouldNotHaveOutput()
+		)
 
-		tiltak()
-			.nyttTiltak(
-				TiltakIntegrationTestInput(
-					position = getPosition(),
-					navn = tiltakNavn
-				)
-			)
+		val firstResult = gjennomforingExecutor.execute(command)
+			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
+			.arenaData { it.ingestAttempts shouldBe 1 }
+			.arenaData { it.lastAttempted shouldNotBe null }
+			.result { _, translation, _ -> translation shouldBe null }
+			.result { _, _, output -> output shouldBe null }
+
+		tiltakExecutor.execute(NyttTiltakCommand(navn = tiltakNavn))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 
 		processMessages()
 
-		gjennomforing.updateResults()
-			.arenaData { data, _ -> data.ingestStatus shouldBe IngestStatus.HANDLED }
-			.arenaData { data, _ -> data.ingestedTimestamp shouldNotBe null }
-			.output { data, _ -> data.payload!!.tiltak.navn shouldBe tiltakNavn }
+		gjennomforingExecutor.updateResults(firstResult.position, command)
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.arenaData { it.ingestedTimestamp shouldNotBe null }
+			.output { it.payload!!.tiltak.navn shouldBe tiltakNavn }
 	}
-
 }
