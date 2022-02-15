@@ -1,6 +1,5 @@
 package no.nav.amt.arena.acl.integration.executors
 
-import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
@@ -16,10 +15,11 @@ import java.util.*
 class GjennomforingTestExecutor(
 	kafkaProducer: KafkaProducerClientImpl<String, String>,
 	arenaDataRepository: ArenaDataRepository,
-	private val translationRepository: ArenaDataIdTranslationRepository
+	translationRepository: ArenaDataIdTranslationRepository
 ) : TestExecutor(
 	kafkaProducer = kafkaProducer,
-	arenaDataRepository = arenaDataRepository
+	arenaDataRepository = arenaDataRepository,
+	translationRepository = translationRepository
 ) {
 
 	private val topic = "gjennomforing"
@@ -56,21 +56,6 @@ class GjennomforingTestExecutor(
 		return GjennomforingResult(arenaWrapper.operationPosition, arenaData, translation, message)
 	}
 
-	private fun getTranslation(table: String, arenaId: String): ArenaDataIdTranslation? {
-		var attempts = 0
-		while (attempts < 5) {
-			val data = translationRepository.get(table, arenaId)
-
-			if (data != null) {
-				return data
-			}
-
-			Thread.sleep(250)
-			attempts++
-		}
-
-		return null
-	}
 
 	private fun getOutputMessage(id: UUID): AmtWrapper<AmtGjennomforing>? {
 		var attempts = 0
@@ -78,6 +63,7 @@ class GjennomforingTestExecutor(
 			val data = outputMessages.firstOrNull { it.payload != null && (it.payload as AmtGjennomforing).id == id }
 
 			if (data != null) {
+				outputMessages.clear()
 				return data
 			}
 
@@ -85,6 +71,7 @@ class GjennomforingTestExecutor(
 			attempts++
 		}
 
+		outputMessages.clear()
 		return null
 	}
 

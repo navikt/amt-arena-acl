@@ -1,8 +1,10 @@
 package no.nav.amt.arena.acl.integration.executors
 
 import no.nav.amt.arena.acl.domain.ArenaData
+import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.arena.ArenaOperation
+import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
@@ -12,7 +14,8 @@ import org.slf4j.LoggerFactory
 
 abstract class TestExecutor(
 	private val kafkaProducer: KafkaProducerClientImpl<String, String>,
-	private val arenaDataRepository: ArenaDataRepository
+	private val arenaDataRepository: ArenaDataRepository,
+	private val translationRepository: ArenaDataIdTranslationRepository
 ) {
 
 	companion object {
@@ -25,10 +28,6 @@ abstract class TestExecutor(
 
 	fun incrementAndGetPosition(): String {
 		return "${position++}"
-	}
-
-	fun getPosition(): String {
-		return "$position"
 	}
 
 	fun sendKafkaMessage(topic: String, payload: String) {
@@ -46,12 +45,29 @@ abstract class TestExecutor(
 				}
 			}
 
-			Thread.sleep(500)
+			Thread.sleep(250)
 			attempts++
 		}
 
 		fail("Could not find Arena data in table $table with operation $operation and position $position")
 	}
+
+	fun getTranslation(table: String, arenaId: String): ArenaDataIdTranslation? {
+		var attempts = 0
+		while (attempts < 5) {
+			val data = translationRepository.get(table, arenaId)
+
+			if (data != null) {
+				return data
+			}
+
+			Thread.sleep(250)
+			attempts++
+		}
+
+		return null
+	}
+
 
 	fun ArenaOperation.toAmtOperation(): AmtOperation {
 		return when (this) {

@@ -1,26 +1,23 @@
-package no.nav.amt.arena.acl.integration.commands.gjennomforing
+package no.nav.amt.arena.acl.integration.commands.deltaker
 
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
-import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerResult
 import org.junit.jupiter.api.fail
 
-data class GjennomforingResult(
+data class DeltakerResult(
 	val position: String,
 	val arenaData: ArenaData,
 	val translation: ArenaDataIdTranslation?,
-	val output: AmtWrapper<AmtGjennomforing>?
+	val output: AmtWrapper<AmtDeltaker>?
 ) {
-
-	fun arenaData(check: (data: ArenaData) -> Unit): GjennomforingResult {
+	fun arenaData(check: (data: ArenaData) -> Unit): DeltakerResult {
 		check.invoke(arenaData)
 		return this
 	}
 
-	fun translation(check: (data: ArenaDataIdTranslation) -> Unit): GjennomforingResult {
+	fun translation(check: (data: ArenaDataIdTranslation) -> Unit): DeltakerResult {
 		if (translation == null) {
 			fail("Trying to get translation, but it is null")
 		}
@@ -29,7 +26,7 @@ data class GjennomforingResult(
 		return this
 	}
 
-	fun output(check: (data: AmtWrapper<AmtGjennomforing>) -> Unit): GjennomforingResult {
+	fun output(check: (data: AmtWrapper<AmtDeltaker>) -> Unit): DeltakerResult {
 		if (output == null) {
 			fail("Trying to get output, but it is null")
 		}
@@ -38,12 +35,12 @@ data class GjennomforingResult(
 		return this
 	}
 
-	fun result(check: (arenaData: ArenaData, translation: ArenaDataIdTranslation?, output: AmtWrapper<AmtGjennomforing>?) -> Unit): GjennomforingResult {
+	fun result(check: (arenaData: ArenaData, translation: ArenaDataIdTranslation?, output: AmtWrapper<AmtDeltaker>?) -> Unit): DeltakerResult {
 		check.invoke(arenaData, translation, output)
 		return this
 	}
 
-	fun outgoingPayload(check: (payload: AmtGjennomforing) -> Unit): GjennomforingResult {
+	fun outgoingPayload(check: (payload: AmtDeltaker) -> Unit): DeltakerResult {
 		if (output?.payload == null) {
 			fail("Forsøker å hente payload på en outgoing melding som er null")
 		}
@@ -51,6 +48,4 @@ data class GjennomforingResult(
 		check.invoke(output.payload!!)
 		return this
 	}
-
-
 }

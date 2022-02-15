@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.integration.executors
 import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
 import no.nav.amt.arena.acl.integration.commands.tiltak.TiltakCommand
 import no.nav.amt.arena.acl.integration.commands.tiltak.TiltakResult
+import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
@@ -12,10 +13,12 @@ import org.junit.jupiter.api.fail
 class TiltakTestExecutor(
 	kafkaProducer: KafkaProducerClientImpl<String, String>,
 	arenaDataRepository: ArenaDataRepository,
+	translationRepository: ArenaDataIdTranslationRepository,
 	private val tiltakRepository: TiltakRepository
 ) : TestExecutor(
 	kafkaProducer = kafkaProducer,
-	arenaDataRepository = arenaDataRepository
+	arenaDataRepository = arenaDataRepository,
+	translationRepository = translationRepository
 ) {
 
 	private val topic = "tiltak"

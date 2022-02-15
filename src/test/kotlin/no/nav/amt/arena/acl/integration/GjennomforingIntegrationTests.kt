@@ -10,8 +10,6 @@ import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
 import org.junit.jupiter.api.Test
 import java.util.*
 
-// sudo rm -rf /var/run/docker.sock && sudo ln -s /Users/$(whoami)/.colima/docker.sock /var/run/docker.sock && TESTCONTAINERS_RYUK_DISABLED=true && colima start
-
 class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 	@Test
@@ -20,13 +18,27 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 			gjennomforingId = Random().nextLong()
 		)
 
-		tiltakExecutor.execute(NyttTiltakCommand(navn = UUID.randomUUID().toString()))
+		tiltakExecutor.execute(NyttTiltakCommand())
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 
 		gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 			.output { it.operation shouldBe AmtOperation.CREATED }
 			.result { _, translation, output -> translation!!.amtId shouldBe output!!.payload!!.id }
+	}
+
+	@Test
+	fun gjennomforingPaIgnorertTiltakLagrerTranslationMedIgnoredTrue() {
+
+		val input = GjennomforingInput(
+			gjennomforingId = Random().nextLong(),
+			tiltakKode = "DETTE_TILTAKET_FINNES_IKKE"
+		)
+
+		gjennomforingExecutor.execute(NyGjennomforingCommand(input))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.IGNORED }
+			.translation { it.ignored shouldBe true }
+			.result { _, _, output -> output shouldBe null }
 	}
 
 	@Test
@@ -55,5 +67,25 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 			.arenaData { it.ingestedTimestamp shouldNotBe null }
 			.output { it.payload!!.tiltak.navn shouldBe tiltakNavn }
+	}
+
+	@Test
+	fun shouldRetryWhenOrdsClientThrowsError() {
+		val virksomhetsId = 456785618L
+
+		tiltakExecutor.execute(NyttTiltakCommand())
+
+		IntegrationTestConfiguration.virksomhetsHandler["$virksomhetsId"] = { throw RuntimeException() }
+
+		val input = GjennomforingInput(
+			gjennomforingId = Random().nextLong(),
+			arbeidsgiverIdArrangor = virksomhetsId
+		)
+
+		gjennomforingExecutor.execute(NyGjennomforingCommand(input))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
+			.result { _, translation, _ -> translation shouldBe null }
+			.result { _, _, output -> output shouldBe null }
+
 	}
 }

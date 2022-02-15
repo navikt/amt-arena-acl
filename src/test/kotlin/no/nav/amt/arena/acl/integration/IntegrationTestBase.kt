@@ -3,11 +3,11 @@ package no.nav.amt.arena.acl.integration
 import ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
+import no.nav.amt.arena.acl.integration.executors.DeltakerTestExecutor
 import no.nav.amt.arena.acl.integration.executors.GjennomforingTestExecutor
 import no.nav.amt.arena.acl.integration.executors.TiltakTestExecutor
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.integration.kafka.SingletonKafkaProvider
-import no.nav.amt.arena.acl.integration.utils.GjennomforingIntegrationTestHandler
 import no.nav.amt.arena.acl.kafka.KafkaProperties
 import no.nav.amt.arena.acl.ordsproxy.Arbeidsgiver
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
@@ -33,19 +33,7 @@ import javax.sql.DataSource
 abstract class IntegrationTestBase {
 
 	@Autowired
-	lateinit var kafkaProducerClientImpl: KafkaProducerClientImpl<String, String>
-
-	@Autowired
-	lateinit var arenaDataRepository: ArenaDataRepository
-
-	@Autowired
 	lateinit var tiltakRepository: TiltakRepository
-
-	@Autowired
-	lateinit var translationRepository: ArenaDataIdTranslationRepository
-
-	@Autowired
-	lateinit var consumer: KafkaAmtIntegrationConsumer
 
 	@Autowired
 	lateinit var dataSource: DataSource
@@ -59,6 +47,9 @@ abstract class IntegrationTestBase {
 	@Autowired
 	lateinit var gjennomforingExecutor: GjennomforingTestExecutor
 
+	@Autowired
+	lateinit var deltakerExecutor: DeltakerTestExecutor
+
 	@BeforeEach
 	fun beforeEach() {
 		DatabaseTestUtils.cleanDatabase(dataSource)
@@ -67,24 +58,23 @@ abstract class IntegrationTestBase {
 	@AfterEach
 	fun cleanup() {
 		tiltakRepository.invalidateCache()
+		IntegrationTestConfiguration.fnrHandlers.clear()
+		IntegrationTestConfiguration.virksomhetsHandler.clear()
 	}
 
 	fun processMessages() {
 		messageProcessor.processMessages()
-	}
-
-	fun gjennomforing(): GjennomforingIntegrationTestHandler {
-		return GjennomforingIntegrationTestHandler(
-			kafkaProducerClientImpl,
-			arenaDataRepository,
-			translationRepository
-		)
 	}
 }
 
 @TestConfiguration
 open class IntegrationTestConfiguration(
 ) {
+
+	companion object {
+		val fnrHandlers = mutableMapOf<String, () -> String?>()
+		val virksomhetsHandler = mutableMapOf<String, () -> String>()
+	}
 
 	@Value("\${app.env.amtTopic}")
 	lateinit var consumerTopic: String
@@ -93,9 +83,10 @@ open class IntegrationTestConfiguration(
 	open fun tiltakExecutor(
 		kafkaProducer: KafkaProducerClientImpl<String, String>,
 		arenaDataRepository: ArenaDataRepository,
+		translationRepository: ArenaDataIdTranslationRepository,
 		tiltakRepository: TiltakRepository
 	): TiltakTestExecutor {
-		return TiltakTestExecutor(kafkaProducer, arenaDataRepository, tiltakRepository)
+		return TiltakTestExecutor(kafkaProducer, arenaDataRepository, translationRepository, tiltakRepository)
 	}
 
 	@Bean
@@ -105,6 +96,15 @@ open class IntegrationTestConfiguration(
 		translationRepository: ArenaDataIdTranslationRepository
 	): GjennomforingTestExecutor {
 		return GjennomforingTestExecutor(kafkaProducer, arenaDataRepository, translationRepository)
+	}
+
+	@Bean
+	open fun deltakerExecutor(
+		kafkaProducer: KafkaProducerClientImpl<String, String>,
+		arenaDataRepository: ArenaDataRepository,
+		translationRepository: ArenaDataIdTranslationRepository
+	): DeltakerTestExecutor {
+		return DeltakerTestExecutor(kafkaProducer, arenaDataRepository, translationRepository)
 	}
 
 	@Bean
@@ -126,16 +126,27 @@ open class IntegrationTestConfiguration(
 	@Bean
 	open fun ordsProxyClient(): ArenaOrdsProxyClient {
 
+//		fnrHandlers["0"] = { throw SocketTimeoutException() }
+
 		return object : ArenaOrdsProxyClient {
 			override fun hentFnr(arenaPersonId: String): String? {
+				if (fnrHandlers[arenaPersonId] != null) {
+					return fnrHandlers[arenaPersonId]!!.invoke()
+				}
+
 				return "12345"
+
 			}
 
 			override fun hentArbeidsgiver(arenaArbeidsgiverId: String): Arbeidsgiver? {
-				return Arbeidsgiver("12345", "56789")
+				throw NotImplementedError()
 			}
 
 			override fun hentVirksomhetsnummer(arenaArbeidsgiverId: String): String {
+				if (virksomhetsHandler[arenaArbeidsgiverId] != null) {
+					return virksomhetsHandler[arenaArbeidsgiverId]!!.invoke()
+				}
+
 				return "12345"
 			}
 
