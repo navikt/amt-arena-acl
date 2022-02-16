@@ -53,19 +53,19 @@ open class TiltakGjennomforingProcessor(
 		val gjennomforingId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
 			?: UUID.randomUUID()
 
-		val isGjennomforingIgnored = isIgnored(arenaGjennomforing)
+		val isUnsupportedTiltakType = isUnsupportedTiltakType(arenaGjennomforing)
 
-		if (ugyldigGjennomforing(arenaGjennomforing)) {
-			logger.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaTiltakgjennomforingId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}")
-			insertTranslation(data, gjennomforingId, true)
-			repository.upsert(data.markAsIgnored())
-			return
-		}
-
-		if (isGjennomforingIgnored) {
+		if (isUnsupportedTiltakType) {
 			logger.info("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
 			insertTranslation(data, gjennomforingId, true)
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
+			return
+		}
+
+		if (ugyldigGjennomforing(arenaGjennomforing)) {
+			// Ikke sett til ignored i translation fordi da må man unignore når man får neste melding som kan være gyldig
+			logger.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaTiltakgjennomforingId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}")
+			repository.upsert(data.markAsIgnored())
 			return
 		}
 
@@ -86,7 +86,7 @@ open class TiltakGjennomforingProcessor(
 			virksomhetsnummer = virksomhetsnummer
 		)
 
-		val translation = insertTranslation(data, gjennomforingId, isGjennomforingIgnored)
+		val translation = insertTranslation(data, gjennomforingId, isUnsupportedTiltakType)
 
 		if (translation.first == Creation.EXISTED) {
 			val digest = getDigest(amtGjennomforing)
@@ -109,7 +109,7 @@ open class TiltakGjennomforingProcessor(
 		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Gjennomføring with id $gjennomforingId Sent.")
 	}
 
-	private fun isIgnored(gjennomforing: ArenaTiltakGjennomforing): Boolean {
+	private fun isUnsupportedTiltakType(gjennomforing: ArenaTiltakGjennomforing): Boolean {
 		return !isSupportedTiltak(gjennomforing.TILTAKSKODE)
 	}
 

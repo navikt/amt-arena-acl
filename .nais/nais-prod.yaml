@@ -44,11 +44,11 @@ spec:
     - name: AMT_TOPIC
       value: amt.amt-tiltak-v1
     - name: ARENA_TILTAK_TOPIC
-      value: amt.placeholder
+      value: teamarenanais.aapen-arena-tiltakendret-v1-p
     - name: ARENA_TILTAKGJENNOMFORING_TOPIC
-      value: amt.placeholder
+      value: teamarenanais.aapen-arena-tiltakgjennomforingendret-v1-p
     - name: ARENA_TILTAK_DELTAKER_TOPIC
-      value: amt.placeholder
+      value: teamarenanais.aapen-arena-tiltakdeltakerendret-v1-p
   gcp:
     sqlInstances:
       - type: POSTGRES_12
