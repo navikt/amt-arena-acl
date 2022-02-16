@@ -122,11 +122,8 @@ open class IntegrationTestConfiguration(
 		return KafkaAmtIntegrationConsumer(properties, consumerTopic)
 	}
 
-	//TODO Should be a WireMock instead
 	@Bean
 	open fun ordsProxyClient(): ArenaOrdsProxyClient {
-
-//		fnrHandlers["0"] = { throw SocketTimeoutException() }
 
 		return object : ArenaOrdsProxyClient {
 			override fun hentFnr(arenaPersonId: String): String? {

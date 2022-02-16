@@ -85,11 +85,9 @@ open class TiltakRepository(
 		return cache
 	}
 
-	//TODO Burde flytte cache ut i egen komponent. Brukes kun i integrasjonstest grunnet dårlig sletting av database
 	internal fun invalidateCache() {
 		cache.invalidateAll()
 	}
-
 
 	private fun singletonParameterMap(key: String, value: Any): MapSqlParameterSource {
 		return MapSqlParameterSource().addValues(

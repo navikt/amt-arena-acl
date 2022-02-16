@@ -2,10 +2,8 @@ package no.nav.amt.arena.acl.integration.commands.gjennomforing
 
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
-import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
-import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerResult
 import org.junit.jupiter.api.fail
 
 data class GjennomforingResult(
