@@ -6,8 +6,11 @@ import io.kotest.matchers.shouldBe
 class StringUtilsTest : FunSpec({
 
 	test("removeNullCharacters - should remove null characters") {
-		"""\\u0000test1\\u0000""".removeNullCharacters() shouldBe "test1"
-		"\u0000test2\u0000".removeNullCharacters() shouldBe "test2"
+		"\u0000test\u0000".removeNullCharacters() shouldBe "test"
+	}
+
+	test("removeNullCharacters - should remove escaped null characters") {
+		"\\u0000test\\u0000".removeNullCharacters() shouldBe "test"
 	}
 
 })

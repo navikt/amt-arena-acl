@@ -17,7 +17,9 @@ fun String.asLocalDateTime(): LocalDateTime {
 }
 
 fun String.removeNullCharacters(): String {
-	return this.replace("\\\\u0000", "").replace("${0.toChar()}", "")
+	return this
+		.replace("\u0000", "")
+		.replace("\\u0000", "")
 }
 
 fun String?.asTime(): LocalTime {
