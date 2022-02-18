@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
 import org.springframework.util.DigestUtils
+import java.time.LocalDateTime
 import java.util.*
 
 @Component
@@ -41,8 +42,6 @@ open class TiltakGjennomforingProcessor(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val statusConverter = GjennomforingStatusConverter()
-
-
 
 	override fun handleEntry(data: ArenaData) {
 		val arenaGjennomforing : ArenaTiltakGjennomforing = data.getMainObject()
@@ -147,12 +146,7 @@ open class TiltakGjennomforingProcessor(
 		amtGjennomforingId: UUID,
 		virksomhetsnummer: String
 	): AmtGjennomforing {
-		var registrertDato = REG_DATO?.asLocalDateTime()
-
-		if (registrertDato == null) {
-			logger.warn("REG_DATO mangler for tiltakgjennomføring arenaId=$TILTAKGJENNOMFORING_ID amtId=${amtGjennomforingId}, bruker MOD_DATO istedenfor")
-			registrertDato = MOD_DATO.asLocalDateTime()
-		}
+		val registrertDato = utledRegDato(this)
 
 		return AmtGjennomforing(
 			id = amtGjennomforingId,
@@ -165,6 +159,25 @@ open class TiltakGjennomforingProcessor(
 			fremmoteDato = DATO_FREMMOTE?.asLocalDate() withTime KLOKKETID_FREMMOTE.asTime(),
 			status = statusConverter.convert(TILTAKSTATUSKODE)
 		)
+	}
+
+	private fun utledRegDato(arenaGjennomforing: ArenaTiltakGjennomforing): LocalDateTime {
+		val registrertDato = arenaGjennomforing.REG_DATO
+
+		if (registrertDato != null) {
+			return registrertDato.asLocalDateTime()
+		}
+
+		val modifisertDato = arenaGjennomforing.MOD_DATO
+
+		if (modifisertDato != null) {
+			logger.warn("REG_DATO mangler for tiltakgjennomføring arenaId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}, bruker MOD_DATO istedenfor")
+			return modifisertDato.asLocalDateTime()
+		}
+
+		logger.warn("MOD_DATO mangler for tiltakgjennomføring arenaId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}, bruker nåtid istedenfor")
+
+		return LocalDateTime.now()
 	}
 
 	private fun ugyldigGjennomforing(data: ArenaTiltakGjennomforing) =
