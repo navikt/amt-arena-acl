@@ -147,6 +147,13 @@ open class TiltakGjennomforingProcessor(
 		amtGjennomforingId: UUID,
 		virksomhetsnummer: String
 	): AmtGjennomforing {
+		var registrertDato = REG_DATO?.asLocalDateTime()
+
+		if (registrertDato == null) {
+			logger.warn("REG_DATO mangler for tiltakgjennomføring arenaId=$TILTAKGJENNOMFORING_ID amtId=${amtGjennomforingId}, bruker MOD_DATO istedenfor")
+			registrertDato = MOD_DATO.asLocalDateTime()
+		}
+
 		return AmtGjennomforing(
 			id = amtGjennomforingId,
 			tiltak = amtTiltak,
@@ -154,7 +161,7 @@ open class TiltakGjennomforingProcessor(
 			navn = LOKALTNAVN ?: throw DataIntegrityViolationException("Forventet at LOKALTNAVN ikke er null"),
 			startDato = DATO_FRA?.asLocalDate(),
 			sluttDato = DATO_TIL?.asLocalDate(),
-			registrertDato = REG_DATO.asLocalDateTime(),
+			registrertDato = registrertDato,
 			fremmoteDato = DATO_FREMMOTE?.asLocalDate() withTime KLOKKETID_FREMMOTE.asTime(),
 			status = statusConverter.convert(TILTAKSTATUSKODE)
 		)

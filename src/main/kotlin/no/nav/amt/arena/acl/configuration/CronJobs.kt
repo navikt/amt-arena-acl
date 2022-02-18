@@ -30,7 +30,7 @@ open class CronJobs(
 		return threadPoolTaskScheduler
 	}
 
-	@Scheduled(fixedDelay = 60000) // Hvert minutt
+	@Scheduled(fixedDelay = 60 * 1000, initialDelay = 60 * 1000) // Hvert minutt
 	open fun processArenaMessages() {
 		logger.debug("Starting processing job for uningested Arena Data...")
 		messageProcessorService.processMessages()
@@ -44,7 +44,7 @@ open class CronJobs(
 		logger.debug("Finished processing job for failed Arena Data!")
 	}
 
-	@Scheduled(fixedDelay = 20000)
+	@Scheduled(fixedDelay = 20 * 1000, initialDelay = 60 * 1000)
 	open fun logArenaDataStatuses() {
 		val gaugeName = "amt.arena-acl.ingest.status"
 
