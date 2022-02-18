@@ -157,7 +157,7 @@ open class TiltakGjennomforingProcessor(
 			sluttDato = DATO_TIL?.asLocalDate(),
 			registrertDato = registrertDato,
 			fremmoteDato = DATO_FREMMOTE?.asLocalDate() withTime KLOKKETID_FREMMOTE.asTime(),
-			status = statusConverter.convert(TILTAKSTATUSKODE)
+			status = statusConverter.convert(TILTAKSTATUSKODE ?: throw DataIntegrityViolationException("Forventet at TILTAKSTATUSKODE ikke er null"))
 		)
 	}
 
