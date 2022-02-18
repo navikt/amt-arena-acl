@@ -8,6 +8,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
 import javax.sql.DataSource
+import kotlin.math.hypot
 
 object SingletonPostgresContainer {
 
@@ -17,14 +18,8 @@ object SingletonPostgresContainer {
 
 	private var postgresContainer: PostgreSQLContainer<Nothing>? = null
 
-	private var containerDataSource: DataSource? = null
-
 	fun getDataSource(): DataSource {
-		if (containerDataSource == null) {
-			containerDataSource = createDataSource(getContainer())
-		}
-
-		return containerDataSource!!
+		return createDataSource(getContainer())
 	}
 
 	private fun getContainer(): PostgreSQLContainer<Nothing> {
