@@ -20,7 +20,7 @@ data class ArenaTiltakGjennomforing(
 	val MOD_DATO: String?,
 	val MOD_USER: String?,
 	val LOKALTNAVN: String?,
-	val TILTAKSTATUSKODE: String,
+	val TILTAKSTATUSKODE: String?,
 	val PROSENT_DELTID: Float?,
 	val KOMMENTAR: String?,
 	val ARBGIV_ID_ARRANGOR: Long?,
