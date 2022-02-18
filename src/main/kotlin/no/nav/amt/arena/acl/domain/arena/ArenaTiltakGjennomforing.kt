@@ -41,7 +41,7 @@ data class ArenaTiltakGjennomforing(
 	val PROFILELEMENT_ID_OPPL_TILTAK: String?,
 	val DATO_OPPFOLGING_OK: String?,
 	val PARTISJON: Long,
-	val MAALFORM_KRAVBREV: String
+	val MAALFORM_KRAVBREV: String?
 )
 // @SONAR_STOP@
 
