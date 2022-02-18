@@ -16,6 +16,12 @@ fun String.asLocalDateTime(): LocalDateTime {
 	return LocalDateTime.parse(this, formatter)
 }
 
+fun String.removeNullCharacters(): String {
+	return this
+		.replace("\u0000", "")
+		.replace("\\u0000", "")
+}
+
 fun String?.asTime(): LocalTime {
 	val logger = LoggerFactory.getLogger(String::class.java)
 

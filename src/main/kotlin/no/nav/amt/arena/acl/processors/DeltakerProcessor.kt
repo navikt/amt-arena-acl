@@ -16,6 +16,7 @@ import no.nav.amt.arena.acl.utils.asLocalDateTime
 import no.nav.common.kafka.producer.KafkaProducerClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 import java.util.*
 
 @Component
@@ -47,13 +48,21 @@ open class DeltakerProcessor(
 			repository.upsert(data.retry("Tiltakgjennomføring ($tiltakGjennomforingId) er ikke håndtert"))
 			return
 		} else if (gjennomforingInfo.ignored) {
-			logger.info("Deltaker med med id ${arenaDeltaker.TILTAKDELTAKER_ID} er ikke støttet og sendes ikke videre")
+			logger.info("Ignorerer deltaker med id ${arenaDeltaker.TILTAKDELTAKER_ID} som ikke er på et støttet tiltak")
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
 			return
 		}
 
-		val personIdent = ordsClient.hentFnr(arenaDeltaker.PERSON_ID.toString())
-			?: throw IllegalStateException("Expected Person with ArenaId ${arenaDeltaker.PERSON_ID} to exist")
+		val personId = arenaDeltaker.PERSON_ID
+
+		if (personId == null) {
+			logger.info("Ignorerer deltaker med id ${arenaDeltaker.TILTAKDELTAKER_ID} som mangler PERSON_ID")
+			repository.upsert(data.markAsIgnored("Mangler PERSON_ID"))
+			return
+		}
+
+		val personIdent = ordsClient.hentFnr(personId.toString())
+			?: throw IllegalStateException("Expected Person with ArenaId $personId to exist")
 
 		val amtDeltakerId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
 			?: UUID.randomUUID()
@@ -122,7 +131,7 @@ open class DeltakerProcessor(
 		gjennomforingId: UUID,
 		personIdent: String
 	): AmtDeltaker {
-		val registrertDato = REG_DATO.asLocalDateTime()
+		val registrertDato = utledRegDato(this)
 
 		return AmtDeltaker(
 			id = amtDeltakerId,
@@ -147,6 +156,25 @@ open class DeltakerProcessor(
 				sluttDato = DATO_TIL?.asLocalDate()?.atStartOfDay()
 			)
 		)
+	}
+
+	private fun utledRegDato(arenaDeltaker: ArenaTiltakDeltaker): LocalDateTime {
+		val registrertDato = arenaDeltaker.REG_DATO
+
+		if (registrertDato != null) {
+			return registrertDato.asLocalDateTime()
+		}
+
+		val modifisertDato = arenaDeltaker.MOD_DATO
+
+		if (modifisertDato != null) {
+			logger.warn("REG_DATO mangler for tiltakdeltaker arenaId=${arenaDeltaker.TILTAKGJENNOMFORING_ID}, bruker MOD_DATO istedenfor")
+			return modifisertDato.asLocalDateTime()
+		}
+
+		logger.warn("MOD_DATO mangler for tiltakdeltaker arenaId=${arenaDeltaker.TILTAKGJENNOMFORING_ID}, bruker nåtid istedenfor")
+
+		return LocalDateTime.now()
 	}
 
 

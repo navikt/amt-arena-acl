@@ -21,6 +21,8 @@ import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
+import org.springframework.util.DigestUtils
+import java.time.LocalDateTime
 import java.util.*
 
 @Component
@@ -53,11 +55,9 @@ open class TiltakGjennomforingProcessor(
 		val gjennomforingId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
 			?: UUID.randomUUID()
 
-		val isUnsupportedTiltakType = isUnsupportedTiltakType(arenaGjennomforing)
-
-		if (isUnsupportedTiltakType) {
+		if (isUnsupportedTiltakType(arenaGjennomforing)) {
 			logger.info("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
-			insertTranslation(data, gjennomforingId, true)
+			insertTranslation(data, gjennomforingId, true, gjennomforingId::digest)
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
 			return
 		}
@@ -86,10 +86,10 @@ open class TiltakGjennomforingProcessor(
 			virksomhetsnummer = virksomhetsnummer
 		)
 
-		val translation = insertTranslation(data, gjennomforingId, isUnsupportedTiltakType)
+		val translation = insertTranslation(data, gjennomforingId, false, amtGjennomforing::digest)
 
 		if (translation.first == Creation.EXISTED) {
-			val digest = getDigest(amtGjennomforing)
+			val digest = amtGjennomforing.digest()
 
 			if (translation.second.currentHash == digest) {
 				logger.info("Gjennomføring med kode $gjennomforingId sendes ikke videre fordi det allerede er sendt (Samme hash)")
@@ -116,7 +116,8 @@ open class TiltakGjennomforingProcessor(
 	private fun insertTranslation(
 		data: ArenaData,
 		gjennomforingId: UUID,
-		ignored: Boolean
+		ignored: Boolean,
+		digestor: () -> String
 	): Pair<Creation, ArenaDataIdTranslation> {
 		val exists = idTranslationRepository.get(data.arenaTableName, data.arenaId)
 
@@ -129,7 +130,7 @@ open class TiltakGjennomforingProcessor(
 					arenaTableName = data.arenaTableName,
 					arenaId = data.arenaId,
 					ignored = ignored,
-					getDigest(gjennomforingId)
+					digestor()
 				)
 			)
 
@@ -145,6 +146,8 @@ open class TiltakGjennomforingProcessor(
 		amtGjennomforingId: UUID,
 		virksomhetsnummer: String
 	): AmtGjennomforing {
+		val registrertDato = utledRegDato(this)
+
 		return AmtGjennomforing(
 			id = amtGjennomforingId,
 			tiltak = amtTiltak,
@@ -152,12 +155,33 @@ open class TiltakGjennomforingProcessor(
 			navn = LOKALTNAVN ?: throw DataIntegrityViolationException("Forventet at LOKALTNAVN ikke er null"),
 			startDato = DATO_FRA?.asLocalDate(),
 			sluttDato = DATO_TIL?.asLocalDate(),
-			registrertDato = REG_DATO.asLocalDateTime(),
+			registrertDato = registrertDato,
 			fremmoteDato = DATO_FREMMOTE?.asLocalDate() withTime KLOKKETID_FREMMOTE.asTime(),
 			status = statusConverter.convert(TILTAKSTATUSKODE)
 		)
 	}
 
+	private fun utledRegDato(arenaGjennomforing: ArenaTiltakGjennomforing): LocalDateTime {
+		val registrertDato = arenaGjennomforing.REG_DATO
+
+		if (registrertDato != null) {
+			return registrertDato.asLocalDateTime()
+		}
+
+		val modifisertDato = arenaGjennomforing.MOD_DATO
+
+		if (modifisertDato != null) {
+			logger.warn("REG_DATO mangler for tiltakgjennomføring arenaId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}, bruker MOD_DATO istedenfor")
+			return modifisertDato.asLocalDateTime()
+		}
+
+		logger.warn("MOD_DATO mangler for tiltakgjennomføring arenaId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}, bruker nåtid istedenfor")
+
+		return LocalDateTime.now()
+	}
+
 	private fun ugyldigGjennomforing(data: ArenaTiltakGjennomforing) =
 		data.ARBGIV_ID_ARRANGOR == null || data.LOKALTNAVN == null
 }
+
+private fun UUID.digest() = DigestUtils.md5DigestAsHex(this.toString().toByteArray())

@@ -7,10 +7,7 @@ import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.TiltakGjennomforingProcessor
 import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.utils.ObjectMapperFactory
-import no.nav.amt.arena.acl.utils.TILTAKGJENNOMFORING_TABLE_NAME
-import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
-import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
+import no.nav.amt.arena.acl.utils.*
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -30,7 +27,9 @@ open class ArenaMessageProcessorService(
 	private val mapper = ObjectMapperFactory.get()
 
 	fun handleArenaGoldenGateRecord(record: ConsumerRecord<String, String>) {
-		val data = mapper.readValue(record.value(), ArenaWrapper::class.java).toArenaData()
+		val recordValue = record.value().removeNullCharacters()
+		val data = mapper.readValue(recordValue, ArenaWrapper::class.java).toArenaData()
+
 		processEntry(data)
 	}
 

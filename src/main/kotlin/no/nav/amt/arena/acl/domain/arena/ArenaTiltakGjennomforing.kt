@@ -3,9 +3,9 @@ package no.nav.amt.arena.acl.domain.arena
 // @SONAR_START@
 data class ArenaTiltakGjennomforing(
 	val TILTAKGJENNOMFORING_ID: Long,
-	val SAK_ID: Long,
+	val SAK_ID: Long?,
 	val TILTAKSKODE: String,
-	val ANTALL_DELTAKERE: Int,
+	val ANTALL_DELTAKERE: Int?,
 	val ANTALL_VARIGHET: Int?,
 	val DATO_FRA: String?,
 	val DATO_TIL: String?,
@@ -15,13 +15,13 @@ data class ArenaTiltakGjennomforing(
 	val TEKST_KURSSTED: String?,
 	val TEKST_MAALGRUPPE: String?,
 	val STATUS_TREVERDIKODE_INNSOKNING: String?,
-	val REG_DATO: String,
-	val REG_USER: String,
-	val MOD_DATO: String,
-	val MOD_USER: String,
+	val REG_DATO: String?,
+	val REG_USER: String?,
+	val MOD_DATO: String?,
+	val MOD_USER: String?,
 	val LOKALTNAVN: String?,
 	val TILTAKSTATUSKODE: String,
-	val PROSENT_DELTID: Float,
+	val PROSENT_DELTID: Float?,
 	val KOMMENTAR: String?,
 	val ARBGIV_ID_ARRANGOR: Long?,
 	val PROFILELEMENT_ID_GEOGRAFI: String?,
@@ -40,8 +40,7 @@ data class ArenaTiltakGjennomforing(
 	val VURDERING_GJENNOMFORING: String?,
 	val PROFILELEMENT_ID_OPPL_TILTAK: String?,
 	val DATO_OPPFOLGING_OK: String?,
-	val PARTISJON: Long,
-	val MAALFORM_KRAVBREV: String
+	val PARTISJON: Long?,
+	val MAALFORM_KRAVBREV: String?
 )
 // @SONAR_STOP@
-
