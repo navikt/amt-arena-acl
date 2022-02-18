@@ -6,7 +6,6 @@ import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.domain.Creation
 import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakGjennomforing
@@ -45,12 +44,6 @@ open class TiltakGjennomforingProcessor(
 
 	override fun handleEntry(data: ArenaData) {
 		val arenaGjennomforing : ArenaTiltakGjennomforing = data.getMainObject()
-
-		if (data.operation == AmtOperation.DELETED) {
-			logger.error("Implementation for deleted elements is not implemented for tiltakgjennomføring. Cannot handle arena id ${data.arenaId}")
-			repository.upsert(data.markAsFailed("Implementation of DELETE is not implemented"))
-			return
-		}
 
 		val gjennomforingId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
 			?: UUID.randomUUID()
