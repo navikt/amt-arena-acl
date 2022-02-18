@@ -6,7 +6,7 @@ data class ArenaTiltakDeltaker(
 	val PERSON_ID: Long,
 	val TILTAKGJENNOMFORING_ID: Long,
 	val DELTAKERSTATUSKODE: String,
-	val DELTAKERTYPEKODE: String,
+	val DELTAKERTYPEKODE: String?,
 	val AARSAKVERDIKODE_STATUS: String?,
 	val OPPMOTETYPEKODE: String?,
 	val PRIORITET: Int?,
