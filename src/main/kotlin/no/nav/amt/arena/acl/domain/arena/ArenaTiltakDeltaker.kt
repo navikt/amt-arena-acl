@@ -15,7 +15,7 @@ data class ArenaTiltakDeltaker(
 	val REG_DATO: String?,
 	val REG_USER: String?,
 	val MOD_DATO: String,
-	val MOD_USER: String,
+	val MOD_USER: String?,
 	val DATO_SVARFRIST: String?,
 	val DATO_FRA: String?,
 	val DATO_TIL: String?,
