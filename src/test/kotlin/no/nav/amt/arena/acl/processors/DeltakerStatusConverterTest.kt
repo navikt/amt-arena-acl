@@ -36,7 +36,7 @@ class DeltakerStatusConverterTest : StringSpec({
 	"status - AKTUELL - returnerer VENTER_PÅ_OPPSTART" {
 		converter.convert("AKTUELL", now, null, null, null) shouldBe VENTER_PA_OPPSTART
 	}
-	"status - AKTUELL og har startdato i fortid - returnerer GJENNOMFORES" {
+	"status - AKTUELL og har startdato i fortid - returnerer DELTAR" {
 		converter.convert("AKTUELL", now, yesterday, null, null) shouldBe DELTAR
 	}
 	"status - AKTUELL og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
@@ -45,10 +45,12 @@ class DeltakerStatusConverterTest : StringSpec({
 	"status - AKTUELL og har sluttdato i fortid - returnerer HAR_SLUTTET" {
 		converter.convert("AKTUELL", now, yesterday.minusDays(1), yesterday, null) shouldBe HAR_SLUTTET
 	}
-	"status - AKTUELL og har sluttdato i fremtid - returnerer GJENNOMFORES" {
+	"status - AKTUELL og har sluttdato i fremtid - returnerer DELTAR" {
 		converter.convert("AKTUELL", now, yesterday, tomorrow, null) shouldBe DELTAR
 	}
-
+	"status - AKTUELL og har startdato i dag - returnerer DELTAR" {
+		converter.convert("AKTUELL", now, now.toLocalDate(), tomorrow, null) shouldBe DELTAR
+	}
 	"status - AVSLAG og mangler startdato - returnerer IKKE_AKTUELL" {
 		converter.convert("AVSLAG", now, null, null, null) shouldBe IKKE_AKTUELL
 	}
