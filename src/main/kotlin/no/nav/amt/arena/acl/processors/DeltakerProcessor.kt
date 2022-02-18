@@ -122,7 +122,12 @@ open class DeltakerProcessor(
 		gjennomforingId: UUID,
 		personIdent: String
 	): AmtDeltaker {
-		val registrertDato = REG_DATO.asLocalDateTime()
+		var registrertDato = REG_DATO?.asLocalDateTime()
+
+		if (registrertDato == null) {
+			logger.warn("REG_DATO mangler for tiltakdeltaker arenaId=$TILTAKDELTAKER_ID amtId=${amtDeltakerId}, bruker MOD_DATO istedenfor")
+			registrertDato = MOD_DATO.asLocalDateTime()
+		}
 
 		return AmtDeltaker(
 			id = amtDeltakerId,
