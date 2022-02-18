@@ -26,7 +26,7 @@ open class DeltakerStatusConverter(
 	private val gjennomforendeStatus: ConversionStrategy = {
 		if (it.startDatoPassert() && it.sluttDatoPassert())
 			AmtDeltaker.Status.HAR_SLUTTET
-		else if (it.startDatoPassert())
+		else if (it.starterIDag() || it.startDatoPassert())
 			AmtDeltaker.Status.DELTAR
 		else AmtDeltaker.Status.VENTER_PA_OPPSTART
 	}
@@ -86,6 +86,7 @@ private data class StatusDates(
 ) {
 
 	fun statusEndretSammeDagSomRegistrering() = datoStatusEndring != null && datoStatusEndring == deltakerRegistrertDato.toLocalDate()
+	fun starterIDag () = start?.equals(LocalDate.now()) == true
 	fun startDatoPassert() = start?.isBefore(LocalDate.now()) ?: false
 	fun sluttDatoPassert() = end?.isBefore(LocalDate.now()) ?: false
 	fun endretEtterStartDato() = start != null && datoStatusEndring?.isAfter(start) ?: false
