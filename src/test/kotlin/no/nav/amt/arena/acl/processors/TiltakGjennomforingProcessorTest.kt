@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.processors
 import ArenaOrdsProxyClient
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
@@ -131,7 +132,7 @@ class TiltakGjennomforingProcessorTest {
 	}
 
 	@Test
-	fun `handleEntry() - operation type delete - legges til i failed liste`() {
+	fun `handleEntry() - operation type delete - skal sendes videre`() {
 		val arenaId = "1234567"
 		val opPos = "11223344"
 
@@ -147,9 +148,9 @@ class TiltakGjennomforingProcessorTest {
 		gjennomforingProcessor.handle(arenaData)
 
 		val translationData = translationRepository.get(arenaData.arenaTableName, arenaData.arenaId)
-		translationData shouldBe null
+		translationData shouldNotBe null
 
-		repository.get(arenaData.arenaTableName, AmtOperation.DELETED, opPos).ingestStatus shouldBe IngestStatus.FAILED
+		repository.get(arenaData.arenaTableName, AmtOperation.DELETED, opPos).ingestStatus shouldBe IngestStatus.HANDLED
 	}
 
 	val arenaGjennomforingUgyldigJson = mapper.readTree("""
