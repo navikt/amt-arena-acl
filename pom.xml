@@ -137,6 +137,11 @@
         </dependency>
         <dependency>
             <groupId>no.nav.common</groupId>
+            <artifactId>log</artifactId>
+            <version>${common.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.common</groupId>
             <artifactId>kafka</artifactId>
             <version>${common.version}</version>
         </dependency>

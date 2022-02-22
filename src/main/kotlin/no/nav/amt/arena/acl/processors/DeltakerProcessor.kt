@@ -10,6 +10,7 @@ import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.utils.SecureLog.secureLog
 import no.nav.amt.arena.acl.utils.TILTAKGJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.asLocalDate
 import no.nav.amt.arena.acl.utils.asLocalDateTime
@@ -63,7 +64,7 @@ open class DeltakerProcessor(
 		}
 
 		val personIdent = ordsClient.hentFnr(personId)
-			?: throw IllegalStateException("Expected Person with personId=$personId to exist")
+			?: throw IllegalStateException("Expected person with personId=$personId to exist")
 
 		val deltakerAmtId = hentEllerOpprettNyDeltakerId(data.arenaTableName, data.arenaId)
 
@@ -93,6 +94,8 @@ open class DeltakerProcessor(
 
 		send(amtDeltaker.id, objectMapper.writeValueAsString(amtData))
 		repository.upsert(data.markAsHandled())
+
+		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=$deltakerArenaId personId=$personId fnr=$personIdent er sendt")
 		log.info("Melding for deltaker id=$deltakerAmtId arenaId=$deltakerArenaId transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 	}
 
