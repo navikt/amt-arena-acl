@@ -14,6 +14,7 @@ import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.services.ArenaMessageProcessorService
+import no.nav.amt.arena.acl.services.TiltakService
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -42,6 +43,9 @@ abstract class IntegrationTestBase {
 	private lateinit var messageProcessor: ArenaMessageProcessorService
 
 	@Autowired
+	lateinit var tiltakService: TiltakService
+
+	@Autowired
 	lateinit var tiltakExecutor: TiltakTestExecutor
 
 	@Autowired
@@ -57,7 +61,7 @@ abstract class IntegrationTestBase {
 
 	@AfterEach
 	fun cleanup() {
-		tiltakRepository.invalidateCache()
+		tiltakService.invalidateTiltakByKodeCache()
 		IntegrationTestConfiguration.fnrHandlers.clear()
 		IntegrationTestConfiguration.virksomhetsHandler.clear()
 	}
