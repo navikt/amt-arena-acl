@@ -33,42 +33,42 @@ open class DeltakerProcessor(
 	kafkaProducer = kafkaProducer
 ) {
 
-	private val logger = LoggerFactory.getLogger(javaClass)
+	private val log = LoggerFactory.getLogger(javaClass)
 	private val statusConverter = DeltakerStatusConverter(meterRegistry)
 	private val statusEndretDatoConverter = DeltakerEndretDatoConverter()
 
 	override fun handleEntry(data: ArenaData) {
 		val arenaDeltaker: ArenaTiltakDeltaker = data.getMainObject()
+
 		val tiltakGjennomforingId = arenaDeltaker.TILTAKGJENNOMFORING_ID.toString()
+		val deltakerArenaId = arenaDeltaker.TILTAKDELTAKER_ID.toString()
+		val personId = arenaDeltaker.PERSON_ID?.toString()
 
 		val gjennomforingInfo = idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, tiltakGjennomforingId)
 
 		if (gjennomforingInfo == null) {
-			logger.info("Tiltakgjennomføring $tiltakGjennomforingId er ikke håndtert, kan derfor ikke håndtere deltaker med Arena ID ${arenaDeltaker.TILTAKDELTAKER_ID} enda")
-			repository.upsert(data.retry("Tiltakgjennomføring ($tiltakGjennomforingId) er ikke håndtert"))
+			log.info("Tiltakgjennomføring id=$tiltakGjennomforingId er ikke håndtert, kan derfor ikke håndtere deltaker med arenaId=$deltakerArenaId enda")
+			repository.upsert(data.retry("Venter på at gjennomføring id=$tiltakGjennomforingId skal bli håndtert"))
 			return
 		} else if (gjennomforingInfo.ignored) {
-			logger.info("Ignorerer deltaker med id ${arenaDeltaker.TILTAKDELTAKER_ID} som ikke er på et støttet tiltak")
+			log.info("Ignorerer deltaker med arenaId=$deltakerArenaId som ikke er på et støttet tiltak")
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
 			return
 		}
 
-		val personId = arenaDeltaker.PERSON_ID
-
 		if (personId == null) {
-			logger.info("Ignorerer deltaker med id ${arenaDeltaker.TILTAKDELTAKER_ID} som mangler PERSON_ID")
+			log.warn("Ignorerer deltaker med arenaId=$deltakerArenaId som mangler PERSON_ID")
 			repository.upsert(data.markAsIgnored("Mangler PERSON_ID"))
 			return
 		}
 
-		val personIdent = ordsClient.hentFnr(personId.toString())
-			?: throw IllegalStateException("Expected Person with ArenaId $personId to exist")
+		val personIdent = ordsClient.hentFnr(personId)
+			?: throw IllegalStateException("Expected Person with personId=$personId to exist")
 
-		val amtDeltakerId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
-			?: UUID.randomUUID()
+		val deltakerAmtId = hentEllerOpprettNyDeltakerId(data.arenaTableName, data.arenaId)
 
 		val amtDeltaker = arenaDeltaker.toAmtDeltaker(
-			amtDeltakerId = amtDeltakerId,
+			amtDeltakerId = deltakerAmtId,
 			gjennomforingId = gjennomforingInfo.amtId,
 			personIdent = personIdent
 		)
@@ -79,8 +79,8 @@ open class DeltakerProcessor(
 			val digest = getDigest(amtDeltaker)
 
 			if (deltakerInfo.second.currentHash == digest) {
-				logger.info("Deltaker med kode $amtDeltakerId sendes ikke videre fordi det allerede er sendt (Samme hash)")
-				repository.upsert(data.markAsIgnored("Deltaker er allerede sendt (samme hash)."))
+				log.info("Deltaker med kode id=$deltakerAmtId sendes ikke videre fordi det allerede er sendt (samme hash)")
+				repository.upsert(data.markAsIgnored("Deltaker er allerede sendt (samme hash)"))
 				return
 			}
 		}
@@ -88,15 +88,24 @@ open class DeltakerProcessor(
 		val amtData = AmtWrapper(
 			type = "DELTAKER",
 			operation = data.operation,
-			payload = arenaDeltaker.toAmtDeltaker(amtDeltakerId, gjennomforingInfo.amtId, personIdent)
+			payload = arenaDeltaker.toAmtDeltaker(deltakerAmtId, gjennomforingInfo.amtId, personIdent)
 		)
 
 		send(amtDeltaker.id, objectMapper.writeValueAsString(amtData))
 		repository.upsert(data.markAsHandled())
-		logger.info(
-			"[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}]"
-				+ " [Gjennomføring: ${amtDeltaker.gjennomforingId}] Deltaker with id $amtDeltakerId sent"
-		)
+		log.info("Melding for deltaker id=$deltakerAmtId arenaId=$deltakerArenaId transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
+	}
+
+	private fun hentEllerOpprettNyDeltakerId(arenaTableName: String, arenaId: String): UUID {
+		val deltakerId = idTranslationRepository.getAmtId(arenaTableName, arenaId)
+
+		if (deltakerId == null) {
+			val nyDeltakerIdId = UUID.randomUUID()
+			log.info("Opprettet ny id for deltaker, id=$nyDeltakerIdId arenaId=$arenaId")
+			return nyDeltakerIdId
+		}
+
+		return deltakerId
 	}
 
 	private fun insertTranslation(
@@ -119,8 +128,10 @@ open class DeltakerProcessor(
 				)
 			)
 
+			log.info("Opprettet translation for deltaker id=${deltaker.id} arenaId=$arenaId")
+
 			val created = idTranslationRepository.get(table, arenaId)
-				?: throw IllegalStateException("Translation for id $arenaId in table $table should exist")
+				?: throw IllegalStateException("Translation for id=${deltaker.id} arenaId=$arenaId in table $table should exist")
 
 			return Pair(Creation.CREATED, created)
 		}
@@ -168,11 +179,11 @@ open class DeltakerProcessor(
 		val modifisertDato = arenaDeltaker.MOD_DATO
 
 		if (modifisertDato != null) {
-			logger.warn("REG_DATO mangler for tiltakdeltaker arenaId=${arenaDeltaker.TILTAKGJENNOMFORING_ID}, bruker MOD_DATO istedenfor")
+			log.warn("REG_DATO mangler for tiltakdeltaker arenaId=${arenaDeltaker.TILTAKGJENNOMFORING_ID}, bruker MOD_DATO istedenfor")
 			return modifisertDato.asLocalDateTime()
 		}
 
-		logger.warn("MOD_DATO mangler for tiltakdeltaker arenaId=${arenaDeltaker.TILTAKGJENNOMFORING_ID}, bruker nåtid istedenfor")
+		log.warn("MOD_DATO mangler for tiltakdeltaker arenaId=${arenaDeltaker.TILTAKGJENNOMFORING_ID}, bruker nåtid istedenfor")
 
 		return LocalDateTime.now()
 	}

@@ -19,13 +19,13 @@ fun main() {
 
 class ArenaKafkaProducer {
 
-	private val logger = LoggerFactory.getLogger(javaClass)
+	private val log = LoggerFactory.getLogger(javaClass)
 
 	private val kafkaProducer = KafkaProducerClientImpl<String, String>(getKafkaProperties())
 
 	fun send(jsonFilePath: String, topic: String) {
 		val objectMapper = ObjectMapperFactory.get()
-		val jsonFileContent = this::class.java.classLoader.getResource(jsonFilePath).readText()
+		val jsonFileContent = javaClass.classLoader.getResource(jsonFilePath).readText()
 
 		val data: List<JsonNode> = objectMapper.readValue(jsonFileContent)
 
@@ -34,7 +34,7 @@ class ArenaKafkaProducer {
 			kafkaProducer.sendSync(ProducerRecord(topic, it.toString()))
 		}
 
-		logger.info("Sent ${data.size} messages on topic $topic")
+		log.info("Sent ${data.size} messages on topic $topic")
 	}
 
 	private fun getKafkaProperties(): Properties {

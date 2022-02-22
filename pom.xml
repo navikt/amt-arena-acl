@@ -23,7 +23,7 @@
         <kotlin.version>1.6.10</kotlin.version>
         <java.version>17</java.version>
 
-        <common.version>2.2022.01.21_08.02-cd96965058ef</common.version>
+        <common.version>2.2022.02.18_14.38-8d8bb494bd41</common.version>
         <kotest.version>5.0.0.M2</kotest.version>
         <testcontainers.version>1.16.0</testcontainers.version>
         <okhttp.version>4.9.3</okhttp.version>
@@ -124,7 +124,7 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>6.6</version>
+            <version>7.0.1</version>
         </dependency>
 
         <dependency>
@@ -138,6 +138,11 @@
         <dependency>
             <groupId>no.nav.common</groupId>
             <artifactId>kafka</artifactId>
+            <version>${common.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.common</groupId>
+            <artifactId>job</artifactId>
             <version>${common.version}</version>
         </dependency>
         <dependency>

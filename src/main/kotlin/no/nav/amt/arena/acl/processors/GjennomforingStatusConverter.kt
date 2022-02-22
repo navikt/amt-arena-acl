@@ -14,7 +14,7 @@ class GjennomforingStatusConverter {
 			in avsluttendeStatuser -> AmtGjennomforing.Status.AVSLUTTET
 			in ikkeStartetStatuser -> AmtGjennomforing.Status.IKKE_STARTET
 			in gjennomforesStatuser -> AmtGjennomforing.Status.GJENNOMFORES
-			else -> throw DataIntegrityViolationException("Ukjent status fra arena: ${arenaStatus}")
+			else -> throw DataIntegrityViolationException("Ukjent status fra arena: $arenaStatus")
 		}
 
 	}

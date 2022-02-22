@@ -39,17 +39,18 @@ open class TiltakGjennomforingProcessor(
 	kafkaProducer = kafkaProducer
 ) {
 
-	private val logger = LoggerFactory.getLogger(javaClass)
+	private val log = LoggerFactory.getLogger(javaClass)
 	private val statusConverter = GjennomforingStatusConverter()
 
 	override fun handleEntry(data: ArenaData) {
 		val arenaGjennomforing : ArenaTiltakGjennomforing = data.getMainObject()
 
-		val gjennomforingId = idTranslationRepository.getAmtId(data.arenaTableName, data.arenaId)
-			?: UUID.randomUUID()
+		val arenaId = arenaGjennomforing.TILTAKGJENNOMFORING_ID
+
+		val gjennomforingId = hentEllerOpprettNyGjennomforingId(data.arenaTableName, data.arenaId)
 
 		if (isUnsupportedTiltakType(arenaGjennomforing)) {
-			logger.info("Gjennomføring med id ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
+			log.info("Gjennomføring med arenaId=$arenaId er ikke støttet og sendes ikke videre")
 			insertTranslation(data, gjennomforingId, true, gjennomforingId::digest)
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
 			return
@@ -57,7 +58,7 @@ open class TiltakGjennomforingProcessor(
 
 		if (ugyldigGjennomforing(arenaGjennomforing)) {
 			// Ikke sett til ignored i translation fordi da må man unignore når man får neste melding som kan være gyldig
-			logger.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaTiltakgjennomforingId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}")
+			log.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaId=$arenaId")
 			repository.upsert(data.markAsIgnored())
 			return
 		}
@@ -66,7 +67,7 @@ open class TiltakGjennomforingProcessor(
 		val tiltak = tiltakRepository.getByKode(tiltakskode)
 
 		if (tiltak == null) {
-			logger.info("Tiltak $tiltakskode er ikke håndtert, kan derfor ikke håndtere gjennomføring med Arena ID ${arenaGjennomforing.TILTAKGJENNOMFORING_ID} enda.")
+			log.info("Tiltak $tiltakskode er ikke håndtert, kan derfor ikke håndtere gjennomføring med arenaId=$arenaId enda")
 			repository.upsert(data.retry("Tiltaket ($tiltakskode) er ikke håndtert"))
 			return
 		}
@@ -85,7 +86,7 @@ open class TiltakGjennomforingProcessor(
 			val digest = amtGjennomforing.digest()
 
 			if (translation.second.currentHash == digest) {
-				logger.info("Gjennomføring med kode $gjennomforingId sendes ikke videre fordi det allerede er sendt (Samme hash)")
+				log.info("Gjennomføring med kode $gjennomforingId sendes ikke videre fordi det allerede er sendt (Samme hash)")
 				repository.upsert(data.markAsIgnored("Tiltaket er allerede sendt (samme hash)."))
 				return
 			}
@@ -99,7 +100,19 @@ open class TiltakGjennomforingProcessor(
 
 		send(amtGjennomforing.id, objectMapper.writeValueAsString(amtData))
 		repository.upsert(data.markAsHandled())
-		logger.info("[Transaction id: ${amtData.transactionId}] [Operation: ${amtData.operation}] Gjennomføring with id $gjennomforingId Sent.")
+		log.info("Melding for gjennomføring id=$gjennomforingId arenaId=$arenaId transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
+	}
+
+	private fun hentEllerOpprettNyGjennomforingId(arenaTableName: String, arenaId: String): UUID {
+		val gjennomforingId = idTranslationRepository.getAmtId(arenaTableName, arenaId)
+
+		if (gjennomforingId == null) {
+			val nyGjennomforingId = UUID.randomUUID()
+			log.info("Opprettet ny id for gjennomføring, id=$nyGjennomforingId arenaId=$arenaId")
+			return nyGjennomforingId
+		}
+
+		return gjennomforingId
 	}
 
 	private fun isUnsupportedTiltakType(gjennomforing: ArenaTiltakGjennomforing): Boolean {
@@ -127,8 +140,10 @@ open class TiltakGjennomforingProcessor(
 				)
 			)
 
+			log.info("Opprettet translation for gjennomføring id=${gjennomforingId} arenaId=${data.arenaId}")
+
 			val created = idTranslationRepository.get(data.arenaTableName, data.arenaId)
-				?: throw IllegalStateException("Translation for id ${data.arenaId} in table ${data.arenaTableName} should exist")
+				?: throw IllegalStateException("Translation for id=$gjennomforingId arenaId=${data.arenaId} in table ${data.arenaTableName} should exist")
 
 			return Pair(Creation.CREATED, created)
 		}
@@ -164,11 +179,11 @@ open class TiltakGjennomforingProcessor(
 		val modifisertDato = arenaGjennomforing.MOD_DATO
 
 		if (modifisertDato != null) {
-			logger.warn("REG_DATO mangler for tiltakgjennomføring arenaId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}, bruker MOD_DATO istedenfor")
+			log.warn("REG_DATO mangler for tiltakgjennomføring arenaId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}, bruker MOD_DATO istedenfor")
 			return modifisertDato.asLocalDateTime()
 		}
 
-		logger.warn("MOD_DATO mangler for tiltakgjennomføring arenaId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}, bruker nåtid istedenfor")
+		log.warn("MOD_DATO mangler for tiltakgjennomføring arenaId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID}, bruker nåtid istedenfor")
 
 		return LocalDateTime.now()
 	}

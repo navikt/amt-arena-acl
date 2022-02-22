@@ -60,7 +60,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 
 	"should handle arena deltaker message" {
 		val tiltakdeltakereJsonFileContent =
-			this::class.java.classLoader.getResource("data/arena-tiltakdeltakerendret-v1.json").readText()
+			javaClass.classLoader.getResource("data/arena-tiltakdeltakerendret-v1.json").readText()
 		val tiltakdeltakere: List<JsonNode> = objectMapper.readValue(tiltakdeltakereJsonFileContent)
 		val deltakerJson = tiltakdeltakere.toList()[0].toString()
 
@@ -79,7 +79,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 
 	"should handle arena gjennomforing message" {
 		val tiltakgjennomforingerJsonFileContent =
-			this::class.java.classLoader.getResource("data/arena-tiltakgjennomforingendret-v1.json").readText()
+			javaClass.classLoader.getResource("data/arena-tiltakgjennomforingendret-v1.json").readText()
 		val tiltakgjennomforinger: List<JsonNode> = objectMapper.readValue(tiltakgjennomforingerJsonFileContent)
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
@@ -98,7 +98,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 
 	"should handle arena tiltak message" {
 		val tiltakJsonFileContent =
-			this::class.java.classLoader.getResource("data/arena-tiltakendret-v1.json").readText()
+			javaClass.classLoader.getResource("data/arena-tiltakendret-v1.json").readText()
 		val tiltakList: List<JsonNode> = objectMapper.readValue(tiltakJsonFileContent)
 		val tiltakJson = tiltakList.toList()[0].toString()
 
@@ -117,7 +117,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 
 	"should handle message with unicode NULL" {
 		val tiltakgjennomforingerJsonFileContent =
-			this::class.java.classLoader.getResource("data/arena-tiltakgjennomforingendret-v1-bad-unicode.json")
+			javaClass.classLoader.getResource("data/arena-tiltakgjennomforingendret-v1-bad-unicode.json")
 				.readText()
 		val tiltakgjennomforinger: List<JsonNode> = objectMapper.readValue(tiltakgjennomforingerJsonFileContent)
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()

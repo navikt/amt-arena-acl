@@ -30,7 +30,7 @@ open class TiltakRepository(
 		)
 	}
 
-	fun upsert(kode: String, navn: String): AmtTiltak {
+	fun upsert(id: UUID, kode: String, navn: String): AmtTiltak {
 		val sql = """
 			INSERT INTO arena_tiltak(id, kode, navn)
 			VALUES (:id,
@@ -38,8 +38,6 @@ open class TiltakRepository(
 					:navn)
 			ON CONFLICT (kode) DO UPDATE SET navn = :navn
 		""".trimIndent()
-
-		val id = UUID.randomUUID()
 
 		val parameters = MapSqlParameterSource().addValues(
 			mapOf(

@@ -8,11 +8,10 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
 import javax.sql.DataSource
-import kotlin.math.hypot
 
 object SingletonPostgresContainer {
 
-	private val log = LoggerFactory.getLogger(this::class.java)
+	private val log = LoggerFactory.getLogger(javaClass)
 
 	private const val postgresDockerImageName = "postgres:12-alpine"
 
