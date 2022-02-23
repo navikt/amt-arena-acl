@@ -23,7 +23,7 @@ fun String.removeNullCharacters(): String {
 }
 
 fun String?.asTime(): LocalTime {
-	val logger = LoggerFactory.getLogger(String::class.java)
+	val log = LoggerFactory.getLogger(String::class.java)
 
 	if (this == null) {
 		return LocalTime.MIDNIGHT
@@ -40,7 +40,7 @@ fun String?.asTime(): LocalTime {
 		return LocalTime.of(hour.toInt(), minutes.toInt())
 	}
 
-	logger.warn("Det er ikke implementert en handler for klokketid, pattern: $this")
+	log.warn("Det er ikke implementert en handler for klokketid, pattern: $this")
 
 	return LocalTime.MIDNIGHT
 }

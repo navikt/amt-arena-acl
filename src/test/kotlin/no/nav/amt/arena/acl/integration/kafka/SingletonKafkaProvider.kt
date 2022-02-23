@@ -14,7 +14,7 @@ object SingletonKafkaProvider {
 	private const val producerId = "INTEGRATION_PRODUCER"
 	private const val consumerId = "INTEGRATION_CONSUMER"
 
-	private val logger = LoggerFactory.getLogger(this::class.java)
+	private val log = LoggerFactory.getLogger(javaClass)
 	private const val kafkaDockerImageName = "confluentinc/cp-kafka:6.2.1"
 
 	private var kafkaContainer: KafkaContainer? = null
@@ -47,7 +47,7 @@ object SingletonKafkaProvider {
 
 	private fun getHost(): String {
 		if (kafkaContainer == null) {
-			logger.info("Starting new Kafka Instance...")
+			log.info("Starting new Kafka Instance...")
 			kafkaContainer = KafkaContainer(DockerImageName.parse(kafkaDockerImageName))
 			kafkaContainer!!.start()
 			setupShutdownHook()
@@ -57,7 +57,7 @@ object SingletonKafkaProvider {
 
 	private fun setupShutdownHook() {
 		Runtime.getRuntime().addShutdownHook(Thread {
-			logger.info("Shutting down Kafka server...")
+			log.info("Shutting down Kafka server...")
 			kafkaContainer?.stop()
 		})
 	}

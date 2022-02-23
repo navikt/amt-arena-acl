@@ -33,6 +33,8 @@ spec:
       enabled: true
   kafka:
     pool: nav-prod
+  secureLogs:
+    enabled: true
   env:
     - name: AMT_ARENA_ORDS_PROXY_SCOPE
       value: api://prod-fss.amt.amt-arena-ords-proxy/.default
