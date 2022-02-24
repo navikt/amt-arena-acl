@@ -6,7 +6,7 @@ import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.repositories.TiltakRepository
+import no.nav.amt.arena.acl.services.TiltakService
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -15,7 +15,7 @@ import java.util.*
 @Component
 open class TiltakProcessor(
 	private val arenaDataRepository: ArenaDataRepository,
-	private val repository: TiltakRepository,
+	private val tiltakService: TiltakService,
 ) {
 
 	private val objectMapper = ObjectMapperFactory.get()
@@ -33,9 +33,9 @@ open class TiltakProcessor(
 			val kode = arenaTiltak.TILTAKSKODE
 			val navn = arenaTiltak.TILTAKSNAVN
 
-			repository.upsert(
-				id = id,
-				kode = kode,
+			tiltakService.upsert(
+				id = UUID.randomUUID(),
+				kode = arenaTiltak.TILTAKSKODE,
 				navn = navn
 			)
 

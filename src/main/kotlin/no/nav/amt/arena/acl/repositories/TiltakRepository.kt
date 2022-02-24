@@ -1,7 +1,5 @@
 package no.nav.amt.arena.acl.repositories
 
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
 import no.nav.amt.arena.acl.domain.amt.AmtTiltak
 import no.nav.amt.arena.acl.utils.getUUID
 import org.springframework.jdbc.core.RowMapper
@@ -9,18 +7,11 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 @Component
 open class TiltakRepository(
 	private val template: NamedParameterJdbcTemplate
 ) {
-
-	private val cache: Cache<String, AmtTiltak> = Caffeine.newBuilder()
-		.maximumSize(200)
-		.expireAfterWrite(10, TimeUnit.MINUTES)
-		.recordStats()
-		.build()
 
 	private val rowMapper = RowMapper { rs, _ ->
 		AmtTiltak(
@@ -30,7 +21,7 @@ open class TiltakRepository(
 		)
 	}
 
-	fun upsert(id: UUID, kode: String, navn: String): AmtTiltak {
+	fun upsert(id: UUID, kode: String, navn: String) {
 		val sql = """
 			INSERT INTO arena_tiltak(id, kode, navn)
 			VALUES (:id,
@@ -47,44 +38,13 @@ open class TiltakRepository(
 			)
 		)
 
-		val rowsUpdated = template.update(sql, parameters)
-
-		if (rowsUpdated > 0) {
-			cache.invalidate(kode)
-		}
-
-		return getByKode(kode)
-			?: throw NoSuchElementException("Tiltak med kode $kode kan ikke hentes fra databasen.")
+		template.update(sql, parameters)
 	}
 
 	fun getByKode(kode: String): AmtTiltak? {
-		val cachedTiltak = cache.getIfPresent(kode)
+		val sql = "SELECT * FROM arena_tiltak WHERE kode = :kode"
 
-		if (cachedTiltak != null) {
-			return cachedTiltak
-		}
-
-		val sql = """
-			SELECT *
-			FROM arena_tiltak
-			WHERE kode = :kode
-		""".trimIndent()
-
-		val tiltak = template.query(sql, singletonParameterMap("kode", kode), rowMapper).firstOrNull()
-
-		if (tiltak != null) {
-			cache.put(kode, tiltak)
-		}
-
-		return tiltak
-	}
-
-	fun getCache(): Cache<String, AmtTiltak> {
-		return cache
-	}
-
-	internal fun invalidateCache() {
-		cache.invalidateAll()
+		return template.query(sql, singletonParameterMap("kode", kode), rowMapper).firstOrNull()
 	}
 
 	private fun singletonParameterMap(key: String, value: Any): MapSqlParameterSource {

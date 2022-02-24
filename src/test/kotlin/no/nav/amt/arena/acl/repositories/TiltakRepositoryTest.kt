@@ -30,32 +30,13 @@ class TiltakRepositoryTest : FunSpec({
 		val kode = "KODE"
 		val navn = "NAVN"
 
-		val tiltak = repository.upsert(id, kode, navn)
-
-		tiltak.id shouldBe id
-		tiltak.kode shouldBe kode
-		tiltak.navn shouldBe navn
-
-		val cache = repository.getCache()
-		cache.stats().hitCount() shouldBe 0
-		cache.getIfPresent(kode) shouldBe tiltak
-	}
-
-	test("Get multiple times should get item from cache") {
-		val id = UUID.randomUUID()
-		val kode = "KODE"
-		val navn = "NAVN"
-
 		repository.upsert(id, kode, navn)
 
-		val cache = repository.getCache()
+		val tiltak = repository.getByKode(kode)
 
-		repository.getByKode(kode)
-		cache.stats().hitCount() shouldBe 1
-
-		repository.getByKode(kode)
-		cache.stats().hitCount() shouldBe 2
-
+		tiltak?.id shouldBe id
+		tiltak?.kode shouldBe kode
+		tiltak?.navn shouldBe navn
 	}
 
 })

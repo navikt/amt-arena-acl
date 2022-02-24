@@ -12,6 +12,7 @@ import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
+import no.nav.amt.arena.acl.services.TiltakService
 import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -36,7 +37,7 @@ class TiltakProcessorTest : FunSpec({
 		tiltakRepository = TiltakRepository(template)
 		DatabaseTestUtils.cleanDatabase(dataSource)
 
-		tiltakProcessor = TiltakProcessor(arenaDataRepository, tiltakRepository)
+		tiltakProcessor = TiltakProcessor(arenaDataRepository, TiltakService(tiltakRepository))
 	}
 
 	test("Add Tiltak") {
