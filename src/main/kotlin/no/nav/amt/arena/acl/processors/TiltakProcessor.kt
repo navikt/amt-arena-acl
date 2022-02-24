@@ -20,22 +20,28 @@ open class TiltakProcessor(
 
 	private val objectMapper = ObjectMapperFactory.get()
 
-	private val logger = LoggerFactory.getLogger(javaClass)
+	private val log = LoggerFactory.getLogger(javaClass)
 
 	fun handle(data: ArenaData) {
 		val arenaTiltak = getMainObject(data)
 
 		if (data.operation == AmtOperation.DELETED) {
-			logger.error("Implementation for delete elements are not implemented. Cannot handle arena id ${data.arenaId} from table ${data.arenaTableName} at position ${data.operationPosition}.")
+			log.error("Implementation for delete elements are not implemented. Cannot handle arena id ${data.arenaId} from table ${data.arenaTableName} at position ${data.operationPosition}.")
 			arenaDataRepository.upsert(data.markAsFailed("Implementation of DELETE is not implemented."))
 		} else {
+			val id = UUID.randomUUID()
+			val kode = arenaTiltak.TILTAKSKODE
+			val navn = arenaTiltak.TILTAKSNAVN
+
 			tiltakService.upsert(
 				id = UUID.randomUUID(),
 				kode = arenaTiltak.TILTAKSKODE,
-				navn = arenaTiltak.TILTAKSNAVN
+				navn = navn
 			)
 
 			arenaDataRepository.upsert(data.markAsHandled())
+
+			log.info("Upsert av tiltak id=$id kode=$kode navn=$navn")
 		}
 
 	}

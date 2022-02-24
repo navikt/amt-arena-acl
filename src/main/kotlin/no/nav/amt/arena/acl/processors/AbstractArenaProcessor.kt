@@ -23,7 +23,7 @@ abstract class AbstractArenaProcessor<T>(
 	@Value("\${app.env.amtTopic}")
 	lateinit var topic: String
 
-	private val logger = LoggerFactory.getLogger(javaClass)
+	private val log = LoggerFactory.getLogger(javaClass)
 
 	protected val objectMapper = ObjectMapperFactory.get()
 
@@ -46,11 +46,11 @@ abstract class AbstractArenaProcessor<T>(
 				handleEntry(data)
 			} catch (e: Exception) {
 				if (data.ingestAttempts >= MAX_INGEST_ATTEMPTS) {
-					logger.error("[arena_data_id ${data.id}]: ${e.message}", e)
+					log.error("[arena_data_id ${data.id}]: ${e.message}", e)
 					repository.upsert(data.markAsFailed())
 				} else {
 					if (e !is DependencyNotIngestedException) {
-						logger.error("[arena_data_id ${data.id}]: ${e.message}", e)
+						log.error("[arena_data_id ${data.id}]: ${e.message}", e)
 					}
 
 					repository.upsert(data.retry())

@@ -5,6 +5,7 @@ import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.ArenaMessageProcessorService
+import no.nav.common.job.JobRunner
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -21,7 +22,13 @@ open class CronJobs(
 	private val meterRegistry: MeterRegistry,
 ) {
 
-	private val logger = LoggerFactory.getLogger(javaClass)
+	companion object {
+		private const val ONE_MINUTE = 60 * 1000L
+		private const val ONE_HOUR = 60 * 60 * 1000L
+		private const val AT_MIDNIGHT = "0 0 0 * * *"
+	}
+
+	private val log = LoggerFactory.getLogger(javaClass)
 
 	@Bean
 	open fun threadPoolTaskScheduler(): ThreadPoolTaskScheduler {
@@ -30,21 +37,17 @@ open class CronJobs(
 		return threadPoolTaskScheduler
 	}
 
-	@Scheduled(fixedDelay = 60 * 1000, initialDelay = 60 * 1000) // Hvert minutt
+	@Scheduled(fixedDelay = 15 * ONE_MINUTE, initialDelay = ONE_MINUTE)
 	open fun processArenaMessages() {
-		logger.debug("Starting processing job for uningested Arena Data...")
-		messageProcessorService.processMessages()
-		logger.debug("Finished processing job for uningested Arena Data!")
+		JobRunner.run("process_arena_messages", messageProcessorService::processMessages)
 	}
 
-	@Scheduled(cron = "0 0 0 * * *") // Hver dag ved midnatt
-	open fun processFailedMessages() {
-		logger.debug("Starting processing job for failed Arena Data...")
-		messageProcessorService.processFailedMessages()
-		logger.debug("Finished processing job for failed Arena Data!")
+	@Scheduled(cron = AT_MIDNIGHT)
+	open fun processFailedArenaMessages() {
+		JobRunner.run("process_failed_arena_messages", messageProcessorService::processFailedMessages)
 	}
 
-	@Scheduled(fixedDelay = 20 * 1000, initialDelay = 60 * 1000)
+	@Scheduled(fixedDelay = ONE_MINUTE, initialDelay = ONE_MINUTE)
 	open fun logArenaDataStatuses() {
 		val gaugeName = "amt.arena-acl.ingest.status"
 
@@ -68,10 +71,12 @@ open class CronJobs(
 			}
 	}
 
-	@Scheduled(cron = "0 0 * * * *") // Hver time
+	@Scheduled(fixedDelay = ONE_HOUR, initialDelay = ONE_MINUTE)
 	open fun deleteIgnoredArenaData() {
-		val rowsDeleted = arenaDataRepository.deleteAllIgnoredData()
-		logger.info("Slettet ignorert data fra arena_data rows=${rowsDeleted}")
+		JobRunner.run("delete_ignored_data") {
+			val rowsDeleted = arenaDataRepository.deleteAllIgnoredData()
+			log.info("Slettet ignorert data fra arena_data rows=${rowsDeleted}")
+		}
 	}
 
 }

@@ -22,7 +22,7 @@ open class ArenaMessageProcessorService(
 	private val deltakerProcessor: DeltakerProcessor
 ) {
 
-	private val logger = LoggerFactory.getLogger(javaClass)
+	private val log = LoggerFactory.getLogger(javaClass)
 
 	private val mapper = ObjectMapperFactory.get()
 
@@ -72,7 +72,7 @@ open class ArenaMessageProcessorService(
 		val table = messages.first().arenaTableName
 		val duration = Duration.between(start, Instant.now())
 
-		logger.info("[$table]: Handled ${messages.size} messages in ${duration.toSeconds()}.${duration.toMillisPart()} seconds.")
+		log.info("[$table]: Handled ${messages.size} messages in ${duration.toSeconds()}.${duration.toMillisPart()} seconds.")
 	}
 
 
