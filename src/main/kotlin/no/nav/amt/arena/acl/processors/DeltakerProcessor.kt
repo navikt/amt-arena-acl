@@ -8,6 +8,7 @@ import no.nav.amt.arena.acl.domain.Creation
 import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
+import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.SecureLog.secureLog
@@ -25,7 +26,8 @@ open class DeltakerProcessor(
 	repository: ArenaDataRepository,
 	private val idTranslationRepository: ArenaDataIdTranslationRepository,
 	private val ordsClient: ArenaOrdsProxyClient,
-	meterRegistry: MeterRegistry,
+	val meterRegistry: MeterRegistry,
+	private val metrics: DeltakerMetricHandler,
 	kafkaProducer: KafkaProducerClient<String, String>
 ) : AbstractArenaProcessor<ArenaTiltakDeltaker>(
 	repository = repository,
@@ -97,6 +99,7 @@ open class DeltakerProcessor(
 
 		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=$deltakerArenaId personId=$personId fnr=$personIdent er sendt")
 		log.info("Melding for deltaker id=$deltakerAmtId arenaId=$deltakerArenaId transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
+		metrics.publishMetrics(data)
 	}
 
 	private fun hentEllerOpprettNyDeltakerId(arenaTableName: String, arenaId: String): UUID {
