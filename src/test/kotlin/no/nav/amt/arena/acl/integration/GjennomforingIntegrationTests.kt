@@ -7,6 +7,7 @@ import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingInput
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCommand
 import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
+import no.nav.amt.arena.acl.mocks.OrdsClientMock
 import org.junit.jupiter.api.Test
 import java.util.*
 
@@ -75,7 +76,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 		tiltakExecutor.execute(NyttTiltakCommand())
 
-		IntegrationTestConfiguration.virksomhetsHandler["$virksomhetsId"] = { throw RuntimeException() }
+		OrdsClientMock.virksomhetsHandler["$virksomhetsId"] = { throw RuntimeException() }
 
 		val input = GjennomforingInput(
 			gjennomforingId = Random().nextLong(),
