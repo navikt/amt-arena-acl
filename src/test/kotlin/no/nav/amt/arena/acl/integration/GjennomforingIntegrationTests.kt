@@ -90,23 +90,4 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 	}
 
-	@Test
-	fun sameGjennomforingTwiceSendsOneMessage() {
-		val gjennomforingInput = GjennomforingInput(
-			gjennomforingId = Random().nextLong()
-		)
-
-		tiltakExecutor.execute(NyttTiltakCommand())
-			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
-
-		val first = gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
-			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
-
-		gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
-			.arenaData { it.ingestStatus shouldBe IngestStatus.IGNORED }
-			.arenaData { it.note shouldBe "Tiltaket er allerede sendt (samme hash)." }
-			.translation { it.currentHash shouldBe first.translation!!.currentHash }
-
-	}
-
 }

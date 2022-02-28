@@ -4,7 +4,6 @@ import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
-import no.nav.amt.arena.acl.domain.Creation
 import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
@@ -43,7 +42,7 @@ open class TiltakGjennomforingProcessor(
 	private val statusConverter = GjennomforingStatusConverter()
 
 	override fun handleEntry(data: ArenaData) {
-		val arenaGjennomforing : ArenaTiltakGjennomforing = data.getMainObject()
+		val arenaGjennomforing: ArenaTiltakGjennomforing = data.getMainObject()
 
 		val arenaId = arenaGjennomforing.TILTAKGJENNOMFORING_ID
 
@@ -51,7 +50,7 @@ open class TiltakGjennomforingProcessor(
 
 		if (isUnsupportedTiltakType(arenaGjennomforing)) {
 			log.info("Gjennomføring med arenaId=$arenaId er ikke støttet og sendes ikke videre")
-			insertTranslation(data, gjennomforingId, true, gjennomforingId::digest)
+			insertTranslation(data, gjennomforingId, true)
 			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
 			return
 		}
@@ -80,17 +79,8 @@ open class TiltakGjennomforingProcessor(
 			virksomhetsnummer = virksomhetsnummer
 		)
 
-		val translation = insertTranslation(data, gjennomforingId, false, amtGjennomforing::digest)
+		insertTranslation(data, gjennomforingId, false)
 
-		if (translation.first == Creation.EXISTED) {
-			val digest = amtGjennomforing.digest()
-
-			if (translation.second.currentHash == digest) {
-				log.info("Gjennomføring med kode $gjennomforingId sendes ikke videre fordi det allerede er sendt (Samme hash)")
-				repository.upsert(data.markAsIgnored("Tiltaket er allerede sendt (samme hash)."))
-				return
-			}
-		}
 
 		val amtData = AmtWrapper(
 			type = "GJENNOMFORING",
@@ -123,30 +113,15 @@ open class TiltakGjennomforingProcessor(
 		data: ArenaData,
 		gjennomforingId: UUID,
 		ignored: Boolean,
-		digestor: () -> String
-	): Pair<Creation, ArenaDataIdTranslation> {
-		val exists = idTranslationRepository.get(data.arenaTableName, data.arenaId)
-
-		if (exists != null) {
-			return Pair(Creation.EXISTED, exists)
-		} else {
-			idTranslationRepository.insert(
-				ArenaDataIdTranslation(
-					amtId = gjennomforingId,
-					arenaTableName = data.arenaTableName,
-					arenaId = data.arenaId,
-					ignored = ignored,
-					digestor()
-				)
+	) {
+		idTranslationRepository.insert(
+			ArenaDataIdTranslation(
+				amtId = gjennomforingId,
+				arenaTableName = data.arenaTableName,
+				arenaId = data.arenaId,
+				ignored = ignored,
 			)
-
-			log.info("Opprettet translation for gjennomføring id=${gjennomforingId} arenaId=${data.arenaId}")
-
-			val created = idTranslationRepository.get(data.arenaTableName, data.arenaId)
-				?: throw IllegalStateException("Translation for id=$gjennomforingId arenaId=${data.arenaId} in table ${data.arenaTableName} should exist")
-
-			return Pair(Creation.CREATED, created)
-		}
+		)
 	}
 
 	private fun ArenaTiltakGjennomforing.toAmtGjennomforing(
@@ -165,7 +140,9 @@ open class TiltakGjennomforingProcessor(
 			sluttDato = DATO_TIL?.asLocalDate(),
 			registrertDato = registrertDato,
 			fremmoteDato = DATO_FREMMOTE?.asLocalDate() withTime KLOKKETID_FREMMOTE.asTime(),
-			status = statusConverter.convert(TILTAKSTATUSKODE ?: throw DataIntegrityViolationException("Forventet at TILTAKSTATUSKODE ikke er null"))
+			status = statusConverter.convert(
+				TILTAKSTATUSKODE ?: throw DataIntegrityViolationException("Forventet at TILTAKSTATUSKODE ikke er null")
+			)
 		)
 	}
 

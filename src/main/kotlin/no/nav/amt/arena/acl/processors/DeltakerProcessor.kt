@@ -4,7 +4,6 @@ import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
-import no.nav.amt.arena.acl.domain.Creation
 import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
@@ -74,17 +73,7 @@ open class DeltakerProcessor(
 			personIdent = personIdent
 		)
 
-		val deltakerInfo = insertTranslation(data.arenaTableName, data.arenaId, amtDeltaker)
-
-		if (deltakerInfo.first == Creation.EXISTED) {
-			val digest = getDigest(amtDeltaker)
-
-			if (deltakerInfo.second.currentHash == digest) {
-				log.info("Deltaker med kode id=$deltakerAmtId sendes ikke videre fordi det allerede er sendt (samme hash)")
-				repository.upsert(data.markAsIgnored("Deltaker er allerede sendt (samme hash)"))
-				return
-			}
-		}
+		insertTranslation(data.arenaTableName, data.arenaId, amtDeltaker)
 
 		val amtData = AmtWrapper(
 			type = "DELTAKER",
@@ -115,29 +104,15 @@ open class DeltakerProcessor(
 		table: String,
 		arenaId: String,
 		deltaker: AmtDeltaker,
-	): Pair<Creation, ArenaDataIdTranslation> {
-		val exists = idTranslationRepository.get(table, arenaId)
-
-		if (exists != null) {
-			return Pair(Creation.EXISTED, exists)
-		} else {
-			idTranslationRepository.insert(
-				ArenaDataIdTranslation(
-					amtId = deltaker.id,
-					arenaTableName = table,
-					arenaId = arenaId,
-					ignored = false,
-					getDigest(deltaker)
-				)
+	) {
+		idTranslationRepository.insert(
+			ArenaDataIdTranslation(
+				amtId = deltaker.id,
+				arenaTableName = table,
+				arenaId = arenaId,
+				ignored = false
 			)
-
-			log.info("Opprettet translation for deltaker id=${deltaker.id} arenaId=$arenaId")
-
-			val created = idTranslationRepository.get(table, arenaId)
-				?: throw IllegalStateException("Translation for id=${deltaker.id} arenaId=$arenaId in table $table should exist")
-
-			return Pair(Creation.CREATED, created)
-		}
+		)
 	}
 
 	private fun ArenaTiltakDeltaker.toAmtDeltaker(

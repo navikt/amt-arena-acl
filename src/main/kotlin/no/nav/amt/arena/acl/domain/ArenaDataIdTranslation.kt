@@ -12,5 +12,4 @@ data class ArenaDataIdTranslation(
 	val arenaTableName: String,
 	val arenaId: String,
 	val ignored: Boolean,
-	val currentHash: String
 )

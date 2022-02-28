@@ -78,9 +78,8 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 
 		deltakerExecutor.execute(NyDeltakerCommand(input))
-			.arenaData { it.ingestStatus shouldBe IngestStatus.IGNORED }
-			.arenaData { it.note shouldBe "Deltaker er allerede sendt (samme hash)" }
-			.translation { it.currentHash shouldBe first.translation!!.currentHash }
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.output { it.timestamp.isAfter(first.output?.timestamp) }
 	}
 
 	@Test
