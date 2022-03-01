@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.ordsproxy
 import ArenaOrdsProxyClient
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import no.nav.common.rest.client.RestClient.baseClient
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.springframework.http.HttpStatus
@@ -17,7 +18,7 @@ open class ArenaOrdsProxyClientImpl(
 	private val arenaOrdsProxyUrl: String,
 	private val proxyTokenProvider: Supplier<String>,
 	private val ordsProxyTokenProvider: Supplier<String>,
-	private val httpClient: OkHttpClient = OkHttpClient(),
+	private val httpClient: OkHttpClient = baseClient(),
 	private val objectMapper: ObjectMapper = ObjectMapper().registerKotlinModule(),
 ) : ArenaOrdsProxyClient {
 
