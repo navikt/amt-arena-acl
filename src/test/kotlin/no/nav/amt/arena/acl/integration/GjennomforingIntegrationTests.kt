@@ -14,7 +14,7 @@ import java.util.*
 class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 	@Test
-	fun leggTilNyGjennomforing() {
+	fun `Legg til ny gjennomforing`() {
 		val gjennomforingInput = GjennomforingInput(
 			gjennomforingId = Random().nextLong()
 		)
@@ -29,7 +29,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	}
 
 	@Test
-	fun gjennomforingPaIgnorertTiltakLagrerTranslationMedIgnoredTrue() {
+	fun `Gjennomforing pa ignorert tiltak lager tranlation tabell med ignored lik true`() {
 
 		val input = GjennomforingInput(
 			gjennomforingId = Random().nextLong(),

@@ -59,7 +59,7 @@ open class DeltakerProcessor(
 			personIdent = personIdent
 		)
 
-		insertTranslation(data.arenaTableName, data.arenaId, amtDeltaker)
+		upsertTranslation(data.arenaTableName, data.arenaId, amtDeltaker)
 
 		val amtData = AmtWrapper(
 			type = "DELTAKER",
@@ -86,7 +86,7 @@ open class DeltakerProcessor(
 		return deltakerId
 	}
 
-	private fun insertTranslation(
+	private fun upsertTranslation(
 		table: String,
 		arenaId: String,
 		deltaker: AmtDeltaker,

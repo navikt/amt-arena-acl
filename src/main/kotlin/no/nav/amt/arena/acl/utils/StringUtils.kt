@@ -24,6 +24,14 @@ fun String.asValidatedLocalDateTime(fieldName: String): LocalDateTime {
 	}
 }
 
+fun String.validatedLocalDateTime(fieldName: String, klokkeslett: String?): LocalDateTime? {
+	try {
+		return this.asLocalDate() withTime klokkeslett.asTime()
+	} catch (e: DateTimeParseException) {
+		throw ValidationException("$fieldName kan ikke parses til LocalDateTime ($this + $klokkeslett)")
+	}
+}
+
 
 fun String.asLocalDate(): LocalDate {
 	val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")

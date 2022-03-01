@@ -1,5 +1,13 @@
 package no.nav.amt.arena.acl.domain.arena
 
+import no.nav.amt.arena.acl.exceptions.ValidationException
+import no.nav.amt.arena.acl.utils.asValidatedLocalDate
+import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
+import no.nav.amt.arena.acl.utils.validatedLocalDateTime
+import org.springframework.dao.DataIntegrityViolationException
+import java.time.LocalDate
+import java.time.LocalDateTime
+
 // @SONAR_START@
 data class ArenaTiltakGjennomforing(
 	val TILTAKGJENNOMFORING_ID: Long,
@@ -42,5 +50,36 @@ data class ArenaTiltakGjennomforing(
 	val DATO_OPPFOLGING_OK: String?,
 	val PARTISJON: Long?,
 	val MAALFORM_KRAVBREV: String?
-)
+) {
+	fun mapTiltakGjennomforing(): TiltakGjennomforing {
+		return TiltakGjennomforing(
+			tiltakgjennomforingId = TILTAKGJENNOMFORING_ID.toString(),
+			tiltakskode = TILTAKSKODE,
+			arbgivIdArrangor = ARBGIV_ID_ARRANGOR?.toString()
+				?: throw ValidationException("ARBGIV_ID_ARRANGOR er null"),
+			lokaltNavn = LOKALTNAVN ?: throw ValidationException("LOKALTNAVN er null"),
+			datoFra = DATO_FRA?.asValidatedLocalDate("DATO_FRA"),
+			datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
+			datoFremmote = DATO_FREMMOTE?.validatedLocalDateTime(
+				"DATO_FREMMOTE + KLOKKETID_FREMMOTE",
+				KLOKKETID_FREMMOTE
+			),
+			tiltakstatusKode = TILTAKSTATUSKODE ?: throw DataIntegrityViolationException("Forventet at TILTAKSTATUSKODE ikke er null"),
+			regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO")
+				?: throw ValidationException("REG_DATO er null")
+		)
+	}
+}
 // @SONAR_STOP@
+
+data class TiltakGjennomforing(
+	val tiltakgjennomforingId: String,
+	val tiltakskode: String,
+	val arbgivIdArrangor: String,
+	val lokaltNavn: String,
+	val datoFra: LocalDate?,
+	val datoTil: LocalDate?,
+	val datoFremmote: LocalDateTime?,
+	val tiltakstatusKode: String,
+	val regDato: LocalDateTime
+)
