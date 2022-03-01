@@ -10,7 +10,8 @@ enum class IngestStatus {
 	HANDLED,
 	RETRY,
 	FAILED,
-	IGNORED
+	IGNORED,
+	INCOMPLETE
 }
 
 data class ArenaData(
@@ -37,6 +38,11 @@ data class ArenaData(
 		ingestStatus = IngestStatus.HANDLED,
 		ingestedTimestamp = LocalDateTime.now(),
 		note = null
+	)
+
+	fun markAsIncomplete(reason: String) = this.copy(
+		ingestStatus = IngestStatus.INCOMPLETE,
+		note = reason
 	)
 
 	fun markAsFailed(reason: String? = null) = this.copy(

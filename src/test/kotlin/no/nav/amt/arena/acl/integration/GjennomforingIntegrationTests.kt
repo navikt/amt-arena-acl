@@ -90,4 +90,36 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 	}
 
+	@Test
+	fun shouldBeIncompleteIfArbeidsgiverIdIsNull() {
+		tiltakExecutor.execute(NyttTiltakCommand())
+
+		val input = GjennomforingInput(
+			gjennomforingId = Random().nextLong(),
+			arbeidsgiverIdArrangor = null
+		)
+
+		gjennomforingExecutor.execute(NyGjennomforingCommand(input))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.INCOMPLETE }
+			.arenaData { it.note shouldBe "ARBGIV_ID_ARRANGOR er null" }
+			.result { _, translation, _ -> translation shouldBe null }
+			.result { _, _, output -> output shouldBe null }
+	}
+
+	@Test
+	fun shouldBeIncompleteIfLokaltnavnIsNull() {
+		tiltakExecutor.execute(NyttTiltakCommand())
+
+		val input = GjennomforingInput(
+			gjennomforingId = Random().nextLong(),
+			navn = null
+		)
+
+		gjennomforingExecutor.execute(NyGjennomforingCommand(input))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.INCOMPLETE }
+			.arenaData { it.note shouldBe "LOKALTNAVN er null" }
+			.result { _, translation, _ -> translation shouldBe null }
+			.result { _, _, output -> output shouldBe null }
+	}
+
 }

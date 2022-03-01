@@ -19,7 +19,6 @@ import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
-import org.springframework.util.DigestUtils
 import java.time.LocalDateTime
 import java.util.*
 
@@ -45,20 +44,9 @@ open class TiltakGjennomforingProcessor(
 		val arenaGjennomforing: ArenaTiltakGjennomforing = data.getMainObject()
 
 		val arenaId = arenaGjennomforing.TILTAKGJENNOMFORING_ID
-
 		val gjennomforingId = hentEllerOpprettNyGjennomforingId(data.arenaTableName, data.arenaId)
 
-		if (isUnsupportedTiltakType(arenaGjennomforing)) {
-			log.info("Gjennomføring med arenaId=$arenaId er ikke støttet og sendes ikke videre")
-			insertTranslation(data, gjennomforingId, true)
-			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
-			return
-		}
-
-		if (ugyldigGjennomforing(arenaGjennomforing)) {
-			// Ikke sett til ignored i translation fordi da må man unignore når man får neste melding som kan være gyldig
-			log.info("Hopper over upsert av tiltakgjennomforing som mangler data. arenaId=$arenaId")
-			repository.upsert(data.markAsIgnored())
+		if (!valid(data, arenaGjennomforing, gjennomforingId)) {
 			return
 		}
 
@@ -93,6 +81,27 @@ open class TiltakGjennomforingProcessor(
 		log.info("Melding for gjennomføring id=$gjennomforingId arenaId=$arenaId transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 	}
 
+	private fun valid(data: ArenaData, arenaGjennomforing: ArenaTiltakGjennomforing, gjennomforingId: UUID): Boolean {
+		if (!isSupportedTiltak(arenaGjennomforing.TILTAKSKODE)) {
+			log.info("Gjennomføring med arenaId=${arenaGjennomforing.TILTAKGJENNOMFORING_ID} er ikke støttet og sendes ikke videre")
+			insertTranslation(data, gjennomforingId, true)
+			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
+			return false
+		}
+
+		if (arenaGjennomforing.ARBGIV_ID_ARRANGOR == null) {
+			repository.upsert(data.markAsIncomplete("ARBGIV_ID_ARRANGOR er null"))
+			return false
+		}
+
+		if (arenaGjennomforing.LOKALTNAVN == null) {
+			repository.upsert(data.markAsIncomplete("LOKALTNAVN er null"))
+			return false
+		}
+
+		return true
+	}
+
 	private fun hentEllerOpprettNyGjennomforingId(arenaTableName: String, arenaId: String): UUID {
 		val gjennomforingId = idTranslationRepository.getAmtId(arenaTableName, arenaId)
 
@@ -103,10 +112,6 @@ open class TiltakGjennomforingProcessor(
 		}
 
 		return gjennomforingId
-	}
-
-	private fun isUnsupportedTiltakType(gjennomforing: ArenaTiltakGjennomforing): Boolean {
-		return !isSupportedTiltak(gjennomforing.TILTAKSKODE)
 	}
 
 	private fun insertTranslation(
@@ -164,9 +169,4 @@ open class TiltakGjennomforingProcessor(
 
 		return LocalDateTime.now()
 	}
-
-	private fun ugyldigGjennomforing(data: ArenaTiltakGjennomforing) =
-		data.ARBGIV_ID_ARRANGOR == null || data.LOKALTNAVN == null
 }
-
-private fun UUID.digest() = DigestUtils.md5DigestAsHex(this.toString().toByteArray())

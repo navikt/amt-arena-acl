@@ -37,6 +37,34 @@ open class DeltakerProcessor(
 	private val statusConverter = DeltakerStatusConverter(meterRegistry)
 	private val statusEndretDatoConverter = DeltakerEndretDatoConverter()
 
+	private fun valid(
+		data: ArenaData,
+		gjennomforingInfo: ArenaDataIdTranslation?,
+		arenaDeltaker: ArenaTiltakDeltaker
+	): Boolean {
+		val tiltakGjennomforingId = arenaDeltaker.TILTAKGJENNOMFORING_ID.toString()
+		val deltakerArenaId = arenaDeltaker.TILTAKDELTAKER_ID.toString()
+		val personId = arenaDeltaker.PERSON_ID?.toString()
+
+		if (gjennomforingInfo == null) {
+			log.info("Tiltakgjennomføring id=$tiltakGjennomforingId er ikke håndtert, kan derfor ikke håndtere deltaker med arenaId=$deltakerArenaId enda")
+			repository.upsert(data.retry("Venter på at gjennomføring id=$tiltakGjennomforingId skal bli håndtert"))
+			return false
+		} else if (gjennomforingInfo.ignored) {
+			log.info("Ignorerer deltaker med arenaId=$deltakerArenaId som ikke er på et støttet tiltak")
+			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
+			return false
+		}
+
+		if (personId == null) {
+			log.warn("Ignorerer deltaker med arenaId=$deltakerArenaId som mangler PERSON_ID")
+			repository.upsert(data.markAsIncomplete("Mangler PERSON_ID"))
+			return false
+		}
+
+		return true
+	}
+
 	override fun handleEntry(data: ArenaData) {
 		val arenaDeltaker: ArenaTiltakDeltaker = data.getMainObject()
 
@@ -46,30 +74,18 @@ open class DeltakerProcessor(
 
 		val gjennomforingInfo = idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, tiltakGjennomforingId)
 
-		if (gjennomforingInfo == null) {
-			log.info("Tiltakgjennomføring id=$tiltakGjennomforingId er ikke håndtert, kan derfor ikke håndtere deltaker med arenaId=$deltakerArenaId enda")
-			repository.upsert(data.retry("Venter på at gjennomføring id=$tiltakGjennomforingId skal bli håndtert"))
-			return
-		} else if (gjennomforingInfo.ignored) {
-			log.info("Ignorerer deltaker med arenaId=$deltakerArenaId som ikke er på et støttet tiltak")
-			repository.upsert(data.markAsIgnored("Ikke et støttet tiltak"))
+		if (!valid(data, gjennomforingInfo, arenaDeltaker)) {
 			return
 		}
 
-		if (personId == null) {
-			log.warn("Ignorerer deltaker med arenaId=$deltakerArenaId som mangler PERSON_ID")
-			repository.upsert(data.markAsIgnored("Mangler PERSON_ID"))
-			return
-		}
-
-		val personIdent = ordsClient.hentFnr(personId)
+		val personIdent = ordsClient.hentFnr(personId!!)
 			?: throw IllegalStateException("Expected person with personId=$personId to exist")
 
 		val deltakerAmtId = hentEllerOpprettNyDeltakerId(data.arenaTableName, data.arenaId)
 
 		val amtDeltaker = arenaDeltaker.toAmtDeltaker(
 			amtDeltakerId = deltakerAmtId,
-			gjennomforingId = gjennomforingInfo.amtId,
+			gjennomforingId = gjennomforingInfo!!.amtId,
 			personIdent = personIdent
 		)
 

@@ -85,7 +85,7 @@ class TiltakGjennomforingProcessorTest {
 	}
 
 	@Test
-	fun `handleEntry() - ugyldig gjennomføring - legges ikke til i ignore liste`() {
+	fun `handleEntry() - ugyldig gjennomføring - legges ikke til i INCOMPLETE liste`() {
 		val arenaId = "3210"
 		val opPos = "2"
 
@@ -102,7 +102,7 @@ class TiltakGjennomforingProcessorTest {
 		val translationData = translationRepository.get(arenaData.arenaTableName, arenaData.arenaId)
 		translationData shouldBe null
 
-		repository.get(arenaData.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.IGNORED
+		repository.get(arenaData.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.INCOMPLETE
 
 	}
 
