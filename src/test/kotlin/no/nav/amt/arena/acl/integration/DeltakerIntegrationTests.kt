@@ -1,6 +1,7 @@
 package no.nav.amt.arena.acl.integration
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
@@ -118,6 +119,101 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 
 		deltakerExecutor.execute(NyDeltakerCommand(input))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
+			.result { _, translation, _ -> translation shouldBe null }
+			.result { _, _, output -> output shouldBe null }
+	}
+
+	@Test
+	fun `should retry if gjennomforing is not stored yet`() {
+		val gjennomforingId = Random().nextLong()
+
+		val input = DeltakerInput(
+			tiltakDeltakerId = Random().nextLong(),
+			tiltakgjennomforingId = gjennomforingId
+		)
+
+		val command = NyDeltakerCommand(input)
+
+		val firstResult = deltakerExecutor.execute(command)
+			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
+			.arenaData { it.note shouldBe "Venter på at gjennomføring med id=$gjennomforingId skal bli håndtert" }
+			.result { _, translation, _ -> translation shouldBe null }
+			.result { _, _, output -> output shouldBe null }
+
+		setupTiltakOgGjennomforing(gjennomforingId)
+
+		processMessages()
+
+		deltakerExecutor.updateResults(firstResult.position, command)
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.arenaData { it.note shouldBe null }
+			.result { _, translation, _ -> translation shouldNotBe null }
+			.result { _, _, output -> output shouldNotBe null }
+	}
+
+	@Test
+	fun `should ignore if tiltak is not supported`() {
+		val gjennomforingId = Random().nextLong()
+
+		gjennomforingExecutor.execute(
+			NyGjennomforingCommand(
+				GjennomforingInput(
+					tiltakKode = "IKKE_EKSISTERENDE",
+					gjennomforingId = gjennomforingId
+				)
+			)
+		)
+			.translation { it.ignored shouldBe true }
+
+		deltakerExecutor.execute(
+			NyDeltakerCommand(
+				DeltakerInput(
+					tiltakDeltakerId = Random().nextLong(),
+					tiltakgjennomforingId = gjennomforingId
+				)
+			)
+		)
+			.arenaData { it.ingestStatus shouldBe IngestStatus.IGNORED }
+			.arenaData { it.note shouldBe "Ikke støttet tiltak" }
+	}
+
+	@Test
+	fun `deltaker id equal to 0 should be invalid`() {
+		val gjennomforingId = Random().nextLong()
+
+		setupTiltakOgGjennomforing(gjennomforingId)
+
+		deltakerExecutor.execute(
+			NyDeltakerCommand(
+				DeltakerInput(
+					tiltakgjennomforingId = gjennomforingId,
+					tiltakDeltakerId = 0
+				)
+			)
+		)
+			.arenaData { it.ingestStatus shouldBe IngestStatus.INCOMPLETE }
+			.arenaData { it.note shouldBe "TILTAKDELTAKER_ID er 0" }
+			.result { _, translation, _ -> translation shouldBe null }
+			.result { _, _, output -> output shouldBe null }
+	}
+
+	@Test
+	fun `deltaker personId equal to null should be invalid`() {
+		val gjennomforingId = Random().nextLong()
+
+		setupTiltakOgGjennomforing(gjennomforingId)
+
+		deltakerExecutor.execute(
+			NyDeltakerCommand(
+				DeltakerInput(
+					tiltakgjennomforingId = gjennomforingId,
+					tiltakDeltakerId = Random().nextLong(),
+					personId = null
+				)
+			)
+		)
+			.arenaData { it.ingestStatus shouldBe IngestStatus.INCOMPLETE }
+			.arenaData { it.note shouldBe "PERSON_ID er null" }
 			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 	}

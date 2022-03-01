@@ -47,8 +47,6 @@ data class ArenaData(
 
 	fun markAsFailed(reason: String? = null) = this.copy(
 		ingestStatus = IngestStatus.FAILED,
-		ingestAttempts = ingestAttempts + 1,
-		lastAttempted = LocalDateTime.now(),
 		note = reason
 	)
 

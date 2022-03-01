@@ -4,6 +4,8 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
+import no.nav.amt.arena.acl.exceptions.IgnoredException
+import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import no.nav.common.kafka.producer.KafkaProducerClient
@@ -46,14 +48,22 @@ abstract class AbstractArenaProcessor<T>(
 				handleEntry(data)
 			} catch (e: Exception) {
 				if (data.ingestAttempts >= MAX_INGEST_ATTEMPTS) {
-					log.error("[arena_data_id ${data.id}]: ${e.message}", e)
-					repository.upsert(data.markAsFailed())
+					log.error("${data.arenaId} in table ${data.arenaTableName}: ${e.message}", e)
+					repository.upsert(data.markAsFailed(e.message))
 				} else {
-					if (e !is DependencyNotIngestedException) {
-						log.error("[arena_data_id ${data.id}]: ${e.message}", e)
+					if (e is DependencyNotIngestedException) {
+						log.info("Dependency for ${data.arenaId} in table ${data.arenaTableName} is not ingested: '${e.message}'")
+						repository.upsert(data.retry(e.message))
+					} else if (e is ValidationException) {
+						log.info("${data.arenaId} in table ${data.arenaTableName} is not valid: '${e.validationMessage}'.")
+						repository.upsert(data.markAsIncomplete(e.validationMessage))
+					} else if (e is IgnoredException) {
+						log.info("${data.arenaId} in table ${data.arenaTableName}: '${e.message}'")
+						repository.upsert(data.markAsIgnored(e.message))
+					} else {
+						log.error("${data.arenaId} in table ${data.arenaTableName}: ${e.message}", e)
+						repository.upsert(data.retry())
 					}
-
-					repository.upsert(data.retry())
 				}
 			}
 		}
