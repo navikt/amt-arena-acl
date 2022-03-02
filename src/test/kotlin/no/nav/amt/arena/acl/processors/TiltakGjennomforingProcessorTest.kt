@@ -20,7 +20,8 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.time.LocalDateTime
 import java.util.*
@@ -85,7 +86,7 @@ class TiltakGjennomforingProcessorTest {
 	}
 
 	@Test
-	fun `handleEntry() - ugyldig gjennomføring - legges ikke til i ignore liste`() {
+	fun `handleEntry() - ugyldig gjennomføring - legges ikke til i INVALID liste`() {
 		val arenaId = "3210"
 		val opPos = "2"
 
@@ -102,7 +103,7 @@ class TiltakGjennomforingProcessorTest {
 		val translationData = translationRepository.get(arenaData.arenaTableName, arenaData.arenaId)
 		translationData shouldBe null
 
-		repository.get(arenaData.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.IGNORED
+		repository.get(arenaData.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.INVALID
 
 	}
 

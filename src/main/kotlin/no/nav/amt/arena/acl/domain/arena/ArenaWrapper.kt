@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
+import no.nav.amt.arena.acl.utils.TILTAKGJENNOMFORING_TABLE_NAME
+import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -34,9 +37,9 @@ data class ArenaWrapper(
 	private val opTsFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
 
 	val arenaId = when (table) {
-		"SIAMO.TILTAK" -> getPayload(ArenaTiltak::class.java).TILTAKSKODE
-		"SIAMO.TILTAKGJENNOMFORING" -> getPayload(ArenaTiltakGjennomforing::class.java).TILTAKGJENNOMFORING_ID.toString()
-		"SIAMO.TILTAKDELTAKER" -> getPayload(ArenaTiltakDeltaker::class.java).TILTAKDELTAKER_ID.toString()
+		TILTAK_TABLE_NAME -> getPayload(ArenaTiltak::class.java).TILTAKSKODE
+		TILTAKGJENNOMFORING_TABLE_NAME -> getPayload(ArenaTiltakGjennomforing::class.java).TILTAKGJENNOMFORING_ID.toString()
+		TILTAK_DELTAKER_TABLE_NAME -> getPayload(ArenaTiltakDeltaker::class.java).TILTAKDELTAKER_ID.toString()
 		else -> throw IllegalArgumentException("Table with name $table is not supported.")
 	}
 

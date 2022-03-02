@@ -10,7 +10,8 @@ enum class IngestStatus {
 	HANDLED,
 	RETRY,
 	FAILED,
-	IGNORED
+	IGNORED,
+	INVALID
 }
 
 data class ArenaData(
@@ -39,10 +40,13 @@ data class ArenaData(
 		note = null
 	)
 
+	fun markAsInvalid(reason: String) = this.copy(
+		ingestStatus = IngestStatus.INVALID,
+		note = reason
+	)
+
 	fun markAsFailed(reason: String? = null) = this.copy(
 		ingestStatus = IngestStatus.FAILED,
-		ingestAttempts = ingestAttempts + 1,
-		lastAttempted = LocalDateTime.now(),
 		note = reason
 	)
 

@@ -8,8 +8,8 @@ import java.util.*
 data class GjennomforingInput(
 	val tiltakKode: String = "INDOPPFAG",
 	val gjennomforingId: Long,
-	val arbeidsgiverIdArrangor: Long = 0,
-	val navn: String = UUID.randomUUID().toString(),
+	val arbeidsgiverIdArrangor: Long? = 0,
+	val navn: String? = UUID.randomUUID().toString(),
 	val startDato: LocalDate = LocalDate.now().minusDays(7),
 	val sluttDato: LocalDate = LocalDate.now().plusDays(7),
 	val fremmoteDato: LocalDateTime = LocalDateTime.now().minusDays(7),

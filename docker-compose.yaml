@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   amt-arena-acl-postgres:
-    image: 'postgres:12-alpine'
+    image: 'postgres:14-alpine'
     container_name: amt-arena-acl-postgres
     #    volumes:
     #      - postgres-db-volume:/var/lib/postgresql/data

@@ -1,10 +1,37 @@
 package no.nav.amt.arena.acl.utils
 
+import no.nav.amt.arena.acl.exceptions.ValidationException
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+
+fun String.asValidatedLocalDate(fieldName: String): LocalDate {
+	try {
+		return this.asLocalDate()
+	} catch (e: DateTimeParseException) {
+		throw ValidationException("$fieldName kan ikke parses til LocalDate ($this)")
+	}
+}
+
+fun String.asValidatedLocalDateTime(fieldName: String): LocalDateTime {
+	try {
+		return this.asLocalDateTime()
+	} catch (e: DateTimeParseException) {
+		throw ValidationException("$fieldName kan ikke parses til LocalDateTime ($this)")
+	}
+}
+
+fun String.validatedLocalDateTime(fieldName: String, klokkeslett: String?): LocalDateTime? {
+	try {
+		return this.asLocalDate() withTime klokkeslett.asTime()
+	} catch (e: DateTimeParseException) {
+		throw ValidationException("$fieldName kan ikke parses til LocalDateTime ($this + $klokkeslett)")
+	}
+}
+
 
 fun String.asLocalDate(): LocalDate {
 	val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
