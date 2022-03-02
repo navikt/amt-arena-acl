@@ -14,7 +14,8 @@ import no.nav.amt.arena.acl.domain.amt.AmtTiltak
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
-import no.nav.amt.arena.acl.utils.TILTAKGJENNOMFORING_TABLE_NAME
+import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
+import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -50,7 +51,14 @@ class TiltakGjennomforingProcessorTest {
 		tiltakRepository = mock(TiltakRepository::class.java)
 		ordsClient = mock(ArenaOrdsProxyClient::class.java)
 		kafkaProducer = mock(KafkaProducerClientImpl::class.java) as KafkaProducerClientImpl<String, String>
-		gjennomforingProcessor = TiltakGjennomforingProcessor(repository, translationRepository, tiltakRepository, ordsClient, meterRegistry, kafkaProducer)
+		gjennomforingProcessor = TiltakGjennomforingProcessor(
+			repository,
+			ArenaDataIdTranslationService(translationRepository),
+			tiltakRepository,
+			ordsClient,
+			meterRegistry,
+			kafkaProducer
+		)
 
 		`when`(tiltakRepository.getByKode(tiltakKode)).thenReturn(AmtTiltak(UUID.randomUUID(), kode=tiltakKode, navn="Oppfølging"))
 		`when`(ordsClient.hentVirksomhetsnummer(ARBGIV_ID_ARRANGOR)).thenReturn("123")
@@ -68,7 +76,7 @@ class TiltakGjennomforingProcessorTest {
 		val opPos = "1"
 
 		val arenaData = ArenaData(
-			arenaTableName =  TILTAKGJENNOMFORING_TABLE_NAME,
+			arenaTableName =  ARENA_GJENNOMFORING_TABLE_NAME,
 			arenaId =  arenaId,
 			operation =  AmtOperation.CREATED,
 			operationPosition =  opPos,
@@ -91,7 +99,7 @@ class TiltakGjennomforingProcessorTest {
 		val opPos = "2"
 
 		val arenaData = ArenaData(
-			arenaTableName =  TILTAKGJENNOMFORING_TABLE_NAME,
+			arenaTableName =  ARENA_GJENNOMFORING_TABLE_NAME,
 			arenaId =  arenaId,
 			operation =  AmtOperation.CREATED,
 			operationPosition =  opPos,
@@ -113,7 +121,7 @@ class TiltakGjennomforingProcessorTest {
 		val opPos = "2"
 
 		val arenaData = ArenaData(
-			arenaTableName =  TILTAKGJENNOMFORING_TABLE_NAME,
+			arenaTableName =  ARENA_GJENNOMFORING_TABLE_NAME,
 			arenaId =  arenaId,
 			operation =  AmtOperation.CREATED,
 			operationPosition =  opPos,
@@ -138,7 +146,7 @@ class TiltakGjennomforingProcessorTest {
 		val opPos = "11223344"
 
 		val arenaData = ArenaData(
-			arenaTableName =  TILTAKGJENNOMFORING_TABLE_NAME,
+			arenaTableName =  ARENA_GJENNOMFORING_TABLE_NAME,
 			arenaId =  arenaId,
 			operation =  AmtOperation.DELETED,
 			operationPosition =  opPos,

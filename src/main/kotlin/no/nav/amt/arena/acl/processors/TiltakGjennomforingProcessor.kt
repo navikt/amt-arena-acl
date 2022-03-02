@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.processors
 import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
@@ -12,9 +11,9 @@ import no.nav.amt.arena.acl.domain.arena.TiltakGjennomforing
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
-import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
+import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -23,7 +22,7 @@ import java.util.*
 @Component
 open class TiltakGjennomforingProcessor(
 	repository: ArenaDataRepository,
-	private val idTranslationRepository: ArenaDataIdTranslationRepository,
+	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val tiltakRepository: TiltakRepository,
 	private val ordsClient: ArenaOrdsProxyClient,
 	meterRegistry: MeterRegistry,
@@ -42,10 +41,15 @@ open class TiltakGjennomforingProcessor(
 		val arenaGjennomforing: TiltakGjennomforing =
 			data.getMainObject<ArenaTiltakGjennomforing>().mapTiltakGjennomforing()
 
-		val gjennomforingId = hentEllerOpprettNyGjennomforingId(data.arenaTableName, data.arenaId)
+		val gjennomforingId = arenaDataIdTranslationService.hentEllerOpprettNyGjennomforingId(data.arenaId)
 
 		if (!isSupportedTiltak(arenaGjennomforing.tiltakskode)) {
-			upsertTranslation(data, gjennomforingId, true)
+			arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
+				gjennomforingArenaId = data.arenaId,
+				gjennomforingAmtId = gjennomforingId,
+				ignored = true
+			)
+
 			throw IgnoredException("${arenaGjennomforing.tiltakskode} er ikke et støttet tiltak")
 		}
 
@@ -61,8 +65,11 @@ open class TiltakGjennomforingProcessor(
 			virksomhetsnummer = virksomhetsnummer
 		)
 
-		upsertTranslation(data, gjennomforingId, false)
-
+		arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
+			gjennomforingArenaId = data.arenaId,
+			gjennomforingAmtId = gjennomforingId,
+			ignored = false
+		)
 
 		val amtData = AmtWrapper(
 			type = "GJENNOMFORING",
@@ -73,33 +80,6 @@ open class TiltakGjennomforingProcessor(
 		send(amtGjennomforing.id, objectMapper.writeValueAsString(amtData))
 		repository.upsert(data.markAsHandled())
 		log.info("Melding for gjennomføring id=$gjennomforingId arenaId=${arenaGjennomforing.tiltakgjennomforingId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
-	}
-
-	private fun hentEllerOpprettNyGjennomforingId(arenaTableName: String, arenaId: String): UUID {
-		val gjennomforingId = idTranslationRepository.getAmtId(arenaTableName, arenaId)
-
-		if (gjennomforingId == null) {
-			val nyGjennomforingId = UUID.randomUUID()
-			log.info("Opprettet ny id for gjennomføring, id=$nyGjennomforingId arenaId=$arenaId")
-			return nyGjennomforingId
-		}
-
-		return gjennomforingId
-	}
-
-	private fun upsertTranslation(
-		data: ArenaData,
-		gjennomforingId: UUID,
-		ignored: Boolean,
-	) {
-		idTranslationRepository.insert(
-			ArenaDataIdTranslation(
-				amtId = gjennomforingId,
-				arenaTableName = data.arenaTableName,
-				arenaId = data.arenaId,
-				ignored = ignored,
-			)
-		)
 	}
 
 	private fun TiltakGjennomforing.toAmtGjennomforing(

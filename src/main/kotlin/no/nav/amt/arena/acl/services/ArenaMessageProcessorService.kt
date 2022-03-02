@@ -34,19 +34,19 @@ open class ArenaMessageProcessorService(
 	}
 
 	fun processMessages() {
-		processBatch(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.NEW))
-		processBatch(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.NEW))
-		processBatch(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.NEW))
+		processBatch(dataRepository.getByIngestStatusIn(ARENA_TILTAK_TABLE_NAME, IngestStatus.NEW))
+		processBatch(dataRepository.getByIngestStatusIn(ARENA_GJENNOMFORING_TABLE_NAME, IngestStatus.NEW))
+		processBatch(dataRepository.getByIngestStatusIn(ARENA_DELTAKER_TABLE_NAME, IngestStatus.NEW))
 
-		processBatch(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.RETRY))
-		processBatch(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.RETRY))
-		processBatch(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.RETRY))
+		processBatch(dataRepository.getByIngestStatusIn(ARENA_TILTAK_TABLE_NAME, IngestStatus.RETRY))
+		processBatch(dataRepository.getByIngestStatusIn(ARENA_GJENNOMFORING_TABLE_NAME, IngestStatus.RETRY))
+		processBatch(dataRepository.getByIngestStatusIn(ARENA_DELTAKER_TABLE_NAME, IngestStatus.RETRY))
 	}
 
 	fun processFailedMessages() {
-		processBatch(dataRepository.getByIngestStatusIn(TILTAK_TABLE_NAME, IngestStatus.FAILED))
-		processBatch(dataRepository.getByIngestStatusIn(TILTAKGJENNOMFORING_TABLE_NAME, IngestStatus.FAILED))
-		processBatch(dataRepository.getByIngestStatusIn(TILTAK_DELTAKER_TABLE_NAME, IngestStatus.FAILED))
+		processBatch(dataRepository.getByIngestStatusIn(ARENA_TILTAK_TABLE_NAME, IngestStatus.FAILED))
+		processBatch(dataRepository.getByIngestStatusIn(ARENA_GJENNOMFORING_TABLE_NAME, IngestStatus.FAILED))
+		processBatch(dataRepository.getByIngestStatusIn(ARENA_DELTAKER_TABLE_NAME, IngestStatus.FAILED))
 	}
 
 	private fun processBatch(entries: List<ArenaData>) {
@@ -59,9 +59,9 @@ open class ArenaMessageProcessorService(
 
 	private fun processEntry(entry: ArenaData) {
 		when (entry.arenaTableName) {
-			TILTAK_TABLE_NAME -> tiltakProcessor.handle(entry)
-			TILTAKGJENNOMFORING_TABLE_NAME -> tiltakGjennomforingProcessor.handle(entry)
-			TILTAK_DELTAKER_TABLE_NAME -> deltakerProcessor.handle(entry)
+			ARENA_TILTAK_TABLE_NAME -> tiltakProcessor.handle(entry)
+			ARENA_GJENNOMFORING_TABLE_NAME -> tiltakGjennomforingProcessor.handle(entry)
+			ARENA_DELTAKER_TABLE_NAME -> deltakerProcessor.handle(entry)
 		}
 	}
 

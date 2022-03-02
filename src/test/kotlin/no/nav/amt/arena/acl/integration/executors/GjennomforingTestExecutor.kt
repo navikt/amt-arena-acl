@@ -8,7 +8,7 @@ import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingResu
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.utils.TILTAKGJENNOMFORING_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import java.util.*
 
@@ -45,12 +45,12 @@ class GjennomforingTestExecutor(
 
 	private fun getResults(arenaWrapper: ArenaWrapper): GjennomforingResult {
 		val arenaData = getArenaData(
-			TILTAKGJENNOMFORING_TABLE_NAME,
+			ARENA_GJENNOMFORING_TABLE_NAME,
 			arenaWrapper.operation.toAmtOperation(),
 			arenaWrapper.operationPosition
 		)
 
-		val translation = getTranslation(TILTAKGJENNOMFORING_TABLE_NAME, arenaData.arenaId)
+		val translation = getTranslation(ARENA_GJENNOMFORING_TABLE_NAME, arenaData.arenaId)
 		val message = if (translation != null) getOutputMessage(translation.amtId) else null
 
 		return GjennomforingResult(arenaWrapper.operationPosition, arenaData, translation, message)

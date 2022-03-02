@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.processors
 import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
 import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
@@ -13,10 +12,9 @@ import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.processors.converters.DeltakerEndretDatoConverter
 import no.nav.amt.arena.acl.processors.converters.DeltakerStatusConverter
-import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.utils.SecureLog.secureLog
-import no.nav.amt.arena.acl.utils.TILTAKGJENNOMFORING_TABLE_NAME
 import no.nav.common.kafka.producer.KafkaProducerClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -25,9 +23,9 @@ import java.util.*
 @Component
 open class DeltakerProcessor(
 	repository: ArenaDataRepository,
-	private val idTranslationRepository: ArenaDataIdTranslationRepository,
-	private val ordsClient: ArenaOrdsProxyClient,
 	val meterRegistry: MeterRegistry,
+	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
+	private val ordsClient: ArenaOrdsProxyClient,
 	private val metrics: DeltakerMetricHandler,
 	kafkaProducer: KafkaProducerClient<String, String>
 ) : AbstractArenaProcessor<ArenaTiltakDeltaker>(
@@ -45,7 +43,7 @@ open class DeltakerProcessor(
 		val arenaDeltaker: TiltakDeltaker = data.getMainObject<ArenaTiltakDeltaker>().mapTiltakDeltaker()
 
 		val gjennomforingInfo =
-			idTranslationRepository.get(TILTAKGJENNOMFORING_TABLE_NAME, arenaDeltaker.tiltakgjennomforingId)
+			arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaDeltaker.tiltakgjennomforingId)
 				?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=${arenaDeltaker.tiltakgjennomforingId} skal bli håndtert")
 
 		if (gjennomforingInfo.ignored) {
@@ -55,7 +53,7 @@ open class DeltakerProcessor(
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
 			?: throw IllegalStateException("Expected person with personId=${arenaDeltaker.personId} to exist")
 
-		val deltakerAmtId = hentEllerOpprettNyDeltakerId(data.arenaTableName, data.arenaId)
+		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(data.arenaId)
 
 		val amtDeltaker = arenaDeltaker.toAmtDeltaker(
 			amtDeltakerId = deltakerAmtId,
@@ -63,7 +61,11 @@ open class DeltakerProcessor(
 			personIdent = personIdent
 		)
 
-		upsertTranslation(data.arenaTableName, data.arenaId, amtDeltaker)
+		arenaDataIdTranslationService.upsertDeltakerIdTranslation(
+			deltakerArenaId = data.arenaId,
+			deltakerAmtId = deltakerAmtId,
+			ignored = false
+		)
 
 		val amtData = AmtWrapper(
 			type = "DELTAKER",
@@ -77,33 +79,6 @@ open class DeltakerProcessor(
 		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} personId=${arenaDeltaker.personId} fnr=$personIdent er sendt")
 		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 		metrics.publishMetrics(data)
-	}
-
-	private fun hentEllerOpprettNyDeltakerId(arenaTableName: String, arenaId: String): UUID {
-		val deltakerId = idTranslationRepository.getAmtId(arenaTableName, arenaId)
-
-		if (deltakerId == null) {
-			val nyDeltakerIdId = UUID.randomUUID()
-			log.info("Opprettet ny id for deltaker, id=$nyDeltakerIdId arenaId=$arenaId")
-			return nyDeltakerIdId
-		}
-
-		return deltakerId
-	}
-
-	private fun upsertTranslation(
-		table: String,
-		arenaId: String,
-		deltaker: AmtDeltaker,
-	) {
-		idTranslationRepository.insert(
-			ArenaDataIdTranslation(
-				amtId = deltaker.id,
-				arenaTableName = table,
-				arenaId = arenaId,
-				ignored = false
-			)
-		)
 	}
 
 	private fun TiltakDeltaker.toAmtDeltaker(

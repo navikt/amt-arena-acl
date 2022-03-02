@@ -16,7 +16,8 @@ import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.common.kafka.producer.KafkaProducerClient
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
@@ -60,7 +61,7 @@ class DeltakerProcessorTest : FunSpec({
 
 		deltakerProcessor = DeltakerProcessor(
 			repository = arenaDataRepository,
-			idTranslationRepository = idTranslationRepository,
+			arenaDataIdTranslationService = ArenaDataIdTranslationService(idTranslationRepository),
 			ordsClient = ordsClient,
 			meterRegistry = SimpleMeterRegistry(),
 			kafkaProducer = kafkaProducer,
@@ -84,7 +85,7 @@ class DeltakerProcessorTest : FunSpec({
 		expectedStatus: IngestStatus = IngestStatus.HANDLED
 	): ArenaData {
 		val arenaDataRepositoryEntry = shouldNotThrowAny {
-			arenaDataRepository.get(TILTAK_DELTAKER_TABLE_NAME, operation, position)
+			arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, operation, position)
 		}
 
 		arenaDataRepositoryEntry shouldNotBe null
@@ -124,7 +125,7 @@ class DeltakerProcessorTest : FunSpec({
 
 		getAndCheckArenaDataRepositoryEntry(operation = AmtOperation.CREATED, position)
 
-		val translationEntry = idTranslationRepository.get(TILTAK_DELTAKER_TABLE_NAME, "1")
+		val translationEntry = idTranslationRepository.get(ARENA_DELTAKER_TABLE_NAME, "1")
 
 		translationEntry shouldNotBe null
 		translationEntry!!.ignored shouldBe false
