@@ -53,7 +53,8 @@ spec:
       value: teamarenanais.aapen-arena-tiltakdeltakerendret-v1-p
   gcp:
     sqlInstances:
-      - type: POSTGRES_12
+      - name: amt-arena-acl-v1
+        type: POSTGRES_14
         tier: db-custom-1-3840
         diskAutoresize: true
         pointInTimeRecovery: true
