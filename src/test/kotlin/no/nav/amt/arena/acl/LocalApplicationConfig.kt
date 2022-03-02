@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl
 
-import no.nav.amt.arena.acl.ordsproxy.token_provider.ScopedTokenProvider
+import no.nav.amt.arena.acl.utils.token_provider.ScopedTokenProvider
 import no.nav.security.token.support.spring.api.EnableJwtTokenValidation
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

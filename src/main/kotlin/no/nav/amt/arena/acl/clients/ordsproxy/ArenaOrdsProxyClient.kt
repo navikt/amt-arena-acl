@@ -1,4 +1,4 @@
-import no.nav.amt.arena.acl.ordsproxy.Arbeidsgiver
+import no.nav.amt.arena.acl.clients.ordsproxy.Arbeidsgiver
 
 interface ArenaOrdsProxyClient {
 

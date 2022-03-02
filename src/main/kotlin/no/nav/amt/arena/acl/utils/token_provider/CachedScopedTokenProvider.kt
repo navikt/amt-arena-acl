@@ -1,8 +1,8 @@
-package no.nav.amt.arena.acl.ordsproxy.token_provider
+package no.nav.amt.arena.acl.utils.token_provider
 
 import com.nimbusds.jwt.JWT
 import com.nimbusds.jwt.JWTParser
-import no.nav.amt.arena.acl.ordsproxy.token_provider.JwtUtils.needsRefresh
+import no.nav.amt.arena.acl.utils.token_provider.JwtUtils.needsRefresh
 import java.util.concurrent.ConcurrentHashMap
 
 class CachedScopedTokenProvider(private val scopedTokenProvider: ScopedTokenProvider) : ScopedTokenProvider {

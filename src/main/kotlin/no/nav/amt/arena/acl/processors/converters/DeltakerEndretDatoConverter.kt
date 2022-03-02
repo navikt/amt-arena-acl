@@ -1,9 +1,9 @@
-package no.nav.amt.arena.acl.processors
+package no.nav.amt.arena.acl.processors.converters
 import java.time.LocalDateTime
 
 class DeltakerEndretDatoConverter {
 	private val avsluttendeStatuser = listOf("FULLF", "DELAVB", "IKKEM", "GJENN_AVB", "GJENN_AVL")
-	private val ikkeAktuelleStatuser = listOf("IKKAKTUELL", "AVSLAG", "NEITAKK")
+//	private val ikkeAktuelleStatuser = listOf("IKKAKTUELL", "AVSLAG", "NEITAKK")
 	private val gjennomforendeStatuser = listOf("TILBUD", "GJENN", "INFOMOETE", "JATAKK", "VENTELISTE", "AKTUELL", "TILBUD")
 
 	internal fun convert(

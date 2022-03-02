@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.ordsproxy
+package no.nav.amt.arena.acl.clients.ordsproxy
 
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo

@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.ordsproxy.token_provider
+package no.nav.amt.arena.acl.utils.token_provider
 
 import com.nimbusds.jwt.JWT
 import org.slf4j.LoggerFactory

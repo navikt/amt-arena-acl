@@ -11,6 +11,7 @@ import no.nav.amt.arena.acl.domain.arena.ArenaTiltakGjennomforing
 import no.nav.amt.arena.acl.domain.arena.TiltakGjennomforing
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
+import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository

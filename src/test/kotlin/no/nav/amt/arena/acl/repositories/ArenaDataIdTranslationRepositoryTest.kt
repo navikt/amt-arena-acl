@@ -2,7 +2,6 @@ package no.nav.amt.arena.acl.repositories
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
-import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
