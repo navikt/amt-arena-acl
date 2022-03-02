@@ -191,7 +191,7 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 				)
 			)
 		)
-			.arenaData { it.ingestStatus shouldBe IngestStatus.INCOMPLETE }
+			.arenaData { it.ingestStatus shouldBe IngestStatus.INVALID }
 			.arenaData { it.note shouldBe "TILTAKDELTAKER_ID er 0" }
 			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
@@ -212,7 +212,7 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 				)
 			)
 		)
-			.arenaData { it.ingestStatus shouldBe IngestStatus.INCOMPLETE }
+			.arenaData { it.ingestStatus shouldBe IngestStatus.INVALID }
 			.arenaData { it.note shouldBe "PERSON_ID er null" }
 			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }

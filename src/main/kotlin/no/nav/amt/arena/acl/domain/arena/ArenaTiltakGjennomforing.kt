@@ -4,7 +4,6 @@ import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.utils.asValidatedLocalDate
 import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
 import no.nav.amt.arena.acl.utils.validatedLocalDateTime
-import org.springframework.dao.DataIntegrityViolationException
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -64,7 +63,8 @@ data class ArenaTiltakGjennomforing(
 				"DATO_FREMMOTE + KLOKKETID_FREMMOTE",
 				KLOKKETID_FREMMOTE
 			),
-			tiltakstatusKode = TILTAKSTATUSKODE ?: throw DataIntegrityViolationException("Forventet at TILTAKSTATUSKODE ikke er null"),
+			tiltakstatusKode = TILTAKSTATUSKODE
+				?: throw ValidationException("Forventet at TILTAKSTATUSKODE ikke er null"),
 			regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO")
 				?: throw ValidationException("REG_DATO er null")
 		)

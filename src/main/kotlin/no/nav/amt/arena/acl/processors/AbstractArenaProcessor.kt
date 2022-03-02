@@ -56,7 +56,7 @@ abstract class AbstractArenaProcessor<T>(
 						repository.upsert(data.retry(e.message))
 					} else if (e is ValidationException) {
 						log.info("${data.arenaId} in table ${data.arenaTableName} is not valid: '${e.validationMessage}'.")
-						repository.upsert(data.markAsIncomplete(e.validationMessage))
+						repository.upsert(data.markAsInvalid(e.validationMessage))
 					} else if (e is IgnoredException) {
 						log.info("${data.arenaId} in table ${data.arenaTableName}: '${e.message}'")
 						repository.upsert(data.markAsIgnored(e.message))
