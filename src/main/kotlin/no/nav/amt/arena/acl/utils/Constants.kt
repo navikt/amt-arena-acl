@@ -3,3 +3,7 @@ package no.nav.amt.arena.acl.utils
 const val TILTAK_TABLE_NAME = "SIAMO.TILTAK"
 const val TILTAKGJENNOMFORING_TABLE_NAME = "SIAMO.TILTAKGJENNOMFORING"
 const val TILTAK_DELTAKER_TABLE_NAME = "SIAMO.TILTAKDELTAKER"
+
+const val ONE_MINUTE = 60 * 1000L
+const val ONE_HOUR = 60 * 60 * 1000L
+const val AT_MIDNIGHT = "0 0 0 * * *"
