@@ -13,6 +13,7 @@ import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
@@ -62,7 +63,8 @@ class DeltakerProcessorTest : FunSpec({
 			idTranslationRepository = idTranslationRepository,
 			ordsClient = ordsClient,
 			meterRegistry = SimpleMeterRegistry(),
-			kafkaProducer = kafkaProducer
+			kafkaProducer = kafkaProducer,
+			metrics = DeltakerMetricHandler(SimpleMeterRegistry())
 		)
 
 		ReflectionTestUtils.setField(deltakerProcessor, "topic", "test-topic")
