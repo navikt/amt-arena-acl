@@ -38,7 +38,7 @@ open class ArenaDataIdTranslationService(
 	}
 
 	fun hentEllerOpprettNyGjennomforingId(gjennomforingArenaId: String): UUID {
-		val gjennomforingId = arenaDataIdTranslationRepository.getAmtId(ARENA_GJENNOMFORING_TABLE_NAME, gjennomforingArenaId)
+		val gjennomforingId = arenaDataIdTranslationRepository.get(ARENA_GJENNOMFORING_TABLE_NAME, gjennomforingArenaId)?.amtId
 
 		if (gjennomforingId == null) {
 			val nyGjennomforingId = UUID.randomUUID()
@@ -50,7 +50,7 @@ open class ArenaDataIdTranslationService(
 	}
 
 	fun hentEllerOpprettNyDeltakerId(deltakerArenaId: String): UUID {
-		val deltakerId = arenaDataIdTranslationRepository.getAmtId(ARENA_DELTAKER_TABLE_NAME, deltakerArenaId)
+		val deltakerId = arenaDataIdTranslationRepository.get(ARENA_DELTAKER_TABLE_NAME, deltakerArenaId)?.amtId
 
 		if (deltakerId == null) {
 			val nyDeltakerIdId = UUID.randomUUID()

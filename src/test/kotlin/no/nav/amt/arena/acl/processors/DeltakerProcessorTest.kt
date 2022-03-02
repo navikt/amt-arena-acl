@@ -72,13 +72,6 @@ class DeltakerProcessorTest : FunSpec({
 
 	}
 
-	fun gatherDataFromSql() {
-		val allArenaData = arenaDataRepository.getAll()
-		val allTranslation = idTranslationRepository.getAll()
-		println(allArenaData)
-		println(allTranslation)
-	}
-
 	fun getAndCheckArenaDataRepositoryEntry(
 		operation: AmtOperation,
 		position: String,
@@ -119,9 +112,6 @@ class DeltakerProcessorTest : FunSpec({
 			deltakerArenaId = 1L
 		)
 		deltakerProcessor.handle(newDeltaker)
-
-
-		gatherDataFromSql()
 
 		getAndCheckArenaDataRepositoryEntry(operation = AmtOperation.CREATED, position)
 
