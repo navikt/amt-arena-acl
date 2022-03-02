@@ -10,6 +10,7 @@ import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
 import no.nav.amt.arena.acl.domain.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
+import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.SecureLog.secureLog
