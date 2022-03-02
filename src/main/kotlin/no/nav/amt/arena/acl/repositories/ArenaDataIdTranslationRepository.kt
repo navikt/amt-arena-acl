@@ -33,21 +33,18 @@ open class ArenaDataIdTranslationRepository(
 			arenaTableName = rs.getString("arena_table_name"),
 			arenaId = rs.getString("arena_id"),
 			ignored = rs.getBoolean("is_ignored"),
-			currentHash = rs.getString("current_hash")
 		)
 	}
 
 	fun insert(entry: ArenaDataIdTranslation) {
 		val sql = """
-			INSERT INTO arena_data_id_translation(amt_id, arena_table_name, arena_id, is_ignored, current_hash)
+			INSERT INTO arena_data_id_translation(amt_id, arena_table_name, arena_id, is_ignored)
 			VALUES (:amt_id,
 					:arena_table_name,
 					:arena_id,
-					:is_ignored,
-					:current_hash)
+					:is_ignored)
 			ON CONFLICT (arena_table_name, arena_id) DO UPDATE SET
-				is_ignored = :is_ignored,
-				current_hash = :current_hash
+				is_ignored = :is_ignored
 		""".trimIndent()
 
 		try {
@@ -120,7 +117,6 @@ open class ArenaDataIdTranslationRepository(
 			"arena_table_name" to arenaTableName,
 			"arena_id" to arenaId,
 			"is_ignored" to ignored,
-			"current_hash" to currentHash
 		)
 	)
 

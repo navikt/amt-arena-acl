@@ -33,6 +33,10 @@ class DeltakerTestExecutor(
 		return command.execute(incrementAndGetPosition()) { sendAndCheck(it) }
 	}
 
+	fun updateResults(position: String, command: DeltakerCommand): DeltakerResult {
+		return command.execute(position) { getResults(it) }
+	}
+
 	private fun sendAndCheck(wrapper: ArenaWrapper): DeltakerResult {
 		sendKafkaMessage(topic, objectMapper.writeValueAsString(wrapper))
 		return getResults(wrapper)

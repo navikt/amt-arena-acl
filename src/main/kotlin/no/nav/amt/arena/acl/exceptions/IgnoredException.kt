@@ -1,5 +1,5 @@
 package no.nav.amt.arena.acl.exceptions
 
-class DependencyNotIngestedException(
-	message: String,
+class IgnoredException(
+	message: String
 ) : Exception(message)
