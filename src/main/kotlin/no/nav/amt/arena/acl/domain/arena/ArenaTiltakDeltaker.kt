@@ -1,5 +1,11 @@
 package no.nav.amt.arena.acl.domain.arena
 
+import no.nav.amt.arena.acl.exceptions.ValidationException
+import no.nav.amt.arena.acl.utils.asValidatedLocalDate
+import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
+import java.time.LocalDate
+import java.time.LocalDateTime
+
 // @SONAR_START@
 data class ArenaTiltakDeltaker(
 	val TILTAKDELTAKER_ID: Long,
@@ -33,5 +39,43 @@ data class ArenaTiltakDeltaker(
 	val PARTISJON: Int?,
 	val BEGRUNNELSE_BESTILLING: String?,
 	val ANTALL_DAGER_PR_UKE: Int?
-)
+) {
+
+	fun mapTiltakDeltaker(): TiltakDeltaker {
+		val tiltakdeltakerId = TILTAKDELTAKER_ID.toString().also {
+			if (it == "0") throw ValidationException("TILTAKDELTAKER_ID er 0")
+		}
+
+		val tiltakgjennomforingId = TILTAKGJENNOMFORING_ID.toString().also {
+			if (it == "0") throw ValidationException("TILTAKGJENNOMFORING_ID er 0")
+		}
+
+		return TiltakDeltaker(
+			tiltakdeltakerId = tiltakdeltakerId,
+			tiltakgjennomforingId = tiltakgjennomforingId,
+			personId = PERSON_ID?.toString() ?: throw ValidationException("PERSON_ID er null"),
+			datoFra = DATO_FRA?.asValidatedLocalDate("DATO_FRA"),
+			datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
+			deltakerStatusKode = DELTAKERSTATUSKODE,
+			datoStatusendring = DATO_STATUSENDRING?.asValidatedLocalDate("DATO_STATUSENDRING"),
+			dagerPerUke = ANTALL_DAGER_PR_UKE,
+			prosentDeltid = PROSENT_DELTID,
+			regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO") ?: throw ValidationException("REG_DATO er null")
+		)
+	}
+
+}
 // @SONAR_STOP@
+
+data class TiltakDeltaker(
+	val tiltakdeltakerId: String,
+	val tiltakgjennomforingId: String,
+	val personId: String,
+	val datoFra: LocalDate?,
+	val datoTil: LocalDate?,
+	val deltakerStatusKode: String,
+	val datoStatusendring: LocalDate?,
+	val dagerPerUke: Int?,
+	val prosentDeltid: Float?,
+	val regDato: LocalDateTime
+)

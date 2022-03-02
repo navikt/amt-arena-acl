@@ -7,13 +7,14 @@ import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingInput
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCommand
 import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
+import no.nav.amt.arena.acl.mocks.OrdsClientMock
 import org.junit.jupiter.api.Test
 import java.util.*
 
 class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 	@Test
-	fun leggTilNyGjennomforing() {
+	fun `Legg til ny gjennomforing`() {
 		val gjennomforingInput = GjennomforingInput(
 			gjennomforingId = Random().nextLong()
 		)
@@ -28,7 +29,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	}
 
 	@Test
-	fun gjennomforingPaIgnorertTiltakLagrerTranslationMedIgnoredTrue() {
+	fun `Gjennomforing pa ignorert tiltak lager tranlation tabell med ignored lik true`() {
 
 		val input = GjennomforingInput(
 			gjennomforingId = Random().nextLong(),
@@ -75,7 +76,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 		tiltakExecutor.execute(NyttTiltakCommand())
 
-		IntegrationTestConfiguration.virksomhetsHandler["$virksomhetsId"] = { throw RuntimeException() }
+		OrdsClientMock.virksomhetsHandler["$virksomhetsId"] = { throw RuntimeException() }
 
 		val input = GjennomforingInput(
 			gjennomforingId = Random().nextLong(),
@@ -90,22 +91,35 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	}
 
 	@Test
-	fun sameGjennomforingTwiceSendsOneMessage() {
-		val gjennomforingInput = GjennomforingInput(
-			gjennomforingId = Random().nextLong()
+	fun `Should be invalid if arbeidsgiverid is null`() {
+		tiltakExecutor.execute(NyttTiltakCommand())
+
+		val input = GjennomforingInput(
+			gjennomforingId = Random().nextLong(),
+			arbeidsgiverIdArrangor = null
 		)
 
+		gjennomforingExecutor.execute(NyGjennomforingCommand(input))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.INVALID }
+			.arenaData { it.note shouldBe "ARBGIV_ID_ARRANGOR er null" }
+			.result { _, translation, _ -> translation shouldBe null }
+			.result { _, _, output -> output shouldBe null }
+	}
+
+	@Test
+	fun `Should be invalid if lokaltnavn is null`() {
 		tiltakExecutor.execute(NyttTiltakCommand())
-			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 
-		val first = gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
-			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+		val input = GjennomforingInput(
+			gjennomforingId = Random().nextLong(),
+			navn = null
+		)
 
-		gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
-			.arenaData { it.ingestStatus shouldBe IngestStatus.IGNORED }
-			.arenaData { it.note shouldBe "Tiltaket er allerede sendt (samme hash)." }
-			.translation { it.currentHash shouldBe first.translation!!.currentHash }
-
+		gjennomforingExecutor.execute(NyGjennomforingCommand(input))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.INVALID }
+			.arenaData { it.note shouldBe "LOKALTNAVN er null" }
+			.result { _, translation, _ -> translation shouldBe null }
+			.result { _, _, output -> output shouldBe null }
 	}
 
 }

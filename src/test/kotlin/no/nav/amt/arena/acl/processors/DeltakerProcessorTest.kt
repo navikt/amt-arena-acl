@@ -7,13 +7,13 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldContain
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.domain.ArenaData
 import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
@@ -63,7 +63,8 @@ class DeltakerProcessorTest : FunSpec({
 			idTranslationRepository = idTranslationRepository,
 			ordsClient = ordsClient,
 			meterRegistry = SimpleMeterRegistry(),
-			kafkaProducer = kafkaProducer
+			kafkaProducer = kafkaProducer,
+			metrics = DeltakerMetricHandler(SimpleMeterRegistry())
 		)
 
 		ReflectionTestUtils.setField(deltakerProcessor, "topic", "test-topic")
@@ -127,30 +128,6 @@ class DeltakerProcessorTest : FunSpec({
 
 		translationEntry shouldNotBe null
 		translationEntry!!.ignored shouldBe false
-	}
-
-	test("Insert same Deltaker twice ignores last deltaker") {
-		val position1 = UUID.randomUUID().toString()
-
-		val deltaker = createNewDeltakerArenaData(
-			position = position1,
-			tiltakGjennomforingArenaId = nonIgnoredGjennomforingArenaId,
-			deltakerArenaId = 1L
-		)
-
-		deltakerProcessor.handle(deltaker)
-		getAndCheckArenaDataRepositoryEntry(AmtOperation.CREATED, position1)
-
-
-		val position2 = UUID.randomUUID().toString()
-		deltakerProcessor.handle(
-			deltaker.copy(
-				operationPosition = position2
-			)
-		)
-
-		val entry = getAndCheckArenaDataRepositoryEntry(AmtOperation.CREATED, position2, IngestStatus.IGNORED)
-		entry.note shouldContain "(samme hash)"
 	}
 
 	test("Insert Deltaker with gjennomføring not processed set the Deltaker to retry") {

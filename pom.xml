@@ -161,6 +161,11 @@
             <version>${common.version}</version>
         </dependency>
         <dependency>
+            <groupId>no.nav.common</groupId>
+            <artifactId>rest</artifactId>
+            <version>${common.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
