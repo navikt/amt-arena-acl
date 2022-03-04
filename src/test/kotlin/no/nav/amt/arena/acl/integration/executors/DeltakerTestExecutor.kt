@@ -8,7 +8,7 @@ import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerResult
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import java.util.*
 
@@ -44,12 +44,12 @@ class DeltakerTestExecutor(
 
 	private fun getResults(wrapper: ArenaWrapper): DeltakerResult {
 		val arenaData = getArenaData(
-			TILTAK_DELTAKER_TABLE_NAME,
+			ARENA_DELTAKER_TABLE_NAME,
 			wrapper.operation.toAmtOperation(),
 			wrapper.operationPosition
 		)
 
-		val translation = getTranslation(TILTAK_DELTAKER_TABLE_NAME, arenaData.arenaId)
+		val translation = getTranslation(ARENA_DELTAKER_TABLE_NAME, arenaData.arenaId)
 		val message = if (translation != null) getOutputMessage(translation.amtId) else null
 
 		return DeltakerResult(

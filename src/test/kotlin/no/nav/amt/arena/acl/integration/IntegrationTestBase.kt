@@ -115,7 +115,7 @@ open class IntegrationTestConfiguration(
 	}
 
 	@Bean
-	open fun kafkaConsumer(properties: KafkaProperties): KafkaAmtIntegrationConsumer {
+	open fun kafkaAmtIntegrationConsumer(properties: KafkaProperties): KafkaAmtIntegrationConsumer {
 		return KafkaAmtIntegrationConsumer(properties, consumerTopic)
 	}
 }

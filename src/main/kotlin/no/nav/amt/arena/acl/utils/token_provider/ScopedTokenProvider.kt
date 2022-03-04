@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.ordsproxy.token_provider
+package no.nav.amt.arena.acl.utils.token_provider
 
 /**
  * Provides tokens that uses OAuth 2.0 scope

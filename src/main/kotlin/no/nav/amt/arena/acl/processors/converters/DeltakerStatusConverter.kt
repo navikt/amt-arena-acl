@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.processors
+package no.nav.amt.arena.acl.processors.converters
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag

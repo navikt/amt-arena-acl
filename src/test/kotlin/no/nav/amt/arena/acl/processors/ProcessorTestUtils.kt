@@ -6,9 +6,9 @@ import no.nav.amt.arena.acl.domain.IngestStatus
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
 import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
-import no.nav.amt.arena.acl.utils.TILTAK_DELTAKER_TABLE_NAME
-import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -18,7 +18,7 @@ import java.util.*
 fun createNewTiltakArenaData(position: String, tiltakKode: String, tiltakNavn: String): ArenaData {
 	return createArenaData(
 		position = position,
-		table = TILTAK_TABLE_NAME,
+		table = ARENA_TILTAK_TABLE_NAME,
 		operation = AmtOperation.CREATED,
 		after = createTiltak(tiltakKode, tiltakNavn)
 	)
@@ -27,7 +27,7 @@ fun createNewTiltakArenaData(position: String, tiltakKode: String, tiltakNavn: S
 fun createUpdateTiltakArenaData(position: String, before: JsonNode, kode: String, newNavn: String): ArenaData {
 	return createArenaData(
 		position = position,
-		table = TILTAK_TABLE_NAME,
+		table = ARENA_TILTAK_TABLE_NAME,
 		operation = AmtOperation.MODIFIED,
 		before = before,
 		after = createTiltak(kode, newNavn)
@@ -37,7 +37,7 @@ fun createUpdateTiltakArenaData(position: String, before: JsonNode, kode: String
 fun createDeleteTiltakArenaData(position: String, before: JsonNode): ArenaData {
 	return createArenaData(
 		position = position,
-		table = TILTAK_TABLE_NAME,
+		table = ARENA_TILTAK_TABLE_NAME,
 		operation = AmtOperation.DELETED,
 		before = before
 	)
@@ -72,7 +72,7 @@ fun createNewDeltakerArenaData(
 
 	return createArenaData(
 		position = position,
-		table = TILTAK_DELTAKER_TABLE_NAME,
+		table = ARENA_DELTAKER_TABLE_NAME,
 		operation = operation,
 		arenaId = deltakerArenaId.toString(),
 		after = if (operation != AmtOperation.DELETED) deltaker else null,

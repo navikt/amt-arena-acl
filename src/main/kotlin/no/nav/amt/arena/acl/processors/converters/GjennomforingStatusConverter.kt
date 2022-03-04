@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.processors
+package no.nav.amt.arena.acl.processors.converters
 
 import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
 import org.springframework.dao.DataIntegrityViolationException

@@ -1,7 +1,7 @@
-package no.nav.amt.arena.acl.ordsproxy
+package no.nav.amt.arena.acl.clients.ordsproxy
 
 import ArenaOrdsProxyClient
-import no.nav.amt.arena.acl.ordsproxy.token_provider.ScopedTokenProvider
+import no.nav.amt.arena.acl.utils.token_provider.ScopedTokenProvider
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

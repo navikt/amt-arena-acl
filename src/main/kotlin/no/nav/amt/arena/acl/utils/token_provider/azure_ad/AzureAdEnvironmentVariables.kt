@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.ordsproxy.token_provider.azure_ad
+package no.nav.amt.arena.acl.utils.token_provider.azure_ad
 
 object AzureAdEnvironmentVariables {
 

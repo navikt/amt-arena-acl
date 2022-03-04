@@ -7,7 +7,7 @@ import no.nav.amt.arena.acl.integration.utils.nullableAsyncRetryHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
-import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.junit.jupiter.api.fail
 
@@ -32,7 +32,7 @@ class TiltakTestExecutor(
 		sendKafkaMessage(topic, objectMapper.writeValueAsString(arenaWrapper))
 
 		val data = getArenaData(
-			TILTAK_TABLE_NAME,
+			ARENA_TILTAK_TABLE_NAME,
 			arenaWrapper.operation.toAmtOperation(),
 			arenaWrapper.operationPosition
 		)

@@ -1,6 +1,7 @@
 package no.nav.amt.arena.acl.processors
 
 import io.kotest.matchers.shouldBe
+import no.nav.amt.arena.acl.processors.converters.DeltakerEndretDatoConverter
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 

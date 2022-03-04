@@ -13,7 +13,7 @@ import no.nav.amt.arena.acl.domain.amt.AmtOperation
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.services.TiltakService
-import no.nav.amt.arena.acl.utils.TILTAK_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.util.*
@@ -49,7 +49,7 @@ class TiltakProcessorTest : FunSpec({
 		tiltakProcessor.handle(data)
 
 		val arenaDataRepositoryEntry = shouldNotThrowAny {
-			arenaDataRepository.get(TILTAK_TABLE_NAME, AmtOperation.CREATED, position)
+			arenaDataRepository.get(ARENA_TILTAK_TABLE_NAME, AmtOperation.CREATED, position)
 		}
 
 		arenaDataRepositoryEntry.before shouldBe null
@@ -85,7 +85,7 @@ class TiltakProcessorTest : FunSpec({
 		tiltakProcessor.handle(update)
 
 		val arenaDataRepositoryEntry = shouldNotThrowAny {
-			arenaDataRepository.get(TILTAK_TABLE_NAME, AmtOperation.MODIFIED, updatedPosition)
+			arenaDataRepository.get(ARENA_TILTAK_TABLE_NAME, AmtOperation.MODIFIED, updatedPosition)
 		}
 
 		arenaDataRepositoryEntry.before shouldBe update.before
@@ -119,7 +119,7 @@ class TiltakProcessorTest : FunSpec({
 		tiltakProcessor.handle(delete)
 
 		val arenaDataRepositoryEntry = shouldNotThrowAny {
-			arenaDataRepository.get(TILTAK_TABLE_NAME, AmtOperation.DELETED, deletePosition)
+			arenaDataRepository.get(ARENA_TILTAK_TABLE_NAME, AmtOperation.DELETED, deletePosition)
 		}
 
 		arenaDataRepositoryEntry.ingestStatus shouldBe IngestStatus.FAILED

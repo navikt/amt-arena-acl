@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.mocks
 
 import ArenaOrdsProxyClient
-import no.nav.amt.arena.acl.ordsproxy.Arbeidsgiver
+import no.nav.amt.arena.acl.clients.ordsproxy.Arbeidsgiver
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 

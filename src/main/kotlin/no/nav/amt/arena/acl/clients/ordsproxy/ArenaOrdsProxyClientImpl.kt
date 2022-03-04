@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.ordsproxy
+package no.nav.amt.arena.acl.clients.ordsproxy
 
 import ArenaOrdsProxyClient
 import com.fasterxml.jackson.databind.ObjectMapper

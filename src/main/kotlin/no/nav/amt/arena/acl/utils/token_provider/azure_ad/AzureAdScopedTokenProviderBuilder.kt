@@ -1,11 +1,11 @@
-package no.nav.amt.arena.acl.ordsproxy.token_provider.azure_ad
+package no.nav.amt.arena.acl.utils.token_provider.azure_ad
 
-import no.nav.amt.arena.acl.ordsproxy.token_provider.CachedScopedTokenProvider
-import no.nav.amt.arena.acl.ordsproxy.token_provider.OAuth2ScopedTokenProvider
-import no.nav.amt.arena.acl.ordsproxy.token_provider.ScopedTokenProvider
-import no.nav.amt.arena.acl.ordsproxy.token_provider.azure_ad.AzureAdEnvironmentVariables.AZURE_APP_CLIENT_ID
-import no.nav.amt.arena.acl.ordsproxy.token_provider.azure_ad.AzureAdEnvironmentVariables.AZURE_APP_CLIENT_SECRET
-import no.nav.amt.arena.acl.ordsproxy.token_provider.azure_ad.AzureAdEnvironmentVariables.AZURE_OPENID_CONFIG_TOKEN_ENDPOINT
+import no.nav.amt.arena.acl.utils.token_provider.CachedScopedTokenProvider
+import no.nav.amt.arena.acl.utils.token_provider.OAuth2ScopedTokenProvider
+import no.nav.amt.arena.acl.utils.token_provider.ScopedTokenProvider
+import no.nav.amt.arena.acl.utils.token_provider.azure_ad.AzureAdEnvironmentVariables.AZURE_APP_CLIENT_ID
+import no.nav.amt.arena.acl.utils.token_provider.azure_ad.AzureAdEnvironmentVariables.AZURE_APP_CLIENT_SECRET
+import no.nav.amt.arena.acl.utils.token_provider.azure_ad.AzureAdEnvironmentVariables.AZURE_OPENID_CONFIG_TOKEN_ENDPOINT
 
 typealias ScopedTokenProviderCacheCreator = (provider: ScopedTokenProvider) -> ScopedTokenProvider
 

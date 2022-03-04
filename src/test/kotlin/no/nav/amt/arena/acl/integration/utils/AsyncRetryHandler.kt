@@ -2,7 +2,7 @@ package no.nav.amt.arena.acl.integration.utils
 
 fun <T> asyncRetryHandler(
 	executor: () -> T?,
-	maxAttempts: Int = 10,
+	maxAttempts: Int = 20,
 	sleepTime: Long = 250
 ): T {
 	return nullableAsyncRetryHandler(executor, maxAttempts, sleepTime)
@@ -11,7 +11,7 @@ fun <T> asyncRetryHandler(
 
 fun <T> nullableAsyncRetryHandler(
 	executor: () -> T?,
-	maxAttempts: Int = 10,
+	maxAttempts: Int = 20,
 	sleepTime: Long = 250
 ): T? {
 	var attempts = 0

@@ -1,20 +1,24 @@
-package no.nav.amt.arena.acl.goldengate
+package no.nav.amt.arena.acl.kafka
 
-import no.nav.amt.arena.acl.kafka.KafkaProperties
-import no.nav.amt.arena.acl.kafka.KafkaTopicProperties
 import no.nav.amt.arena.acl.services.ArenaMessageProcessorService
 import no.nav.common.kafka.consumer.KafkaConsumerClient
 import no.nav.common.kafka.consumer.util.KafkaConsumerClientBuilder
 import no.nav.common.kafka.consumer.util.deserializer.Deserializers.stringDeserializer
+import org.slf4j.LoggerFactory
+import org.springframework.context.event.ContextRefreshedEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
 @Component
-open class GoldenGateKafkaConsumer(
+open class KafkaConsumer(
 	kafkaTopicProperties: KafkaTopicProperties,
 	kafkaProperties: KafkaProperties,
 	private val arenaMessageProcessorService: ArenaMessageProcessorService,
 ) {
+	
 	private val client: KafkaConsumerClient
+
+	private val log = LoggerFactory.getLogger(javaClass)
 
 	init {
 		val topicConfigs = listOf(
@@ -36,7 +40,11 @@ open class GoldenGateKafkaConsumer(
 			.withProperties(kafkaProperties.consumer())
 			.withTopicConfigs(topicConfigs)
 			.build()
+	}
 
+	@EventListener
+	open fun onApplicationEvent(_event: ContextRefreshedEvent?) {
+		log.info("Starting kafka consumer...")
 		client.start()
 	}
 

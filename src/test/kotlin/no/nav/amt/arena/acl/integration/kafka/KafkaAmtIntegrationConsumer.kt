@@ -2,7 +2,6 @@ package no.nav.amt.arena.acl.integration.kafka
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.JsonNode
-import com.github.tomakehurst.wiremock.common.Json.getObjectMapper
 import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.amt.AmtOperation
