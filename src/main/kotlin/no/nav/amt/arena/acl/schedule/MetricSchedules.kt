@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicInteger
 
 @Component
-open class MetricShedules(
+open class MetricSchedules(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val meterRegistry: MeterRegistry,
 ) {
