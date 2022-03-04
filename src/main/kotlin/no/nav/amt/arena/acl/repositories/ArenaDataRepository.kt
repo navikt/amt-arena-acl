@@ -133,14 +133,13 @@ open class ArenaDataRepository(
 
 	fun getStatusCount(): List<LogStatusCountDto> {
 		val sql = """
-			SELECT arena_table_name, ingest_status, count(*)
+			SELECT ingest_status, count(*)
 			FROM arena_data
-			GROUP BY arena_table_name, ingest_status
+			GROUP BY ingest_status
 		""".trimIndent()
 
 		val logRowMapper = RowMapper { rs, _ ->
 			LogStatusCountDto(
-				table = rs.getString("arena_table_name"),
 				status = IngestStatus.valueOf(rs.getString("ingest_status")),
 				count = rs.getInt("count")
 			)
