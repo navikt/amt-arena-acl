@@ -2,7 +2,7 @@ package no.nav.amt.arena.acl.services
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import no.nav.amt.arena.acl.domain.amt.AmtTiltak
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.utils.CacheUtils.tryCacheFirstNullable
 import org.springframework.stereotype.Service

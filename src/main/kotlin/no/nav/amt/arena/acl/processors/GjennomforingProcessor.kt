@@ -1,51 +1,52 @@
 package no.nav.amt.arena.acl.processors
 
 import ArenaOrdsProxyClient
-import io.micrometer.core.instrument.MeterRegistry
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
-import no.nav.amt.arena.acl.domain.amt.AmtTiltak
-import no.nav.amt.arena.acl.domain.amt.AmtWrapper
-import no.nav.amt.arena.acl.domain.arena.ArenaTiltakGjennomforing
-import no.nav.amt.arena.acl.domain.arena.TiltakGjennomforing
+import no.nav.amt.arena.acl.domain.db.toHandledUpsertCmd
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
+import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
+import no.nav.amt.arena.acl.domain.kafka.arena.TiltakGjennomforing
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
-import no.nav.common.kafka.producer.KafkaProducerClientImpl
+import no.nav.amt.arena.acl.services.KafkaProducerService
+import no.nav.amt.arena.acl.services.TiltakService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
-open class TiltakGjennomforingProcessor(
-	repository: ArenaDataRepository,
+open class GjennomforingProcessor(
+	private val arenaDataRepository: ArenaDataRepository,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
-	private val tiltakRepository: TiltakRepository,
+	private val tiltakService: TiltakService,
 	private val ordsClient: ArenaOrdsProxyClient,
-	meterRegistry: MeterRegistry,
-	kafkaProducer: KafkaProducerClientImpl<String, String>
-) : AbstractArenaProcessor<ArenaTiltakGjennomforing>(
-	repository = repository,
-	meterRegistry = meterRegistry,
-	clazz = ArenaTiltakGjennomforing::class.java,
-	kafkaProducer = kafkaProducer
-) {
+	private val kafkaProducerService: KafkaProducerService
+) : ArenaMessageProcessor<ArenaGjennomforingKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
 	private val statusConverter = GjennomforingStatusConverter()
 
-	override fun handleEntry(data: ArenaData) {
-		val arenaGjennomforing: TiltakGjennomforing =
-			data.getMainObject<ArenaTiltakGjennomforing>().mapTiltakGjennomforing()
+	private val SUPPORTED_TILTAK = setOf(
+		"INDOPPFAG",
+	)
 
-		val gjennomforingId = arenaDataIdTranslationService.hentEllerOpprettNyGjennomforingId(data.arenaId)
+	private fun isSupportedTiltak(tiltakskode: String): Boolean {
+		return SUPPORTED_TILTAK.contains(tiltakskode)
+	}
+
+	override fun handleArenaMessage(message: ArenaGjennomforingKafkaMessage) {
+		val arenaGjennomforing: TiltakGjennomforing = message.getData().mapTiltakGjennomforing()
+
+		val gjennomforingId = arenaDataIdTranslationService.hentEllerOpprettNyGjennomforingId(arenaGjennomforing.tiltakgjennomforingId)
 
 		if (!isSupportedTiltak(arenaGjennomforing.tiltakskode)) {
 			arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
-				gjennomforingArenaId = data.arenaId,
+				gjennomforingArenaId = arenaGjennomforing.tiltakgjennomforingId,
 				gjennomforingAmtId = gjennomforingId,
 				ignored = true
 			)
@@ -53,7 +54,7 @@ open class TiltakGjennomforingProcessor(
 			throw IgnoredException("${arenaGjennomforing.tiltakskode} er ikke et støttet tiltak")
 		}
 
-		val tiltak = tiltakRepository.getByKode(arenaGjennomforing.tiltakskode)
+		val tiltak = tiltakService.getByKode(arenaGjennomforing.tiltakskode)
 			?: throw DependencyNotIngestedException("Venter på at tiltaket med koden=${arenaGjennomforing.tiltakskode} skal bli håndtert")
 
 
@@ -66,19 +67,19 @@ open class TiltakGjennomforingProcessor(
 		)
 
 		arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
-			gjennomforingArenaId = data.arenaId,
+			gjennomforingArenaId = arenaGjennomforing.tiltakgjennomforingId,
 			gjennomforingAmtId = gjennomforingId,
 			ignored = false
 		)
 
 		val amtData = AmtWrapper(
-			type = "GJENNOMFORING",
-			operation = data.operation,
-			payload = arenaGjennomforing.toAmtGjennomforing(tiltak, gjennomforingId, virksomhetsnummer)
+			type = PayloadType.GJENNOMFORING,
+			operation = message.operationType,
+			payload = amtGjennomforing
 		)
 
-		send(amtGjennomforing.id, objectMapper.writeValueAsString(amtData))
-		repository.upsert(data.markAsHandled())
+		kafkaProducerService.sendTilAmtTiltak(amtGjennomforing.id, amtData)
+		arenaDataRepository.upsert(message.toHandledUpsertCmd(arenaGjennomforing.tiltakgjennomforingId))
 		log.info("Melding for gjennomføring id=$gjennomforingId arenaId=${arenaGjennomforing.tiltakgjennomforingId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 	}
 
@@ -100,4 +101,5 @@ open class TiltakGjennomforingProcessor(
 			status = statusConverter.convert(tiltakstatusKode)
 		)
 	}
+
 }

@@ -1,8 +1,8 @@
 package no.nav.amt.arena.acl.integration.executors
 
-import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.amt.AmtWrapper
-import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
 import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerCommand
 import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerResult
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer

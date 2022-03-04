@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.processors.converters
 
-import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import org.springframework.dao.DataIntegrityViolationException
 
 class GjennomforingStatusConverter {

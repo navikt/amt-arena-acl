@@ -1,8 +1,8 @@
 package no.nav.amt.arena.acl.integration.executors
 
-import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
-import no.nav.amt.arena.acl.domain.amt.AmtWrapper
-import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingCommand
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingResult
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer

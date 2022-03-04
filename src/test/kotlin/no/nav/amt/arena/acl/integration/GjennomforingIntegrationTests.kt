@@ -2,8 +2,8 @@ package no.nav.amt.arena.acl.integration
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.amt.arena.acl.domain.IngestStatus
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.db.IngestStatus
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingInput
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCommand
 import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand

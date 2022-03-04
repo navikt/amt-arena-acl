@@ -1,11 +1,11 @@
 package no.nav.amt.arena.acl.processors
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.IngestStatus
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
-import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
+import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
+import no.nav.amt.arena.acl.domain.db.IngestStatus
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaTiltak
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 
-fun createNewTiltakArenaData(position: String, tiltakKode: String, tiltakNavn: String): ArenaData {
+fun createNewTiltakArenaData(position: String, tiltakKode: String, tiltakNavn: String): ArenaDataDbo {
 	return createArenaData(
 		position = position,
 		table = ARENA_TILTAK_TABLE_NAME,
@@ -24,7 +24,7 @@ fun createNewTiltakArenaData(position: String, tiltakKode: String, tiltakNavn: S
 	)
 }
 
-fun createUpdateTiltakArenaData(position: String, before: JsonNode, kode: String, newNavn: String): ArenaData {
+fun createUpdateTiltakArenaData(position: String, before: JsonNode, kode: String, newNavn: String): ArenaDataDbo {
 	return createArenaData(
 		position = position,
 		table = ARENA_TILTAK_TABLE_NAME,
@@ -34,7 +34,7 @@ fun createUpdateTiltakArenaData(position: String, before: JsonNode, kode: String
 	)
 }
 
-fun createDeleteTiltakArenaData(position: String, before: JsonNode): ArenaData {
+fun createDeleteTiltakArenaData(position: String, before: JsonNode): ArenaDataDbo {
 	return createArenaData(
 		position = position,
 		table = ARENA_TILTAK_TABLE_NAME,
@@ -56,7 +56,7 @@ fun createNewDeltakerArenaData(
 	prosentDeltid: Float = 0.0f,
 	registrertDato: LocalDateTime = LocalDateTime.now(),
 	operation: AmtOperation = AmtOperation.CREATED
-): ArenaData {
+): ArenaDataDbo {
 	val deltaker = createDeltaker(
 		tiltakGjennomforingArenaId = tiltakGjennomforingArenaId,
 		deltakerArenaId = deltakerArenaId,
@@ -88,8 +88,8 @@ private fun createArenaData(
 	status: IngestStatus = IngestStatus.NEW,
 	before: JsonNode? = null,
 	after: JsonNode? = null,
-): ArenaData {
-	return ArenaData(
+): ArenaDataDbo {
+	return ArenaDataDbo(
 		id = -1,
 		arenaTableName = table,
 		arenaId = arenaId,
@@ -191,13 +191,13 @@ private fun emptyArenaTiltak(): ArenaTiltak {
 	)
 }
 
-private fun emptyArenaTiltakDeltaker(): ArenaTiltakDeltaker {
+private fun emptyArenaTiltakDeltaker(): ArenaDeltaker {
 	val NOT_SET_STRING = "NOT_SET_STRING"
 	val NOT_SET_INT = Int.MIN_VALUE
 	val NOT_SET_LONG = Long.MIN_VALUE
 	val NOT_SET_FLOAT = Float.MIN_VALUE
 
-	return ArenaTiltakDeltaker(
+	return ArenaDeltaker(
 		TILTAKDELTAKER_ID = NOT_SET_LONG,
 		PERSON_ID = NOT_SET_LONG,
 		TILTAKGJENNOMFORING_ID = NOT_SET_LONG,

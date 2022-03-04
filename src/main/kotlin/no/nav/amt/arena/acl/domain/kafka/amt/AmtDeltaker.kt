@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.domain.amt
+package no.nav.amt.arena.acl.domain.kafka.amt
 
 import java.time.LocalDate
 import java.time.LocalDateTime

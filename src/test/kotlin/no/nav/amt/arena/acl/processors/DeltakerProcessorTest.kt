@@ -10,13 +10,14 @@ import io.kotest.matchers.shouldNotBe
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.IngestStatus
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
+import no.nav.amt.arena.acl.domain.db.IngestStatus
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
+import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.common.kafka.producer.KafkaProducerClient
 import org.mockito.ArgumentMatchers.any
@@ -60,11 +61,11 @@ class DeltakerProcessorTest : FunSpec({
 		DatabaseTestUtils.cleanAndInitDatabase(dataSource, "/deltaker-processor_test-data.sql")
 
 		deltakerProcessor = DeltakerProcessor(
-			repository = arenaDataRepository,
+			arenaDataRepository = arenaDataRepository,
 			arenaDataIdTranslationService = ArenaDataIdTranslationService(idTranslationRepository),
 			ordsClient = ordsClient,
 			meterRegistry = SimpleMeterRegistry(),
-			kafkaProducer = kafkaProducer,
+			kafkaProducerService = KafkaProducerService(kafkaProducer),
 			metrics = DeltakerMetricHandler(SimpleMeterRegistry())
 		)
 
@@ -76,7 +77,7 @@ class DeltakerProcessorTest : FunSpec({
 		operation: AmtOperation,
 		position: String,
 		expectedStatus: IngestStatus = IngestStatus.HANDLED
-	): ArenaData {
+	): ArenaDataDbo {
 		val arenaDataRepositoryEntry = shouldNotThrowAny {
 			arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, operation, position)
 		}
@@ -111,6 +112,7 @@ class DeltakerProcessorTest : FunSpec({
 			tiltakGjennomforingArenaId = nonIgnoredGjennomforingArenaId,
 			deltakerArenaId = 1L
 		)
+
 		deltakerProcessor.handle(newDeltaker)
 
 		getAndCheckArenaDataRepositoryEntry(operation = AmtOperation.CREATED, position)

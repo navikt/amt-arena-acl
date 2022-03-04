@@ -1,8 +1,8 @@
 package no.nav.amt.arena.acl.integration.commands.deltaker
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
-import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
 import no.nav.amt.arena.acl.integration.commands.Command
 
 abstract class DeltakerCommand : Command() {
@@ -13,7 +13,7 @@ abstract class DeltakerCommand : Command() {
 	): DeltakerResult
 
 	fun createPayload(input: DeltakerInput): JsonNode {
-		val data = ArenaTiltakDeltaker(
+		val data = ArenaDeltaker(
 			TILTAKDELTAKER_ID = input.tiltakDeltakerId,
 			PERSON_ID = input.personId,
 			TILTAKGJENNOMFORING_ID = input.tiltakgjennomforingId,

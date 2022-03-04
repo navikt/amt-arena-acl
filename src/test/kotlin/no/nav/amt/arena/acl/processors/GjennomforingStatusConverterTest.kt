@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.processors
 
 import io.kotest.matchers.shouldBe
-import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

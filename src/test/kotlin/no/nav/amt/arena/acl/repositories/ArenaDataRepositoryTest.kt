@@ -7,9 +7,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.IngestStatus
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
+import no.nav.amt.arena.acl.domain.db.IngestStatus
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -35,7 +35,7 @@ class ArenaDataRepositoryTest : FunSpec({
 	test("Insert and get should return inserted object") {
 		val afterData = mapper.readTree("{\"test\": \"test\"}".toByteArray())
 
-		val data = ArenaData(
+		val data = ArenaDataDbo(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
@@ -56,7 +56,7 @@ class ArenaDataRepositoryTest : FunSpec({
 	}
 
 	test("Upserting a Inserted object should modify it") {
-		val data = ArenaData(
+		val data = ArenaDataDbo(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
@@ -82,7 +82,7 @@ class ArenaDataRepositoryTest : FunSpec({
 	test("Should delete all ignored arena data") {
 		val afterData = mapper.readTree("{\"test\": \"test\"}".toByteArray())
 
-		val data1 = ArenaData(
+		val data1 = ArenaDataDbo(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
@@ -91,7 +91,7 @@ class ArenaDataRepositoryTest : FunSpec({
 			after = afterData
 		)
 
-		val data2 = ArenaData(
+		val data2 = ArenaDataDbo(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
@@ -101,7 +101,7 @@ class ArenaDataRepositoryTest : FunSpec({
 			after = afterData
 		)
 
-		val data3 = ArenaData(
+		val data3 = ArenaDataDbo(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,

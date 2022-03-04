@@ -1,10 +1,10 @@
-package no.nav.amt.arena.acl.domain.arena
+package no.nav.amt.arena.acl.domain.kafka.arena
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
@@ -38,15 +38,15 @@ data class ArenaWrapper(
 
 	val arenaId = when (table) {
 		ARENA_TILTAK_TABLE_NAME -> getPayload(ArenaTiltak::class.java).TILTAKSKODE
-		ARENA_GJENNOMFORING_TABLE_NAME -> getPayload(ArenaTiltakGjennomforing::class.java).TILTAKGJENNOMFORING_ID.toString()
-		ARENA_DELTAKER_TABLE_NAME -> getPayload(ArenaTiltakDeltaker::class.java).TILTAKDELTAKER_ID.toString()
+		ARENA_GJENNOMFORING_TABLE_NAME -> getPayload(ArenaGjennomforing::class.java).TILTAKGJENNOMFORING_ID.toString()
+		ARENA_DELTAKER_TABLE_NAME -> getPayload(ArenaDeltaker::class.java).TILTAKDELTAKER_ID.toString()
 		else -> throw IllegalArgumentException("Table with name $table is not supported.")
 	}
 
 	val operationTimestamp = LocalDateTime.parse(operationTimestampString, opTsFormatter)
 
-	fun toArenaData(): ArenaData {
-		return ArenaData(
+	fun toArenaData(): ArenaDataDbo {
+		return ArenaDataDbo(
 			arenaTableName = this.table,
 			arenaId = this.arenaId,
 			operation = this.operation.toAmtOperation(),
@@ -79,3 +79,45 @@ data class ArenaWrapper(
 	}
 
 }
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ArenaKafkaMessageDto(
+	val table: String,
+
+	@JsonProperty("op_type")
+	val opType: String,
+
+	@JsonProperty("op_ts")
+	val opTs: String,
+
+	@JsonProperty("current_ts")
+	val currentTs: String,
+
+	val pos: String,
+	val before: JsonNode?,
+	val after: JsonNode?
+)
+
+data class ArenaKafkaMessage<D>(
+	val arenaTableName: String,
+	val operationType: AmtOperation,
+	val operationTimestamp: LocalDateTime,
+	val operationPosition: String,
+	val before: D?,
+	val after: D?
+) {
+	fun getData(): D {
+		return when (operationType) {
+			AmtOperation.CREATED -> after
+			AmtOperation.MODIFIED -> after
+			AmtOperation.DELETED -> before
+		} ?: throw NoSuchElementException("Both before and after is null")
+	}
+}
+
+typealias ArenaTiltakKafkaMessage = ArenaKafkaMessage<ArenaTiltak>
+
+typealias ArenaGjennomforingKafkaMessage = ArenaKafkaMessage<ArenaGjennomforing>
+
+typealias ArenaDeltakerKafkaMessage = ArenaKafkaMessage<ArenaDeltaker>
+

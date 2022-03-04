@@ -2,11 +2,12 @@ package no.nav.amt.arena.acl.processors
 
 import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.amt.AmtWrapper
-import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
-import no.nav.amt.arena.acl.domain.arena.TiltakDeltaker
+import no.nav.amt.arena.acl.domain.db.toHandledUpsertCmd
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
+import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
+import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
@@ -14,33 +15,28 @@ import no.nav.amt.arena.acl.processors.converters.DeltakerEndretDatoConverter
 import no.nav.amt.arena.acl.processors.converters.DeltakerStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
+import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.utils.SecureLog.secureLog
-import no.nav.common.kafka.producer.KafkaProducerClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
 open class DeltakerProcessor(
-	repository: ArenaDataRepository,
 	val meterRegistry: MeterRegistry,
+	private val arenaDataRepository: ArenaDataRepository,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val ordsClient: ArenaOrdsProxyClient,
 	private val metrics: DeltakerMetricHandler,
-	kafkaProducer: KafkaProducerClient<String, String>
-) : AbstractArenaProcessor<ArenaTiltakDeltaker>(
-	repository = repository,
-	meterRegistry = meterRegistry,
-	clazz = ArenaTiltakDeltaker::class.java,
-	kafkaProducer = kafkaProducer
-) {
+	private val kafkaProducerService: KafkaProducerService
+) : ArenaMessageProcessor<ArenaDeltakerKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
 	private val statusConverter = DeltakerStatusConverter(meterRegistry)
 	private val statusEndretDatoConverter = DeltakerEndretDatoConverter()
 
-	override fun handleEntry(data: ArenaData) {
-		val arenaDeltaker: TiltakDeltaker = data.getMainObject<ArenaTiltakDeltaker>().mapTiltakDeltaker()
+	override fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
+		val arenaDeltaker: TiltakDeltaker = message.getData().mapTiltakDeltaker()
 
 		val gjennomforingInfo =
 			arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaDeltaker.tiltakgjennomforingId)
@@ -53,7 +49,7 @@ open class DeltakerProcessor(
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
 			?: throw IllegalStateException("Expected person with personId=${arenaDeltaker.personId} to exist")
 
-		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(data.arenaId)
+		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId)
 
 		val amtDeltaker = arenaDeltaker.toAmtDeltaker(
 			amtDeltakerId = deltakerAmtId,
@@ -62,23 +58,24 @@ open class DeltakerProcessor(
 		)
 
 		arenaDataIdTranslationService.upsertDeltakerIdTranslation(
-			deltakerArenaId = data.arenaId,
+			deltakerArenaId = arenaDeltaker.tiltakdeltakerId,
 			deltakerAmtId = deltakerAmtId,
 			ignored = false
 		)
 
 		val amtData = AmtWrapper(
-			type = "DELTAKER",
-			operation = data.operation,
+			type = PayloadType.DELTAKER,
+			operation = message.operationType,
 			payload = arenaDeltaker.toAmtDeltaker(deltakerAmtId, gjennomforingInfo.amtId, personIdent)
 		)
 
-		send(amtDeltaker.id, objectMapper.writeValueAsString(amtData))
-		repository.upsert(data.markAsHandled())
+		kafkaProducerService.sendTilAmtTiltak(amtDeltaker.id, amtData)
+
+		arenaDataRepository.upsert(message.toHandledUpsertCmd(arenaDeltaker.tiltakdeltakerId))
 
 		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} personId=${arenaDeltaker.personId} fnr=$personIdent er sendt")
 		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
-		metrics.publishMetrics(data)
+		metrics.publishMetrics(message)
 	}
 
 	private fun TiltakDeltaker.toAmtDeltaker(
@@ -111,4 +108,5 @@ open class DeltakerProcessor(
 			)
 		)
 	}
+
 }

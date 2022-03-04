@@ -1,9 +1,9 @@
-package no.nav.amt.arena.acl.domain.arena
+package no.nav.amt.arena.acl.domain.kafka.arena
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import java.time.LocalDateTime
 import java.time.Month

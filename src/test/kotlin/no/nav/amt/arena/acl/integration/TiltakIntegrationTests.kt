@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.integration
 
 import io.kotest.matchers.shouldBe
-import no.nav.amt.arena.acl.domain.IngestStatus
+import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
 import no.nav.amt.arena.acl.integration.commands.tiltak.OppdaterTiltakCommand
 import no.nav.amt.arena.acl.integration.commands.tiltak.SlettTiltakCommand

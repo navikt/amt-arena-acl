@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.integration.executors
 
-import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
 import no.nav.amt.arena.acl.integration.commands.tiltak.TiltakCommand
 import no.nav.amt.arena.acl.integration.commands.tiltak.TiltakResult
 import no.nav.amt.arena.acl.integration.utils.nullableAsyncRetryHandler
@@ -41,7 +41,7 @@ class TiltakTestExecutor(
 			?: fail("Forventet at tiltak med kode $kode ligger i tiltak databasen.")
 
 		return TiltakResult(
-			arenaData = data,
+			arenaDataDbo = data,
 			tiltak = storedTiltak
 		)
 	}

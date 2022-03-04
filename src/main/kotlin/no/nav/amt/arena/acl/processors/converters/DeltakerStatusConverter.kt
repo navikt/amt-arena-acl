@@ -2,7 +2,7 @@ package no.nav.amt.arena.acl.processors.converters
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
-import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import java.time.LocalDate
 import java.time.LocalDateTime
 

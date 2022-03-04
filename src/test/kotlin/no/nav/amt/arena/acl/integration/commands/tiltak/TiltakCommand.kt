@@ -1,8 +1,8 @@
 package no.nav.amt.arena.acl.integration.commands.tiltak
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
-import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaTiltak
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
 import no.nav.amt.arena.acl.integration.commands.Command
 
 abstract class TiltakCommand : Command() {

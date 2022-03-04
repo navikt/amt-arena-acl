@@ -1,7 +1,7 @@
-package no.nav.amt.arena.acl.domain
+package no.nav.amt.arena.acl.domain.db
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import java.time.LocalDateTime
 
@@ -14,7 +14,7 @@ enum class IngestStatus {
 	INVALID
 }
 
-data class ArenaData(
+data class ArenaDataDbo(
 	val id: Int = -1,
 	val arenaTableName: String,
 	val arenaId: String,
@@ -25,8 +25,8 @@ data class ArenaData(
 	val ingestedTimestamp: LocalDateTime? = null,
 	val ingestAttempts: Int = 0,
 	val lastAttempted: LocalDateTime? = null,
-	val before: JsonNode? = null,
-	val after: JsonNode? = null,
+	val before: JsonNode? = null, // TODO: should be String
+	val after: JsonNode? = null, // TODO: should be String
 	val note: String? = null
 ) {
 
@@ -56,15 +56,6 @@ data class ArenaData(
 		lastAttempted = LocalDateTime.now(),
 		note = reason
 	)
-
-	inline fun <reified T> getMainObject(): T {
-		return when (operation) {
-			AmtOperation.CREATED -> jsonObject<T>(after)
-			AmtOperation.MODIFIED -> jsonObject<T>(after)
-			AmtOperation.DELETED -> jsonObject<T>(before)
-		}
-			?: throw IllegalArgumentException("Expected $arenaTableName id $arenaId to have before or after correctly set")
-	}
 
 	inline fun <reified T> jsonObject(node: JsonNode?): T? {
 		if (node == null) {

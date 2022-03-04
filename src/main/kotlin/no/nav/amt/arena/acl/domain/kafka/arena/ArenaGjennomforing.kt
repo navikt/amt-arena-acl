@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.domain.arena
+package no.nav.amt.arena.acl.domain.kafka.arena
 
 import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.utils.asValidatedLocalDate
@@ -8,7 +8,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 // @SONAR_START@
-data class ArenaTiltakGjennomforing(
+data class ArenaGjennomforing(
 	val TILTAKGJENNOMFORING_ID: Long,
 	val SAK_ID: Long?,
 	val TILTAKSKODE: String,

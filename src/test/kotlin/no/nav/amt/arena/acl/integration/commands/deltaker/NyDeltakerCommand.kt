@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.integration.commands.deltaker
 
-import no.nav.amt.arena.acl.domain.arena.ArenaOperation
-import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaOperation
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import java.time.LocalDateTime
 

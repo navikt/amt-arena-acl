@@ -8,8 +8,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
-import no.nav.amt.arena.acl.domain.IngestStatus
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.db.IngestStatus
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.services.TiltakService
@@ -46,7 +46,8 @@ class TiltakProcessorTest : FunSpec({
 		val tiltakNavn = "Tiltak1_NAVN"
 
 		val data = createNewTiltakArenaData(position, tiltakKode, tiltakNavn)
-		tiltakProcessor.handle(data)
+
+		tiltakProcessor.handleArenaMessage(data)
 
 		val arenaDataRepositoryEntry = shouldNotThrowAny {
 			arenaDataRepository.get(ARENA_TILTAK_TABLE_NAME, AmtOperation.CREATED, position)

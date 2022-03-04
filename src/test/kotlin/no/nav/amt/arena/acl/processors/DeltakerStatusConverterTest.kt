@@ -3,7 +3,7 @@ package no.nav.amt.arena.acl.processors
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
-import no.nav.amt.arena.acl.domain.amt.AmtDeltaker.Status.*
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.*
 import no.nav.amt.arena.acl.processors.converters.DeltakerStatusConverter
 import java.time.LocalDate
 import java.time.LocalDateTime

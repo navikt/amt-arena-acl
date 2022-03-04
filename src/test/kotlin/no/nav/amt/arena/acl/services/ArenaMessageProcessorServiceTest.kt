@@ -12,9 +12,9 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
-import no.nav.amt.arena.acl.domain.ArenaData
+import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
-import no.nav.amt.arena.acl.processors.TiltakGjennomforingProcessor
+import no.nav.amt.arena.acl.processors.GjennomforingProcessor
 import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
@@ -32,7 +32,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 
 	lateinit var tiltakProcessor: TiltakProcessor
 
-	lateinit var tiltakGjennomforingProcessor: TiltakGjennomforingProcessor
+	lateinit var gjennomforingProcessor: GjennomforingProcessor
 
 	lateinit var deltakerProcessor: DeltakerProcessor
 
@@ -45,13 +45,13 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		arenaDataRepository = ArenaDataRepository(NamedParameterJdbcTemplate(dataSource))
 
 		tiltakProcessor = mockk()
-		tiltakGjennomforingProcessor = mockk()
+		gjennomforingProcessor = mockk()
 		deltakerProcessor = mockk()
 
 		messageProcessor = ArenaMessageProcessorService(
 			arenaDataRepository,
 			tiltakProcessor,
-			tiltakGjennomforingProcessor,
+			gjennomforingProcessor,
 			deltakerProcessor
 		)
 
@@ -84,7 +84,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
 		every {
-			tiltakGjennomforingProcessor.handle(any())
+			gjennomforingProcessor.handle(any())
 		} returns Unit
 
 		messageProcessor.handleArenaGoldenGateRecord(
@@ -92,7 +92,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		)
 
 		verify(exactly = 1) {
-			tiltakGjennomforingProcessor.handle(any())
+			gjennomforingProcessor.handle(any())
 		}
 	}
 
@@ -123,17 +123,17 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
 		every {
-			tiltakGjennomforingProcessor.handle(any())
+			gjennomforingProcessor.handle(any())
 		} returns Unit
 
 		messageProcessor.handleArenaGoldenGateRecord(
 			ConsumerRecord("test", 1, 1, "123456", tiltakgjennomforingJson)
 		)
 
-		val capturingSlot = CapturingSlot<ArenaData>()
+		val capturingSlot = CapturingSlot<ArenaDataDbo>()
 
 		verify(exactly = 1) {
-			tiltakGjennomforingProcessor.handle(capture(capturingSlot))
+			gjennomforingProcessor.handle(capture(capturingSlot))
 		}
 
 		val capturedData = capturingSlot.captured

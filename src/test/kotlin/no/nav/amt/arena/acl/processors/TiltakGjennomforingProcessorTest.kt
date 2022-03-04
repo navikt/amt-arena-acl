@@ -7,10 +7,10 @@ import io.kotest.matchers.shouldNotBe
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.IngestStatus
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.amt.AmtTiltak
+import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
+import no.nav.amt.arena.acl.domain.db.IngestStatus
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
@@ -35,7 +35,7 @@ class TiltakGjennomforingProcessorTest {
 	private lateinit var tiltakRepository: TiltakRepository
 	private lateinit var ordsClient: ArenaOrdsProxyClient
 	private lateinit var kafkaProducer: KafkaProducerClientImpl<String, String>
-	private lateinit var gjennomforingProcessor: TiltakGjennomforingProcessor
+	private lateinit var gjennomforingProcessor: GjennomforingProcessor
 	private var meterRegistry = SimpleMeterRegistry()
 	var mapper: ObjectMapper = ObjectMapper()
 	val dataSource = SingletonPostgresContainer.getDataSource()
@@ -51,7 +51,7 @@ class TiltakGjennomforingProcessorTest {
 		tiltakRepository = mock(TiltakRepository::class.java)
 		ordsClient = mock(ArenaOrdsProxyClient::class.java)
 		kafkaProducer = mock(KafkaProducerClientImpl::class.java) as KafkaProducerClientImpl<String, String>
-		gjennomforingProcessor = TiltakGjennomforingProcessor(
+		gjennomforingProcessor = GjennomforingProcessor(
 			repository,
 			ArenaDataIdTranslationService(translationRepository),
 			tiltakRepository,
@@ -75,7 +75,7 @@ class TiltakGjennomforingProcessorTest {
 		val arenaId = "123"
 		val opPos = "1"
 
-		val arenaData = ArenaData(
+		val arenaDataDbo = ArenaDataDbo(
 			arenaTableName =  ARENA_GJENNOMFORING_TABLE_NAME,
 			arenaId =  arenaId,
 			operation =  AmtOperation.CREATED,
@@ -84,12 +84,12 @@ class TiltakGjennomforingProcessorTest {
 			after =  arenaGjennomforingJson,
 		)
 
-		gjennomforingProcessor.handle(arenaData)
-		val translationData = translationRepository.get(arenaData.arenaTableName, arenaData.arenaId)
+		gjennomforingProcessor.handle(arenaDataDbo)
+		val translationData = translationRepository.get(arenaDataDbo.arenaTableName, arenaDataDbo.arenaId)
 		translationData!!.arenaId shouldBe arenaId
 		translationData.ignored shouldBe false
 
-		repository.get(arenaData.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.HANDLED
+		repository.get(arenaDataDbo.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.HANDLED
 
 	}
 
@@ -98,7 +98,7 @@ class TiltakGjennomforingProcessorTest {
 		val arenaId = "3210"
 		val opPos = "2"
 
-		val arenaData = ArenaData(
+		val arenaDataDbo = ArenaDataDbo(
 			arenaTableName =  ARENA_GJENNOMFORING_TABLE_NAME,
 			arenaId =  arenaId,
 			operation =  AmtOperation.CREATED,
@@ -107,11 +107,11 @@ class TiltakGjennomforingProcessorTest {
 			after =  arenaGjennomforingUgyldigJson,
 		)
 
-		gjennomforingProcessor.handle(arenaData)
-		val translationData = translationRepository.get(arenaData.arenaTableName, arenaData.arenaId)
+		gjennomforingProcessor.handle(arenaDataDbo)
+		val translationData = translationRepository.get(arenaDataDbo.arenaTableName, arenaDataDbo.arenaId)
 		translationData shouldBe null
 
-		repository.get(arenaData.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.INVALID
+		repository.get(arenaDataDbo.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.INVALID
 
 	}
 
@@ -120,7 +120,7 @@ class TiltakGjennomforingProcessorTest {
 		val arenaId = "321"
 		val opPos = "2"
 
-		val arenaData = ArenaData(
+		val arenaDataDbo = ArenaDataDbo(
 			arenaTableName =  ARENA_GJENNOMFORING_TABLE_NAME,
 			arenaId =  arenaId,
 			operation =  AmtOperation.CREATED,
@@ -131,12 +131,12 @@ class TiltakGjennomforingProcessorTest {
 
 		`when`(tiltakRepository.getByKode(ukjentTiltakType)).thenReturn(AmtTiltak(UUID.randomUUID(), kode=tiltakKode, navn="Oppfølging"))
 
-		gjennomforingProcessor.handle(arenaData)
-		val translationData = translationRepository.get(arenaData.arenaTableName, arenaData.arenaId)
+		gjennomforingProcessor.handle(arenaDataDbo)
+		val translationData = translationRepository.get(arenaDataDbo.arenaTableName, arenaDataDbo.arenaId)
 		translationData!!.arenaId shouldBe arenaId
 		translationData.ignored shouldBe true
 
-		repository.get(arenaData.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.IGNORED
+		repository.get(arenaDataDbo.arenaTableName, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.IGNORED
 
 	}
 
@@ -145,7 +145,7 @@ class TiltakGjennomforingProcessorTest {
 		val arenaId = "1234567"
 		val opPos = "11223344"
 
-		val arenaData = ArenaData(
+		val arenaDataDbo = ArenaDataDbo(
 			arenaTableName =  ARENA_GJENNOMFORING_TABLE_NAME,
 			arenaId =  arenaId,
 			operation =  AmtOperation.DELETED,
@@ -154,12 +154,12 @@ class TiltakGjennomforingProcessorTest {
 			before = arenaGjennomforingJson,
 		)
 
-		gjennomforingProcessor.handle(arenaData)
+		gjennomforingProcessor.handle(arenaDataDbo)
 
-		val translationData = translationRepository.get(arenaData.arenaTableName, arenaData.arenaId)
+		val translationData = translationRepository.get(arenaDataDbo.arenaTableName, arenaDataDbo.arenaId)
 		translationData shouldNotBe null
 
-		repository.get(arenaData.arenaTableName, AmtOperation.DELETED, opPos).ingestStatus shouldBe IngestStatus.HANDLED
+		repository.get(arenaDataDbo.arenaTableName, AmtOperation.DELETED, opPos).ingestStatus shouldBe IngestStatus.HANDLED
 	}
 
 	val arenaGjennomforingUgyldigJson = mapper.readTree("""
