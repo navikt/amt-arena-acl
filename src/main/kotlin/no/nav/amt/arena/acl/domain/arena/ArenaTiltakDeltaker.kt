@@ -60,7 +60,7 @@ data class ArenaTiltakDeltaker(
 			datoStatusendring = DATO_STATUSENDRING?.asValidatedLocalDate("DATO_STATUSENDRING"),
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
-			regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO") ?: throw ValidationException("REG_DATO er null")
+			regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO")
 		)
 	}
 
@@ -77,5 +77,5 @@ data class TiltakDeltaker(
 	val datoStatusendring: LocalDate?,
 	val dagerPerUke: Int?,
 	val prosentDeltid: Float?,
-	val regDato: LocalDateTime
+	val regDato: LocalDateTime?
 )

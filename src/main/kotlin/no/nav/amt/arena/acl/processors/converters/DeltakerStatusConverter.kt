@@ -82,10 +82,10 @@ private data class StatusDates(
 	private val start: LocalDate?,
 	private val end: LocalDate?,
 	private val datoStatusEndring: LocalDate?,
-	private val deltakerRegistrertDato: LocalDateTime
+	private val deltakerRegistrertDato: LocalDateTime?
 ) {
 
-	fun statusEndretSammeDagSomRegistrering() = datoStatusEndring != null && datoStatusEndring == deltakerRegistrertDato.toLocalDate()
+	fun statusEndretSammeDagSomRegistrering() = datoStatusEndring != null && deltakerRegistrertDato != null && datoStatusEndring == deltakerRegistrertDato.toLocalDate()
 	fun starterIDag () = start?.equals(LocalDate.now()) == true
 	fun startDatoPassert() = start?.isBefore(LocalDate.now()) ?: false
 	fun sluttDatoPassert() = end?.isBefore(LocalDate.now()) ?: false
