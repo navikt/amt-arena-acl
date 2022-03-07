@@ -38,24 +38,24 @@ open class TiltakGjennomforingProcessor(
 	private val statusConverter = GjennomforingStatusConverter()
 
 	override fun handleEntry(data: ArenaData) {
-		val arenaGjennomforing: TiltakGjennomforing =
-			data.getMainObject<ArenaTiltakGjennomforing>().mapTiltakGjennomforing()
+		val arenaTiltakGjennomforing = data.getMainObject<ArenaTiltakGjennomforing>()
 
 		val gjennomforingId = arenaDataIdTranslationService.hentEllerOpprettNyGjennomforingId(data.arenaId)
 
-		if (!isSupportedTiltak(arenaGjennomforing.tiltakskode)) {
+		if (!isSupportedTiltak(arenaTiltakGjennomforing.TILTAKSKODE)) {
 			arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
 				gjennomforingArenaId = data.arenaId,
 				gjennomforingAmtId = gjennomforingId,
 				ignored = true
 			)
 
-			throw IgnoredException("${arenaGjennomforing.tiltakskode} er ikke et støttet tiltak")
+			throw IgnoredException("${arenaTiltakGjennomforing.TILTAKSKODE} er ikke et støttet tiltak")
 		}
+
+		val arenaGjennomforing = arenaTiltakGjennomforing.mapTiltakGjennomforing()
 
 		val tiltak = tiltakRepository.getByKode(arenaGjennomforing.tiltakskode)
 			?: throw DependencyNotIngestedException("Venter på at tiltaket med koden=${arenaGjennomforing.tiltakskode} skal bli håndtert")
-
 
 		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.arbgivIdArrangor)
 
