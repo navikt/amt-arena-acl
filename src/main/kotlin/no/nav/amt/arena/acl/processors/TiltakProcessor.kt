@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.processors
 
-import no.nav.amt.arena.acl.domain.db.toHandledUpsertCmd
+import no.nav.amt.arena.acl.domain.db.toUpsertWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaTiltakKafkaMessage
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
@@ -35,7 +35,7 @@ open class TiltakProcessor(
 			navn = navn
 		)
 
-		arenaDataRepository.upsert(message.toHandledUpsertCmd(kode))
+		arenaDataRepository.upsert(message.toUpsertWithStatusHandled(kode))
 
 		log.info("Upsert av tiltak id=$id kode=$kode navn=$navn")
 	}

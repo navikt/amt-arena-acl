@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
-import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
+import no.nav.amt.arena.acl.domain.db.ArenaDataUpsert
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
@@ -33,15 +33,15 @@ class ArenaDataRepositoryTest : FunSpec({
 	}
 
 	test("Insert and get should return inserted object") {
-		val afterData = mapper.readTree("{\"test\": \"test\"}".toByteArray())
+		val after = "{\"test\": \"test\"}"
 
-		val data = ArenaDataDbo(
+		val data = ArenaDataUpsert(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
 			operationPosition = "1",
 			operationTimestamp = LocalDateTime.now(),
-			after = afterData
+			after = after
 		)
 
 		repository.upsert(data)
@@ -52,37 +52,45 @@ class ArenaDataRepositoryTest : FunSpec({
 		stored.id shouldNotBe -1
 		stored.arenaId shouldBe data.arenaId
 		stored.before shouldBe null
-		stored.after shouldBe afterData
+		stored.after shouldBe after
 	}
 
 	test("Upserting a Inserted object should modify it") {
-		val data = ArenaDataDbo(
+		val data = ArenaDataUpsert(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
 			operationPosition = "1",
 			operationTimestamp = LocalDateTime.now(),
-			after = mapper.readTree("{\"test\": \"test\"}".toByteArray())
+			after = "{\"test\": \"test\"}"
 		)
 
 		repository.upsert(data)
 
 		val stored = repository.get(data.arenaTableName, data.operation, data.operationPosition)
 
-		repository.upsert(stored.retry())
+		val newIngestedTimestamp = LocalDateTime.now()
+
+		val data2 = data.copy(
+			ingestStatus = IngestStatus.RETRY,
+			ingestedTimestamp = newIngestedTimestamp,
+			note = "some note"
+		)
+
+		repository.upsert(data2)
 
 		val updated = repository.get(data.arenaTableName, data.operation, data.operationPosition)
 
 		stored.id shouldBe updated.id
 		updated.ingestStatus shouldBe IngestStatus.RETRY
-		updated.ingestAttempts shouldBe 1
-		updated.lastAttempted shouldNotBe null
+		updated.ingestedTimestamp shouldBe newIngestedTimestamp
+		updated.note shouldBe "some note"
 	}
 
 	test("Should delete all ignored arena data") {
-		val afterData = mapper.readTree("{\"test\": \"test\"}".toByteArray())
+		val afterData = "{\"test\": \"test\"}"
 
-		val data1 = ArenaDataDbo(
+		val data1 = ArenaDataUpsert(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
@@ -91,7 +99,7 @@ class ArenaDataRepositoryTest : FunSpec({
 			after = afterData
 		)
 
-		val data2 = ArenaDataDbo(
+		val data2 = ArenaDataUpsert(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
@@ -101,7 +109,7 @@ class ArenaDataRepositoryTest : FunSpec({
 			after = afterData
 		)
 
-		val data3 = ArenaDataDbo(
+		val data3 = ArenaDataUpsert(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,

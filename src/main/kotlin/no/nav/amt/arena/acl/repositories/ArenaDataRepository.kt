@@ -1,12 +1,11 @@
 package no.nav.amt.arena.acl.repositories
 
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
-import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertCmd
+import no.nav.amt.arena.acl.domain.db.ArenaDataUpsert
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.dto.LogStatusCountDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
-import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -18,17 +17,7 @@ open class ArenaDataRepository(
 	private val template: NamedParameterJdbcTemplate,
 ) {
 
-	private val mapper = ObjectMapperFactory.get()
-
 	private val rowMapper = RowMapper { rs, _ ->
-		val before = if (rs.getBytes("before") != null)
-			mapper.readTree(rs.getBytes("before"))
-		else null
-
-		val after = if (rs.getBytes("after") != null)
-			mapper.readTree(rs.getBytes("after"))
-		else null
-
 		ArenaDataDbo(
 			id = rs.getInt("id"),
 			arenaTableName = rs.getString("arena_table_name"),
@@ -40,40 +29,13 @@ open class ArenaDataRepository(
 			ingestedTimestamp = rs.getTimestamp("ingested_timestamp")?.toLocalDateTime(),
 			ingestAttempts = rs.getInt("ingest_attempts"),
 			lastAttempted = rs.getTimestamp("last_attempted")?.toLocalDateTime(),
-			before = before,
-			after = after,
+			before = rs.getString("before"),
+			after = rs.getString("after"),
 			note = rs.getString("note")
 		)
 	}
 
-	fun upsert(arenaDataDbo: ArenaDataDbo) {
-		val sql = """
-			INSERT INTO arena_data(arena_table_name, arena_id, operation_type, operation_pos, operation_timestamp, ingest_status,
-								   ingested_timestamp, ingest_attempts, last_attempted, before, after, note)
-			VALUES (:arena_table_name,
-					:arena_id,
-					:operation_type,
-					:operation_pos,
-					:operation_timestamp,
-					:ingest_status,
-					:ingested_timestamp,
-					:ingest_attempts,
-					:last_attempted,
-					:before::json,
-					:after::json,
-					:note)
-			ON CONFLICT (arena_table_name, operation_pos) DO UPDATE SET
-					ingest_status      = :ingest_status,
-					ingested_timestamp = :ingested_timestamp,
-					ingest_attempts    = :ingest_attempts,
-					last_attempted     = :last_attempted,
-					note 			   = :note
-		""".trimIndent()
-
-		template.update(sql, arenaDataDbo.asParameterSource())
-	}
-
-	fun upsert(cmd: ArenaDataUpsertCmd) {
+	fun upsert(upsertData: ArenaDataUpsert) {
 		val sql = """
 			INSERT INTO arena_data(arena_table_name, arena_id, operation_type, operation_pos, operation_timestamp, ingest_status,
 								   ingested_timestamp, ingest_attempts, last_attempted, before, after, note)
@@ -94,16 +56,16 @@ open class ArenaDataRepository(
 		""".trimIndent()
 
 		template.update(sql, sqlParameters(
-			"arena_table_name" to cmd.arenaTableName,
-			"arena_id" to cmd.arenaId,
-			"operation_type" to cmd.operation.name,
-			"operation_pos" to cmd.operationPosition,
-			"operation_timestamp" to cmd.operationTimestamp,
-			"ingest_status" to cmd.ingestStatus.name,
-			"ingested_timestamp" to cmd.ingestedTimestamp,
-			"before" to cmd.before,
-			"after" to cmd.after,
-			"note" to cmd.note,
+			"arena_table_name" to upsertData.arenaTableName,
+			"arena_id" to upsertData.arenaId,
+			"operation_type" to upsertData.operation.name,
+			"operation_pos" to upsertData.operationPosition,
+			"operation_timestamp" to upsertData.operationTimestamp,
+			"ingest_status" to upsertData.ingestStatus.name,
+			"ingested_timestamp" to upsertData.ingestedTimestamp,
+			"before" to upsertData.before,
+			"after" to upsertData.after,
+			"note" to upsertData.note,
 		))
 	}
 
@@ -227,18 +189,3 @@ open class ArenaDataRepository(
 	}
 
 }
-
-private fun ArenaDataDbo.asParameterSource() = sqlParameters(
-	"arena_table_name" to arenaTableName,
-	"arena_id" to arenaId,
-	"operation_type" to operation.name,
-	"operation_pos" to operationPosition,
-	"operation_timestamp" to operationTimestamp,
-	"ingest_status" to ingestStatus.name,
-	"ingested_timestamp" to ingestedTimestamp,
-	"ingest_attempts" to ingestAttempts,
-	"last_attempted" to lastAttempted,
-	"before" to if (before != null) ObjectMapperFactory.get().writeValueAsString(before) else null,
-	"after" to if (after != null) ObjectMapperFactory.get().writeValueAsString(after) else null,
-	"note" to note
-)

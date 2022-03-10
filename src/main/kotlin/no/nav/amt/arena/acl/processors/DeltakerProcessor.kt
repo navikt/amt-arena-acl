@@ -2,7 +2,7 @@ package no.nav.amt.arena.acl.processors
 
 import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.amt.arena.acl.domain.db.toHandledUpsertCmd
+import no.nav.amt.arena.acl.domain.db.toUpsertWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
@@ -71,7 +71,7 @@ open class DeltakerProcessor(
 
 		kafkaProducerService.sendTilAmtTiltak(amtDeltaker.id, amtData)
 
-		arenaDataRepository.upsert(message.toHandledUpsertCmd(arenaDeltaker.tiltakdeltakerId))
+		arenaDataRepository.upsert(message.toUpsertWithStatusHandled(arenaDeltaker.tiltakdeltakerId))
 
 		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} personId=${arenaDeltaker.personId} fnr=$personIdent er sendt")
 		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")

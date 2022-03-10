@@ -3,9 +3,10 @@ package no.nav.amt.arena.acl.services
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.db.IngestStatus
-import no.nav.amt.arena.acl.domain.db.toUpsertCmd
+import no.nav.amt.arena.acl.domain.db.toUpsert
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.kafka.arena.*
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.exceptions.ValidationException
@@ -68,19 +69,19 @@ open class ArenaMessageProcessorService(
 			when (e) {
 				is DependencyNotIngestedException -> {
 					log.info("Dependency for $arenaId in table $arenaTableName is not ingested: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsertCmd(arenaId, ingestStatus = IngestStatus.RETRY))
+					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.RETRY))
 				}
 				is ValidationException -> {
 					log.info("$arenaId in table $arenaTableName is not valid: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsertCmd(arenaId, ingestStatus = IngestStatus.INVALID))
+					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.INVALID))
 				}
 				is IgnoredException -> {
 					log.info("$arenaId in table $arenaTableName: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsertCmd(arenaId, ingestStatus = IngestStatus.IGNORED))
+					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.IGNORED))
 				}
 				else -> {
 					log.error("$arenaId in table $arenaTableName: ${e.message}", e)
-					arenaDataRepository.upsert(msg.toUpsertCmd(arenaId, ingestStatus = IngestStatus.RETRY))
+					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.RETRY))
 				}
 			}
 		}

@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.domain.kafka.arena
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
@@ -44,19 +43,6 @@ data class ArenaWrapper(
 	}
 
 	val operationTimestamp = LocalDateTime.parse(operationTimestampString, opTsFormatter)
-
-	fun toArenaData(): ArenaDataDbo {
-		return ArenaDataDbo(
-			arenaTableName = this.table,
-			arenaId = this.arenaId,
-			operation = this.operation.toAmtOperation(),
-			operationPosition = this.operationPosition,
-			operationTimestamp = this.operationTimestamp,
-			before = this.before,
-			after = this.after
-		)
-
-	}
 
 	private fun ArenaOperation.toAmtOperation(): AmtOperation {
 		return when (this) {

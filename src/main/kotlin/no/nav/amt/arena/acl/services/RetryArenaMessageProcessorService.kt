@@ -86,8 +86,8 @@ open class RetryArenaMessageProcessorService(
 			operationType = arenaDataDbo.operation,
 			operationTimestamp = arenaDataDbo.operationTimestamp,
 			operationPosition = arenaDataDbo.operationPosition,
-			before = arenaDataDbo.before?.let { mapper.treeToValue(it, D::class.java) },
-			after =  arenaDataDbo.after?.let { mapper.treeToValue(it, D::class.java) }
+			before = arenaDataDbo.before?.let { mapper.readValue(it, D::class.java) },
+			after = arenaDataDbo.after?.let { mapper.readValue(it, D::class.java) }
 		)
 	}
 

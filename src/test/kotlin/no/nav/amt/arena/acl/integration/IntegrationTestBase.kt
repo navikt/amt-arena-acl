@@ -12,7 +12,7 @@ import no.nav.amt.arena.acl.mocks.OrdsClientMock
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
-import no.nav.amt.arena.acl.services.ArenaMessageProcessorService
+import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
 import no.nav.amt.arena.acl.services.TiltakService
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.junit.jupiter.api.AfterEach
@@ -37,7 +37,7 @@ abstract class IntegrationTestBase {
 	lateinit var dataSource: DataSource
 
 	@Autowired
-	private lateinit var messageProcessor: ArenaMessageProcessorService
+	private lateinit var retryArenaMessageProcessorService: RetryArenaMessageProcessorService
 
 	@Autowired
 	lateinit var tiltakService: TiltakService
@@ -64,7 +64,7 @@ abstract class IntegrationTestBase {
 	}
 
 	fun processMessages() {
-		messageProcessor.processMessages()
+		retryArenaMessageProcessorService.processMessages()
 	}
 }
 

@@ -107,13 +107,13 @@ class DeltakerProcessorTest : FunSpec({
 	test("Insert Deltaker on non-ignored Gjennomforing") {
 		val position = UUID.randomUUID().toString()
 
-		val newDeltaker = createNewDeltakerArenaData(
+		val newDeltaker = createArenaDeltakerKafkaMessage(
 			position = position,
 			tiltakGjennomforingArenaId = nonIgnoredGjennomforingArenaId,
 			deltakerArenaId = 1L
 		)
 
-		deltakerProcessor.handle(newDeltaker)
+		deltakerProcessor.handleArenaMessage(newDeltaker)
 
 		getAndCheckArenaDataRepositoryEntry(operation = AmtOperation.CREATED, position)
 
@@ -126,8 +126,8 @@ class DeltakerProcessorTest : FunSpec({
 	test("Insert Deltaker with gjennomføring not processed set the Deltaker to retry") {
 		val position = UUID.randomUUID().toString()
 
-		deltakerProcessor.handle(
-			createNewDeltakerArenaData(
+		deltakerProcessor.handleArenaMessage(
+			createArenaDeltakerKafkaMessage(
 				position,
 				2348790L,
 				1L
@@ -142,8 +142,8 @@ class DeltakerProcessorTest : FunSpec({
 	test("Insert Deltaker on Ignored Gjennomføring sets Deltaker to Ingored") {
 		val position = UUID.randomUUID().toString()
 
-		deltakerProcessor.handle(
-			createNewDeltakerArenaData(
+		deltakerProcessor.handleArenaMessage(
+			createArenaDeltakerKafkaMessage(
 				position,
 				ignoredGjennomforingArenaId,
 				1L
@@ -156,8 +156,8 @@ class DeltakerProcessorTest : FunSpec({
 	test("Should process deleted deltaker") {
 		val position = UUID.randomUUID().toString()
 
-		deltakerProcessor.handle(
-			createNewDeltakerArenaData(
+		deltakerProcessor.handleArenaMessage(
+			createArenaDeltakerKafkaMessage(
 				position = position,
 				tiltakGjennomforingArenaId = nonIgnoredGjennomforingArenaId,
 				deltakerArenaId = 1L,

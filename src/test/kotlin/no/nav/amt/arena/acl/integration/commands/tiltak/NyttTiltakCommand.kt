@@ -1,12 +1,7 @@
 package no.nav.amt.arena.acl.integration.commands.tiltak
 
-<<<<<<< Updated upstream
-import no.nav.amt.arena.acl.domain.arena.ArenaOperation
-import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
-=======
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
->>>>>>> Stashed changes
 import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
 import java.time.LocalDateTime
 import java.util.*

@@ -10,12 +10,15 @@ import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaTiltak
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaTiltakKafkaMessage
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.services.TiltakService
 import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import java.time.LocalDateTime
 import java.util.*
 
 class TiltakProcessorTest : FunSpec({
@@ -45,7 +48,10 @@ class TiltakProcessorTest : FunSpec({
 		val tiltakKode = "Tiltak1_KODE"
 		val tiltakNavn = "Tiltak1_NAVN"
 
-		val data = createNewTiltakArenaData(position, tiltakKode, tiltakNavn)
+		val data = createArenaTiltakKafkaMessage(
+			operationPosition = position,
+			arenaTiltak = createArenaTiltak(tiltakNavn, tiltakKode)
+		)
 
 		tiltakProcessor.handleArenaMessage(data)
 
@@ -76,24 +82,30 @@ class TiltakProcessorTest : FunSpec({
 		val tiltakKode = "Tiltak1_KODE"
 		val tiltakNavn = "Tiltak1_NAVN"
 
-		val insert = createNewTiltakArenaData(newPosition, tiltakKode, tiltakNavn)
-		tiltakProcessor.handle(insert)
+		val kafkaMessageInsertOp = createArenaTiltakKafkaMessage(
+			operationPosition = newPosition,
+			operationType = AmtOperation.CREATED,
+			arenaTiltak = createArenaTiltak(tiltakNavn, tiltakKode)
+		)
+
+		tiltakProcessor.handleArenaMessage(kafkaMessageInsertOp)
 
 		val updatedPosition = UUID.randomUUID().toString()
 		val updatedNavn = "TILTAK1_UPDATED_NAVN"
 
-		val update = createUpdateTiltakArenaData(updatedPosition, insert.after!!, tiltakKode, updatedNavn)
-		tiltakProcessor.handle(update)
+		val kafkaMessageUpdateOp = createArenaTiltakKafkaMessage(
+			operationPosition = newPosition,
+			operationType = AmtOperation.MODIFIED,
+			arenaTiltak = createArenaTiltak(updatedNavn, tiltakKode)
+		)
+
+		tiltakProcessor.handleArenaMessage(kafkaMessageUpdateOp)
 
 		val arenaDataRepositoryEntry = shouldNotThrowAny {
 			arenaDataRepository.get(ARENA_TILTAK_TABLE_NAME, AmtOperation.MODIFIED, updatedPosition)
 		}
 
-		arenaDataRepositoryEntry.before shouldBe update.before
-		arenaDataRepositoryEntry.after shouldBe update.after
 		arenaDataRepositoryEntry.operation shouldBe AmtOperation.MODIFIED
-		arenaDataRepositoryEntry.id shouldNotBe -1
-
 		arenaDataRepositoryEntry.ingestStatus shouldBe IngestStatus.HANDLED
 		arenaDataRepositoryEntry.ingestedTimestamp shouldNotBe null
 		arenaDataRepositoryEntry.ingestAttempts shouldBe 0
@@ -112,12 +124,23 @@ class TiltakProcessorTest : FunSpec({
 		val tiltakKode = "Tiltak1_KODE"
 		val tiltakNavn = "Tiltak1_NAVN"
 
-		val insert = createNewTiltakArenaData(newPosition, tiltakKode, tiltakNavn)
-		tiltakProcessor.handle(insert)
+		val kafkaMessageInsertOp = createArenaTiltakKafkaMessage(
+			operationPosition = newPosition,
+			operationType = AmtOperation.CREATED,
+			arenaTiltak = createArenaTiltak(tiltakNavn, tiltakKode)
+		)
+
+		tiltakProcessor.handleArenaMessage(kafkaMessageInsertOp)
 
 		val deletePosition = UUID.randomUUID().toString()
-		val delete = createDeleteTiltakArenaData(deletePosition, insert.after!!)
-		tiltakProcessor.handle(delete)
+
+		val kafkaMessageDeleteOp = createArenaTiltakKafkaMessage(
+			operationPosition = deletePosition,
+			operationType = AmtOperation.DELETED,
+			arenaTiltak = createArenaTiltak(tiltakNavn, tiltakKode)
+		)
+
+		tiltakProcessor.handleArenaMessage(kafkaMessageDeleteOp)
 
 		val arenaDataRepositoryEntry = shouldNotThrowAny {
 			arenaDataRepository.get(ARENA_TILTAK_TABLE_NAME, AmtOperation.DELETED, deletePosition)
@@ -126,5 +149,55 @@ class TiltakProcessorTest : FunSpec({
 		arenaDataRepositoryEntry.ingestStatus shouldBe IngestStatus.FAILED
 	}
 
-
 })
+
+private fun createArenaTiltak(
+	tiltakNavn: String,
+	tiltakKode: String
+): ArenaTiltak {
+	return ArenaTiltak(
+		TILTAKSNAVN = tiltakNavn,
+		TILTAKSGRUPPEKODE = "",
+		REG_DATO = "",
+		REG_USER = "",
+		MOD_DATO = "",
+		MOD_USER = "",
+		TILTAKSKODE = tiltakKode,
+		DATO_FRA = "",
+		DATO_TIL = "",
+		STATUS_BASISYTELSE = "",
+		ADMINISTRASJONKODE = "",
+		STATUS_KOPI_TILSAGN = "",
+		ARKIVNOKKEL = "",
+		STATUS_ANSKAFFELSE = "",
+		MAKS_ANT_SOKERE = 0,
+		STATUS_KALKULATOR = "",
+		RAMMEAVTALE = "",
+		HANDLINGSPLAN = "",
+		STATUS_SLUTTDATO = "",
+		STATUS_VEDTAK = "",
+		STATUS_IA_AVTALE = "",
+		STATUS_TILLEGGSSTONADER = "",
+		STATUS_UTDANNING = "",
+		AUTOMATISK_TILSAGNSBREV = "",
+		STATUS_BEGRUNNELSE_INNSOKT = "",
+		STATUS_HENVISNING_BREV = "",
+		STATUS_KOPIBREV = "",
+	)
+}
+
+private fun createArenaTiltakKafkaMessage(
+	operationPosition: String = "1",
+	operationType: AmtOperation = AmtOperation.CREATED,
+	operationTimestamp: LocalDateTime = LocalDateTime.now(),
+	arenaTiltak: ArenaTiltak,
+): ArenaTiltakKafkaMessage {
+	return ArenaTiltakKafkaMessage(
+		arenaTableName =  ARENA_TILTAK_TABLE_NAME,
+		operationType = operationType,
+		operationTimestamp = operationTimestamp,
+		operationPosition =  operationPosition,
+		after =  if (operationType != AmtOperation.DELETED) arenaTiltak else null,
+		before = if (operationType != AmtOperation.DELETED) arenaTiltak else null,
+	)
+}

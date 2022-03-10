@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.processors
 
 import ArenaOrdsProxyClient
-import no.nav.amt.arena.acl.domain.db.toHandledUpsertCmd
+import no.nav.amt.arena.acl.domain.db.toUpsertWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
@@ -79,7 +79,7 @@ open class GjennomforingProcessor(
 		)
 
 		kafkaProducerService.sendTilAmtTiltak(amtGjennomforing.id, amtData)
-		arenaDataRepository.upsert(message.toHandledUpsertCmd(arenaGjennomforing.tiltakgjennomforingId))
+		arenaDataRepository.upsert(message.toUpsertWithStatusHandled(arenaGjennomforing.tiltakgjennomforingId))
 		log.info("Melding for gjennomføring id=$gjennomforingId arenaId=${arenaGjennomforing.tiltakgjennomforingId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 	}
 
