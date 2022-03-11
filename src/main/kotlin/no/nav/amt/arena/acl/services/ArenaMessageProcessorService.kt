@@ -95,7 +95,7 @@ open class ArenaMessageProcessorService(
 	private inline fun <reified D> toArenaKafkaMessage(messageDto: ArenaKafkaMessageDto): ArenaKafkaMessage<D> {
 		return ArenaKafkaMessage(
 			arenaTableName = messageDto.table,
-			operationType = toAmtOperation(messageDto.opType),
+			operationType = AmtOperation.fromArenaOperationString(messageDto.opType),
 			operationTimestamp = parseArenaDateTime(messageDto.opTs),
 			operationPosition = messageDto.pos,
 			before = messageDto.before?.let { mapper.treeToValue(it, D::class.java) },
@@ -109,15 +109,6 @@ open class ArenaMessageProcessorService(
 			ARENA_GJENNOMFORING_TABLE_NAME -> "gjennomforing"
 			ARENA_DELTAKER_TABLE_NAME -> "deltaker"
 			else -> "unknown"
-		}
-	}
-
-	private fun toAmtOperation(arenaOpType: String): AmtOperation {
-		return when (arenaOpType) {
-			"I" -> AmtOperation.CREATED
-			"U" -> AmtOperation.MODIFIED
-			"D" -> AmtOperation.DELETED
-			else -> throw IllegalArgumentException("Unknown arena operation type: $arenaOpType")
 		}
 	}
 

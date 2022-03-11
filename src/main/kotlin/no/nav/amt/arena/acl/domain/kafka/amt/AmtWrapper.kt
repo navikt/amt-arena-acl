@@ -14,7 +14,7 @@ enum class AmtOperation {
 				"I" -> CREATED
 				"U" -> MODIFIED
 				"D" -> DELETED
-				else -> throw IllegalArgumentException("Invalid arena operation $arenaOperationString")
+				else -> throw IllegalArgumentException("Unknown arena operation $arenaOperationString")
 			}
 		}
 	}
