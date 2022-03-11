@@ -10,7 +10,7 @@ import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.domain.db.ArenaDataUpsert
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
-import no.nav.amt.arena.acl.utils.ObjectMapperFactory
+import no.nav.amt.arena.acl.utils.DbUtils.isEqualTo
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.time.LocalDateTime
@@ -18,8 +18,6 @@ import java.time.LocalDateTime
 class ArenaDataRepositoryTest : FunSpec({
 
 	val dataSource = SingletonPostgresContainer.getDataSource()
-	val mapper = ObjectMapperFactory.get()
-
 
 	lateinit var repository: ArenaDataRepository
 
@@ -83,7 +81,7 @@ class ArenaDataRepositoryTest : FunSpec({
 
 		stored.id shouldBe updated.id
 		updated.ingestStatus shouldBe IngestStatus.RETRY
-		updated.ingestedTimestamp shouldBe newIngestedTimestamp
+		updated.ingestedTimestamp!!.isEqualTo(newIngestedTimestamp) shouldBe true
 		updated.note shouldBe "some note"
 	}
 
