@@ -163,8 +163,8 @@ class TiltakGjennomforingProcessorTest {
 			operationType = operationType,
 			operationTimestamp = operationTimestamp,
 			operationPosition =  operationPosition,
-			after =  if (operationType != AmtOperation.DELETED) arenaGjennomforing else null,
-			before = if (operationType != AmtOperation.DELETED) arenaGjennomforing else null,
+			before = if (listOf(AmtOperation.MODIFIED, AmtOperation.DELETED).contains(operationType)) arenaGjennomforing else null,
+			after =  if (listOf(AmtOperation.CREATED, AmtOperation.MODIFIED).contains(operationType)) arenaGjennomforing else null,
 		)
 	}
 

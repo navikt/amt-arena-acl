@@ -1,6 +1,7 @@
 package no.nav.amt.arena.acl.integration.executors
 
-import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.integration.commands.tiltak.TiltakCommand
 import no.nav.amt.arena.acl.integration.commands.tiltak.TiltakResult
 import no.nav.amt.arena.acl.integration.utils.nullableAsyncRetryHandler
@@ -28,13 +29,13 @@ class TiltakTestExecutor(
 		return command.execute(incrementAndGetPosition()) { wrapper, kode -> executor(wrapper, kode) }
 	}
 
-	private fun executor(arenaWrapper: ArenaWrapper, kode: String): TiltakResult {
+	private fun executor(arenaWrapper: ArenaKafkaMessageDto, kode: String): TiltakResult {
 		sendKafkaMessage(topic, objectMapper.writeValueAsString(arenaWrapper))
 
 		val data = getArenaData(
 			ARENA_TILTAK_TABLE_NAME,
-			arenaWrapper.operation.toAmtOperation(),
-			arenaWrapper.operationPosition
+			AmtOperation.fromArenaOperationString(arenaWrapper.opType),
+			arenaWrapper.pos
 		)
 
 		val storedTiltak = nullableAsyncRetryHandler({ tiltakRepository.getByKode(kode) })

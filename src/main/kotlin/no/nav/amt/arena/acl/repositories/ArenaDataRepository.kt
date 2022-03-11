@@ -38,7 +38,7 @@ open class ArenaDataRepository(
 	fun upsert(upsertData: ArenaDataUpsert) {
 		val sql = """
 			INSERT INTO arena_data(arena_table_name, arena_id, operation_type, operation_pos, operation_timestamp, ingest_status,
-								   ingested_timestamp, ingest_attempts, last_attempted, before, after, note)
+								   ingested_timestamp, before, after, note)
 			VALUES (:arena_table_name,
 					:arena_id,
 					:operation_type,
@@ -49,7 +49,7 @@ open class ArenaDataRepository(
 					:before::json,
 					:after::json,
 					:note)
-			ON CONFLICT (arena_table_name, operation_pos) DO UPDATE SET
+			ON CONFLICT (arena_table_name, operation_type, operation_pos) DO UPDATE SET
 					ingest_status      = :ingest_status,
 					ingested_timestamp = :ingested_timestamp,
 					note 			   = :note

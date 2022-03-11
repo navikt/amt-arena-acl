@@ -1,8 +1,9 @@
 package no.nav.amt.arena.acl.integration.executors
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
-import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerCommand
 import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerResult
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
@@ -37,16 +38,16 @@ class DeltakerTestExecutor(
 		return command.execute(position) { getResults(it) }
 	}
 
-	private fun sendAndCheck(wrapper: ArenaWrapper): DeltakerResult {
+	private fun sendAndCheck(wrapper: ArenaKafkaMessageDto): DeltakerResult {
 		sendKafkaMessage(topic, objectMapper.writeValueAsString(wrapper))
 		return getResults(wrapper)
 	}
 
-	private fun getResults(wrapper: ArenaWrapper): DeltakerResult {
+	private fun getResults(wrapper: ArenaKafkaMessageDto): DeltakerResult {
 		val arenaData = getArenaData(
 			ARENA_DELTAKER_TABLE_NAME,
-			wrapper.operation.toAmtOperation(),
-			wrapper.operationPosition
+			AmtOperation.fromArenaOperationString(wrapper.opType),
+			wrapper.pos
 		)
 
 		val translation = getTranslation(ARENA_DELTAKER_TABLE_NAME, arenaData.arenaId)

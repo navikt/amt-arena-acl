@@ -6,7 +6,18 @@ import java.util.*
 enum class AmtOperation {
 	CREATED,
 	MODIFIED,
-	DELETED
+	DELETED;
+
+	companion object {
+		fun fromArenaOperationString(arenaOperationString: String): AmtOperation {
+			return when (arenaOperationString) {
+				"I" -> CREATED
+				"U" -> MODIFIED
+				"D" -> DELETED
+				else -> throw IllegalArgumentException("Invalid arena operation $arenaOperationString")
+			}
+		}
+	}
 }
 
 enum class PayloadType {

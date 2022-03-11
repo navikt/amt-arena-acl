@@ -26,7 +26,6 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.test.util.ReflectionTestUtils
 import java.util.*
 
 class DeltakerProcessorTest : FunSpec({
@@ -68,9 +67,6 @@ class DeltakerProcessorTest : FunSpec({
 			kafkaProducerService = KafkaProducerService(kafkaProducer),
 			metrics = DeltakerMetricHandler(SimpleMeterRegistry())
 		)
-
-		ReflectionTestUtils.setField(deltakerProcessor, "topic", "test-topic")
-
 	}
 
 	fun getAndCheckArenaDataRepositoryEntry(

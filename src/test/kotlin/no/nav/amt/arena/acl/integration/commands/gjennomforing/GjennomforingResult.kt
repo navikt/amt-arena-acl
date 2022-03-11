@@ -41,14 +41,4 @@ data class GjennomforingResult(
 		return this
 	}
 
-	fun outgoingPayload(check: (payload: AmtGjennomforing) -> Unit): GjennomforingResult {
-		if (output?.payload == null) {
-			fail("Forsøker å hente payload på en outgoing melding som er null")
-		}
-
-		check.invoke(output.payload!!)
-		return this
-	}
-
-
 }

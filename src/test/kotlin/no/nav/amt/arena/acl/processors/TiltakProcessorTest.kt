@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.processors
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -16,6 +17,7 @@ import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.services.TiltakService
 import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.time.LocalDateTime
@@ -24,6 +26,8 @@ import java.util.*
 class TiltakProcessorTest : FunSpec({
 
 	val dataSource = SingletonPostgresContainer.getDataSource()
+
+	val mapper = ObjectMapperFactory.get()
 
 	lateinit var arenaDataRepository: ArenaDataRepository
 	lateinit var tiltakRepository: TiltakRepository
@@ -60,7 +64,7 @@ class TiltakProcessorTest : FunSpec({
 		}
 
 		arenaDataRepositoryEntry.before shouldBe null
-		arenaDataRepositoryEntry.after shouldBe data.after
+		mapper.readValue(arenaDataRepositoryEntry.after, ArenaTiltak::class.java) shouldBe data.after
 		arenaDataRepositoryEntry.operation shouldBe AmtOperation.CREATED
 		arenaDataRepositoryEntry.id shouldNotBe -1
 
@@ -94,7 +98,7 @@ class TiltakProcessorTest : FunSpec({
 		val updatedNavn = "TILTAK1_UPDATED_NAVN"
 
 		val kafkaMessageUpdateOp = createArenaTiltakKafkaMessage(
-			operationPosition = newPosition,
+			operationPosition = updatedPosition,
 			operationType = AmtOperation.MODIFIED,
 			arenaTiltak = createArenaTiltak(updatedNavn, tiltakKode)
 		)
@@ -119,7 +123,7 @@ class TiltakProcessorTest : FunSpec({
 		tiltakRepositoryEntry.navn shouldBe updatedNavn
 	}
 
-	test("Delete Tiltak") {
+	test("Delete Tiltak should throw exception") {
 		val newPosition = UUID.randomUUID().toString()
 		val tiltakKode = "Tiltak1_KODE"
 		val tiltakNavn = "Tiltak1_NAVN"
@@ -140,13 +144,9 @@ class TiltakProcessorTest : FunSpec({
 			arenaTiltak = createArenaTiltak(tiltakNavn, tiltakKode)
 		)
 
-		tiltakProcessor.handleArenaMessage(kafkaMessageDeleteOp)
-
-		val arenaDataRepositoryEntry = shouldNotThrowAny {
-			arenaDataRepository.get(ARENA_TILTAK_TABLE_NAME, AmtOperation.DELETED, deletePosition)
+		shouldThrowExactly<IllegalStateException> {
+			tiltakProcessor.handleArenaMessage(kafkaMessageDeleteOp)
 		}
-
-		arenaDataRepositoryEntry.ingestStatus shouldBe IngestStatus.FAILED
 	}
 
 })
@@ -197,7 +197,7 @@ private fun createArenaTiltakKafkaMessage(
 		operationType = operationType,
 		operationTimestamp = operationTimestamp,
 		operationPosition =  operationPosition,
-		after =  if (operationType != AmtOperation.DELETED) arenaTiltak else null,
-		before = if (operationType != AmtOperation.DELETED) arenaTiltak else null,
+		before = if (listOf(AmtOperation.MODIFIED, AmtOperation.DELETED).contains(operationType)) arenaTiltak else null,
+		after =  if (listOf(AmtOperation.CREATED, AmtOperation.MODIFIED).contains(operationType)) arenaTiltak else null,
 	)
 }

@@ -30,7 +30,7 @@ fun ArenaKafkaMessage<*>.toUpsert(arenaId: String, ingestStatus: IngestStatus, n
 		ingestStatus = ingestStatus,
 		ingestedTimestamp = LocalDateTime.now(),
 		before = this.before?.let { objectMapper.writeValueAsString(it) },
-		after = this.before?.let { objectMapper.writeValueAsString(it) },
+		after = this.after?.let { objectMapper.writeValueAsString(it) },
 		note = note
 	)
 }

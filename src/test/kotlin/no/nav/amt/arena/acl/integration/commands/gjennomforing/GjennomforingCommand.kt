@@ -2,14 +2,14 @@ package no.nav.amt.arena.acl.integration.commands.gjennomforing
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
-import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.integration.commands.Command
 
 abstract class GjennomforingCommand : Command() {
 
 	abstract fun execute(
 		position: String,
-		executor: (wrapper: ArenaWrapper) -> GjennomforingResult
+		executor: (wrapper: ArenaKafkaMessageDto) -> GjennomforingResult
 	): GjennomforingResult
 
 	fun createPayload(input: GjennomforingInput): JsonNode {

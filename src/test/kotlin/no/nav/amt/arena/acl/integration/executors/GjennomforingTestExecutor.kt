@@ -1,8 +1,9 @@
 package no.nav.amt.arena.acl.integration.executors
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
-import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingCommand
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingResult
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
@@ -38,22 +39,22 @@ class GjennomforingTestExecutor(
 		return command.execute(position) { getResults(it) }
 	}
 
-	private fun sendAndCheck(arenaWrapper: ArenaWrapper): GjennomforingResult {
+	private fun sendAndCheck(arenaWrapper: ArenaKafkaMessageDto): GjennomforingResult {
 		sendKafkaMessage(topic, objectMapper.writeValueAsString(arenaWrapper))
 		return getResults(arenaWrapper)
 	}
 
-	private fun getResults(arenaWrapper: ArenaWrapper): GjennomforingResult {
+	private fun getResults(arenaWrapper: ArenaKafkaMessageDto): GjennomforingResult {
 		val arenaData = getArenaData(
 			ARENA_GJENNOMFORING_TABLE_NAME,
-			arenaWrapper.operation.toAmtOperation(),
-			arenaWrapper.operationPosition
+			AmtOperation.fromArenaOperationString(arenaWrapper.opType),
+			arenaWrapper.pos
 		)
 
 		val translation = getTranslation(ARENA_GJENNOMFORING_TABLE_NAME, arenaData.arenaId)
 		val message = if (translation != null) getOutputMessage(translation.amtId) else null
 
-		return GjennomforingResult(arenaWrapper.operationPosition, arenaData, translation, message)
+		return GjennomforingResult(arenaWrapper.pos, arenaData, translation, message)
 	}
 
 

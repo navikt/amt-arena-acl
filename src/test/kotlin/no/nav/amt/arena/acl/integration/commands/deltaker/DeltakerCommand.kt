@@ -2,14 +2,14 @@ package no.nav.amt.arena.acl.integration.commands.deltaker
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
-import no.nav.amt.arena.acl.domain.kafka.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.integration.commands.Command
 
 abstract class DeltakerCommand : Command() {
 
 	abstract fun execute(
 		position: String,
-		executor: (wrapper: ArenaWrapper) -> DeltakerResult
+		executor: (wrapper: ArenaKafkaMessageDto) -> DeltakerResult
 	): DeltakerResult
 
 	fun createPayload(input: DeltakerInput): JsonNode {
