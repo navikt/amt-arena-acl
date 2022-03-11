@@ -174,7 +174,7 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 			)
 		)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.IGNORED }
-			.arenaData { it.note shouldBe "Ikke støttet tiltak" }
+			.arenaData { it.note shouldBe "Er deltaker på en gjennomførig som ikke er støttet" }
 	}
 
 	@Test

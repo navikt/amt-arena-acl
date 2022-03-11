@@ -40,33 +40,37 @@ open class GjennomforingProcessor(
 	}
 
 	override fun handleArenaMessage(message: ArenaGjennomforingKafkaMessage) {
-		val arenaGjennomforing: TiltakGjennomforing = message.getData().mapTiltakGjennomforing()
+		val arenaGjennomforing = message.getData()
+		val arenaGjennomforingTiltakskode = arenaGjennomforing.TILTAKSKODE
+		val arenaGjennomforingId = arenaGjennomforing.TILTAKGJENNOMFORING_ID.toString()
 
-		val gjennomforingId = arenaDataIdTranslationService.hentEllerOpprettNyGjennomforingId(arenaGjennomforing.tiltakgjennomforingId)
+		val gjennomforingId = arenaDataIdTranslationService.hentEllerOpprettNyGjennomforingId(arenaGjennomforingId)
 
-		if (!isSupportedTiltak(arenaGjennomforing.tiltakskode)) {
+		if (!isSupportedTiltak(arenaGjennomforingTiltakskode)) {
 			arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
-				gjennomforingArenaId = arenaGjennomforing.tiltakgjennomforingId,
+				gjennomforingArenaId = arenaGjennomforingId,
 				gjennomforingAmtId = gjennomforingId,
 				ignored = true
 			)
 
-			throw IgnoredException("${arenaGjennomforing.tiltakskode} er ikke et støttet tiltak")
+			throw IgnoredException("$arenaGjennomforingTiltakskode er ikke et støttet tiltak")
 		}
 
-		val tiltak = tiltakService.getByKode(arenaGjennomforing.tiltakskode)
-			?: throw DependencyNotIngestedException("Venter på at tiltaket med koden=${arenaGjennomforing.tiltakskode} skal bli håndtert")
+		val gjennomforing = arenaGjennomforing.mapTiltakGjennomforing()
 
-		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.arbgivIdArrangor)
+		val tiltak = tiltakService.getByKode(arenaGjennomforingTiltakskode)
+			?: throw DependencyNotIngestedException("Venter på at tiltaket med koden=$arenaGjennomforingTiltakskode skal bli håndtert")
 
-		val amtGjennomforing = arenaGjennomforing.toAmtGjennomforing(
+		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(gjennomforing.arbgivIdArrangor)
+
+		val amtGjennomforing = gjennomforing.toAmtGjennomforing(
 			amtTiltak = tiltak,
 			amtGjennomforingId = gjennomforingId,
 			virksomhetsnummer = virksomhetsnummer
 		)
 
 		arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
-			gjennomforingArenaId = arenaGjennomforing.tiltakgjennomforingId,
+			gjennomforingArenaId = gjennomforing.tiltakgjennomforingId,
 			gjennomforingAmtId = gjennomforingId,
 			ignored = false
 		)
@@ -78,8 +82,8 @@ open class GjennomforingProcessor(
 		)
 
 		kafkaProducerService.sendTilAmtTiltak(amtGjennomforing.id, amtData)
-		arenaDataRepository.upsert(message.toUpsertWithStatusHandled(arenaGjennomforing.tiltakgjennomforingId))
-		log.info("Melding for gjennomføring id=$gjennomforingId arenaId=${arenaGjennomforing.tiltakgjennomforingId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
+		arenaDataRepository.upsert(message.toUpsertWithStatusHandled(gjennomforing.tiltakgjennomforingId))
+		log.info("Melding for gjennomføring id=$gjennomforingId arenaId=${gjennomforing.tiltakgjennomforingId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 	}
 
 	private fun TiltakGjennomforing.toAmtGjennomforing(

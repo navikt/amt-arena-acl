@@ -19,13 +19,8 @@ open class KafkaProducerService(
 	lateinit var topic: String
 
 	fun sendTilAmtTiltak(messageKey: UUID, data: AmtKafkaMessageDto<*>) {
-		kafkaProducer.sendSync(
-			ProducerRecord(
-				topic,
-				messageKey.toString(),
-				objectMapper.writeValueAsString(data)
-			)
-		)
+		val record = ProducerRecord(topic, messageKey.toString(), objectMapper.writeValueAsString(data))
+		kafkaProducer.sendSync(record)
 	}
 
 }

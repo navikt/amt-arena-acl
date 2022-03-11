@@ -36,29 +36,32 @@ open class DeltakerProcessor(
 	private val statusEndretDatoConverter = DeltakerEndretDatoConverter()
 
 	override fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
-		val arenaDeltaker: TiltakDeltaker = message.getData().mapTiltakDeltaker()
+		val arenaDeltaker = message.getData()
+		val arenaGjennomforingId = arenaDeltaker.TILTAKGJENNOMFORING_ID.toString()
 
 		val gjennomforingInfo =
-			arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaDeltaker.tiltakgjennomforingId)
-				?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=${arenaDeltaker.tiltakgjennomforingId} skal bli håndtert")
+			arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaGjennomforingId)
+				?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
 		if (gjennomforingInfo.ignored) {
-			throw IgnoredException("Ikke støttet tiltak")
+			throw IgnoredException("Er deltaker på en gjennomførig som ikke er støttet")
 		}
 
-		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
-			?: throw IllegalStateException("Expected person with personId=${arenaDeltaker.personId} to exist")
+		val deltaker = arenaDeltaker.mapTiltakDeltaker()
 
-		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId)
+		val personIdent = ordsClient.hentFnr(deltaker.personId)
+			?: throw IllegalStateException("Expected person with personId=${deltaker.personId} to exist")
 
-		val amtDeltaker = arenaDeltaker.toAmtDeltaker(
+		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(deltaker.tiltakdeltakerId)
+
+		val amtDeltaker = deltaker.toAmtDeltaker(
 			amtDeltakerId = deltakerAmtId,
 			gjennomforingId = gjennomforingInfo.amtId,
 			personIdent = personIdent
 		)
 
 		arenaDataIdTranslationService.upsertDeltakerIdTranslation(
-			deltakerArenaId = arenaDeltaker.tiltakdeltakerId,
+			deltakerArenaId = deltaker.tiltakdeltakerId,
 			deltakerAmtId = deltakerAmtId,
 			ignored = false
 		)
@@ -66,15 +69,15 @@ open class DeltakerProcessor(
 		val amtData = AmtKafkaMessageDto(
 			type = PayloadType.DELTAKER,
 			operation = message.operationType,
-			payload = arenaDeltaker.toAmtDeltaker(deltakerAmtId, gjennomforingInfo.amtId, personIdent)
+			payload = deltaker.toAmtDeltaker(deltakerAmtId, gjennomforingInfo.amtId, personIdent)
 		)
 
 		kafkaProducerService.sendTilAmtTiltak(amtDeltaker.id, amtData)
 
-		arenaDataRepository.upsert(message.toUpsertWithStatusHandled(arenaDeltaker.tiltakdeltakerId))
+		arenaDataRepository.upsert(message.toUpsertWithStatusHandled(deltaker.tiltakdeltakerId))
 
-		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} personId=${arenaDeltaker.personId} fnr=$personIdent er sendt")
-		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
+		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=${deltaker.tiltakdeltakerId} personId=${deltaker.personId} fnr=$personIdent er sendt")
+		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${deltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 		metrics.publishMetrics(message)
 	}
 
