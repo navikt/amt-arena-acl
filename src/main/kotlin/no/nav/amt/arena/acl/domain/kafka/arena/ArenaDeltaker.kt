@@ -3,8 +3,10 @@ package no.nav.amt.arena.acl.domain.kafka.arena
 import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.utils.asValidatedLocalDate
 import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Month
 
 // @SONAR_START@
 data class ArenaDeltaker(
@@ -41,6 +43,10 @@ data class ArenaDeltaker(
 	val ANTALL_DAGER_PR_UKE: Int? = null
 ) {
 
+	private val log = LoggerFactory.getLogger(javaClass)
+
+	private val placeholderDate = LocalDateTime.of(1970, Month.JANUARY, 1, 0,0)
+
 	fun mapTiltakDeltaker(): TiltakDeltaker {
 		val tiltakdeltakerId = TILTAKDELTAKER_ID.toString().also {
 			if (it == "0") throw ValidationException("TILTAKDELTAKER_ID er 0")
@@ -49,6 +55,11 @@ data class ArenaDeltaker(
 		val tiltakgjennomforingId = TILTAKGJENNOMFORING_ID.toString().also {
 			if (it == "0") throw ValidationException("TILTAKGJENNOMFORING_ID er 0")
 		}
+
+		val regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO") ?: placeholderDate.also {
+				log.warn("Bruker med arenaId=${tiltakdeltakerId} mangler REG_DATO, bruker placeholder dato istedenfor")
+			}
+
 
 		return TiltakDeltaker(
 			tiltakdeltakerId = tiltakdeltakerId,
@@ -60,7 +71,7 @@ data class ArenaDeltaker(
 			datoStatusendring = DATO_STATUSENDRING?.asValidatedLocalDate("DATO_STATUSENDRING"),
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
-			regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO") ?: throw ValidationException("REG_DATO er null")
+			regDato = regDato
 		)
 	}
 

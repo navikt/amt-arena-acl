@@ -20,7 +20,7 @@ open class ArenaDataSchedules(
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	@Scheduled(fixedDelay = 15 * ONE_MINUTE, initialDelay = ONE_MINUTE)
+	@Scheduled(fixedDelay = 10 * 1000L, initialDelay = ONE_MINUTE)
 	open fun processArenaMessages() {
 		if (leaderElectionClient.isLeader) {
 			JobRunner.run("process_arena_messages", retryArenaMessageProcessorService::processMessages)

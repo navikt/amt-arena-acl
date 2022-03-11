@@ -57,7 +57,6 @@ open class GjennomforingProcessor(
 		val tiltak = tiltakService.getByKode(arenaGjennomforing.tiltakskode)
 			?: throw DependencyNotIngestedException("Venter på at tiltaket med koden=${arenaGjennomforing.tiltakskode} skal bli håndtert")
 
-
 		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(arenaGjennomforing.arbgivIdArrangor)
 
 		val amtGjennomforing = arenaGjennomforing.toAmtGjennomforing(
