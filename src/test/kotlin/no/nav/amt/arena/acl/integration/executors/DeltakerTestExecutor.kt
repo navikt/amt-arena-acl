@@ -1,8 +1,8 @@
 package no.nav.amt.arena.acl.integration.executors
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerCommand
 import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerResult
@@ -24,7 +24,7 @@ class DeltakerTestExecutor(
 ) {
 
 	private val topic = "deltaker"
-	private val outputMessages = mutableListOf<AmtWrapper<AmtDeltaker>>()
+	private val outputMessages = mutableListOf<AmtKafkaMessageDto<AmtDeltaker>>()
 
 	init {
 		KafkaAmtIntegrationConsumer.subscribeDeltaker { outputMessages.add(it) }
@@ -61,7 +61,7 @@ class DeltakerTestExecutor(
 		)
 	}
 
-	private fun getOutputMessage(id: UUID): AmtWrapper<AmtDeltaker>? {
+	private fun getOutputMessage(id: UUID): AmtKafkaMessageDto<AmtDeltaker>? {
 		var attempts = 0
 		while (attempts < 5) {
 			val data = outputMessages.firstOrNull { it.payload != null && (it.payload as AmtDeltaker).id == id }

@@ -3,14 +3,14 @@ package no.nav.amt.arena.acl.integration.commands.deltaker
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import org.junit.jupiter.api.fail
 
 data class DeltakerResult(
 	val position: String,
 	val arenaDataDbo: ArenaDataDbo,
 	val translation: ArenaDataIdTranslationDbo?,
-	val output: AmtWrapper<AmtDeltaker>?
+	val output: AmtKafkaMessageDto<AmtDeltaker>?
 ) {
 	fun arenaData(check: (data: ArenaDataDbo) -> Unit): DeltakerResult {
 		check.invoke(arenaDataDbo)
@@ -26,7 +26,7 @@ data class DeltakerResult(
 		return this
 	}
 
-	fun output(check: (data: AmtWrapper<AmtDeltaker>) -> Unit): DeltakerResult {
+	fun output(check: (data: AmtKafkaMessageDto<AmtDeltaker>) -> Unit): DeltakerResult {
 		if (output == null) {
 			fail("Trying to get output, but it is null")
 		}
@@ -35,7 +35,7 @@ data class DeltakerResult(
 		return this
 	}
 
-	fun result(check: (arenaDataDbo: ArenaDataDbo, translation: ArenaDataIdTranslationDbo?, output: AmtWrapper<AmtDeltaker>?) -> Unit): DeltakerResult {
+	fun result(check: (arenaDataDbo: ArenaDataDbo, translation: ArenaDataIdTranslationDbo?, output: AmtKafkaMessageDto<AmtDeltaker>?) -> Unit): DeltakerResult {
 		check.invoke(arenaDataDbo, translation, output)
 		return this
 	}

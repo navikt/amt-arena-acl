@@ -1,8 +1,8 @@
 package no.nav.amt.arena.acl.integration.executors
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingCommand
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingResult
@@ -25,7 +25,7 @@ class GjennomforingTestExecutor(
 
 	private val topic = "gjennomforing"
 
-	private val outputMessages = mutableListOf<AmtWrapper<AmtGjennomforing>>()
+	private val outputMessages = mutableListOf<AmtKafkaMessageDto<AmtGjennomforing>>()
 
 	init {
 		KafkaAmtIntegrationConsumer.subscribeGjennomforing { outputMessages.add(it) }
@@ -58,7 +58,7 @@ class GjennomforingTestExecutor(
 	}
 
 
-	private fun getOutputMessage(id: UUID): AmtWrapper<AmtGjennomforing>? {
+	private fun getOutputMessage(id: UUID): AmtKafkaMessageDto<AmtGjennomforing>? {
 		var attempts = 0
 		while (attempts < 5) {
 			val data = outputMessages.firstOrNull { it.payload != null && (it.payload as AmtGjennomforing).id == id }

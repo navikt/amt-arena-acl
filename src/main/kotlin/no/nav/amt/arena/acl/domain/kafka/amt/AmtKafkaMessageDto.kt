@@ -25,7 +25,7 @@ enum class PayloadType {
 	GJENNOMFORING
 }
 
-data class AmtWrapper<T>(
+data class AmtKafkaMessageDto<T>(
 	val transactionId: UUID = UUID.randomUUID(),
 	val source: String = "AMT_ARENA_ACL",
 	val type: PayloadType,

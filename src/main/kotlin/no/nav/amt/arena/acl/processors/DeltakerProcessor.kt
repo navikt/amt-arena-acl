@@ -4,7 +4,7 @@ import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.amt.arena.acl.domain.db.toUpsertWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
@@ -63,7 +63,7 @@ open class DeltakerProcessor(
 			ignored = false
 		)
 
-		val amtData = AmtWrapper(
+		val amtData = AmtKafkaMessageDto(
 			type = PayloadType.DELTAKER,
 			operation = message.operationType,
 			payload = arenaDeltaker.toAmtDeltaker(deltakerAmtId, gjennomforingInfo.amtId, personIdent)

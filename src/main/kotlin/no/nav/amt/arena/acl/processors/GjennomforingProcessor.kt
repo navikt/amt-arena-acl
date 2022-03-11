@@ -3,8 +3,8 @@ package no.nav.amt.arena.acl.processors
 import ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.domain.db.toUpsertWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtWrapper
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakGjennomforing
@@ -72,7 +72,7 @@ open class GjennomforingProcessor(
 			ignored = false
 		)
 
-		val amtData = AmtWrapper(
+		val amtData = AmtKafkaMessageDto(
 			type = PayloadType.GJENNOMFORING,
 			operation = message.operationType,
 			payload = amtGjennomforing

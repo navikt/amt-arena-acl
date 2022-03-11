@@ -21,17 +21,17 @@ class KafkaAmtIntegrationConsumer(
 
 
 	companion object {
-		private val deltakerSubsctiptions = mutableMapOf<UUID, (wrapper: AmtWrapper<AmtDeltaker>) -> Unit>()
-		private val gjennomforingSubscriptions = mutableMapOf<UUID, (wrapper: AmtWrapper<AmtGjennomforing>) -> Unit>()
+		private val deltakerSubsctiptions = mutableMapOf<UUID, (wrapper: AmtKafkaMessageDto<AmtDeltaker>) -> Unit>()
+		private val gjennomforingSubscriptions = mutableMapOf<UUID, (wrapper: AmtKafkaMessageDto<AmtGjennomforing>) -> Unit>()
 
-		fun subscribeDeltaker(handler: (record: AmtWrapper<AmtDeltaker>) -> Unit): UUID {
+		fun subscribeDeltaker(handler: (record: AmtKafkaMessageDto<AmtDeltaker>) -> Unit): UUID {
 			val id = UUID.randomUUID()
 			deltakerSubsctiptions[id] = handler
 
 			return id
 		}
 
-		fun subscribeGjennomforing(handler: (record: AmtWrapper<AmtGjennomforing>) -> Unit): UUID {
+		fun subscribeGjennomforing(handler: (record: AmtKafkaMessageDto<AmtGjennomforing>) -> Unit): UUID {
 			val id = UUID.randomUUID()
 			gjennomforingSubscriptions[id] = handler
 
@@ -84,8 +84,8 @@ class KafkaAmtIntegrationConsumer(
 		}
 	}
 
-	private fun <T> toKnownMessageWrapper(payload: T, unknownMessageWrapper: UnknownMessageWrapper): AmtWrapper<T> {
-		return AmtWrapper(
+	private fun <T> toKnownMessageWrapper(payload: T, unknownMessageWrapper: UnknownMessageWrapper): AmtKafkaMessageDto<T> {
+		return AmtKafkaMessageDto(
 			transactionId = UUID.fromString(unknownMessageWrapper.transactionId),
 			type = unknownMessageWrapper.type,
 			timestamp = unknownMessageWrapper.timestamp,
