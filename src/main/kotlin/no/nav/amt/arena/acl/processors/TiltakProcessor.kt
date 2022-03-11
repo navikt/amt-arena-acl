@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.processors
 import no.nav.amt.arena.acl.domain.db.toUpsertWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaTiltakKafkaMessage
+import no.nav.amt.arena.acl.exceptions.OperationNotImplementedException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.TiltakService
 import org.slf4j.LoggerFactory
@@ -22,7 +23,7 @@ open class TiltakProcessor(
 
 		if (message.operationType == AmtOperation.DELETED) {
 			log.error("Implementation for delete elements are not implemented. Cannot handle arena id ${data.TILTAKSKODE} from table ${message.arenaTableName} at position ${message.operationPosition}")
-			throw IllegalStateException("Kan ikke håndtere tiltak med operation type DELETE")
+			throw OperationNotImplementedException("Kan ikke håndtere tiltak med operation type DELETE")
 		}
 
 		val id = UUID.randomUUID()

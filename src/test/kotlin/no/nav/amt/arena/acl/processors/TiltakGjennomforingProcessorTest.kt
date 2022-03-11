@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.processors
 
 import ArenaOrdsProxyClient
-import com.fasterxml.jackson.databind.ObjectMapper
+import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
@@ -11,12 +11,15 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
+import no.nav.amt.arena.acl.exceptions.IgnoredException
+import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.services.TiltakService
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -37,7 +40,7 @@ class TiltakGjennomforingProcessorTest {
 	private lateinit var kafkaProducerService: KafkaProducerService
 	private lateinit var gjennomforingProcessor: GjennomforingProcessor
 
-	var mapper: ObjectMapper = ObjectMapper()
+	var mapper = ObjectMapperFactory.get()
 	val dataSource = SingletonPostgresContainer.getDataSource()
 	var tiltakKode = "INDOPPFAG"
 	var ukjentTiltakType = "UKJENTTILTAK"
@@ -91,7 +94,7 @@ class TiltakGjennomforingProcessorTest {
 	}
 
 	@Test
-	fun `handleEntry() - ugyldig gjennomføring - legges ikke til i INVALID liste`() {
+	fun `handleEntry() - ugyldig gjennomføring - skal kaste ValidationException`() {
 		val opPos = "2"
 
 		val arenaGjennomforing = mapper.readValue(arenaGjennomforingUgyldigJson, ArenaGjennomforing::class.java)
@@ -101,17 +104,13 @@ class TiltakGjennomforingProcessorTest {
 			arenaGjennomforing = arenaGjennomforing,
 		)
 
-		gjennomforingProcessor.handleArenaMessage(kafkaMessage)
-
-		val translationData = translationRepository.get(ARENA_GJENNOMFORING_TABLE_NAME, "830743204")
-		translationData shouldBe null
-
-		repository.get(ARENA_GJENNOMFORING_TABLE_NAME, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.INVALID
-
+		shouldThrowExactly<ValidationException> {
+			gjennomforingProcessor.handleArenaMessage(kafkaMessage)
+		}
 	}
 
 	@Test
-	fun `handleEntry() - tiltaktype er ikke oppfølging - legges til i ignore liste`() {
+	fun `handleEntry() - tiltaktype er ikke oppfølging - skal kaste IgnoredException`() {
 		val opPos = "2"
 
 		val arenaGjennomforing = mapper.readValue(arenaGjennomforingUkjentTypeJson, ArenaGjennomforing::class.java)
@@ -123,13 +122,9 @@ class TiltakGjennomforingProcessorTest {
 
 		`when`(tiltakService.getByKode(ukjentTiltakType)).thenReturn(AmtTiltak(UUID.randomUUID(), kode=tiltakKode, navn="Oppfølging"))
 
-		gjennomforingProcessor.handleArenaMessage(kafkaMessage)
-
-		val translationData = translationRepository.get(ARENA_GJENNOMFORING_TABLE_NAME, "7843295")
-		translationData!!.arenaId shouldBe "7843295"
-		translationData.ignored shouldBe true
-
-		repository.get(ARENA_GJENNOMFORING_TABLE_NAME, AmtOperation.CREATED, opPos).ingestStatus shouldBe IngestStatus.IGNORED
+		shouldThrowExactly<IgnoredException> {
+			gjennomforingProcessor.handleArenaMessage(kafkaMessage)
+		}
 	}
 
 	@Test

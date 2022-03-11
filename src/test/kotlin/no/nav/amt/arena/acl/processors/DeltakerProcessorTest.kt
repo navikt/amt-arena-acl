@@ -4,6 +4,7 @@ import ArenaOrdsProxyClient
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -13,14 +14,14 @@ import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
+import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
-import no.nav.common.kafka.producer.KafkaProducerClient
-import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
@@ -36,10 +37,7 @@ class DeltakerProcessorTest : FunSpec({
 		on { hentFnr(anyString()) } doReturn "01010051234"
 	}
 
-	@SuppressWarnings("unchecked")
-	val kafkaProducer = mock<KafkaProducerClient<String, String>> {
-		on { sendSync(any()) } doReturn null
-	}
+	val kafkaProducerService = mock<KafkaProducerService>()
 
 	lateinit var arenaDataRepository: ArenaDataRepository
 	lateinit var idTranslationRepository: ArenaDataIdTranslationRepository
@@ -64,7 +62,7 @@ class DeltakerProcessorTest : FunSpec({
 			arenaDataIdTranslationService = ArenaDataIdTranslationService(idTranslationRepository),
 			ordsClient = ordsClient,
 			meterRegistry = SimpleMeterRegistry(),
-			kafkaProducerService = KafkaProducerService(kafkaProducer),
+			kafkaProducerService = kafkaProducerService,
 			metrics = DeltakerMetricHandler(SimpleMeterRegistry())
 		)
 	}
@@ -119,34 +117,32 @@ class DeltakerProcessorTest : FunSpec({
 		translationEntry!!.ignored shouldBe false
 	}
 
-	test("Insert Deltaker with gjennomføring not processed set the Deltaker to retry") {
+	test("Insert Deltaker with gjennomføring not processed should throw exception") {
 		val position = UUID.randomUUID().toString()
 
-		deltakerProcessor.handleArenaMessage(
-			createArenaDeltakerKafkaMessage(
-				position,
-				2348790L,
-				1L
+		shouldThrowExactly<DependencyNotIngestedException> {
+			deltakerProcessor.handleArenaMessage(
+				createArenaDeltakerKafkaMessage(
+					position,
+					2348790L,
+					1L
+				)
 			)
-		)
-
-		val arenaDataEntry = getAndCheckArenaDataRepositoryEntry(AmtOperation.CREATED, position, IngestStatus.RETRY)
-		arenaDataEntry.ingestAttempts shouldBe 1
-		arenaDataEntry.lastAttempted shouldNotBe null
+		}
 	}
 
 	test("Insert Deltaker on Ignored Gjennomføring sets Deltaker to Ingored") {
 		val position = UUID.randomUUID().toString()
 
-		deltakerProcessor.handleArenaMessage(
-			createArenaDeltakerKafkaMessage(
-				position,
-				ignoredGjennomforingArenaId,
-				1L
+		shouldThrowExactly<IgnoredException> {
+			deltakerProcessor.handleArenaMessage(
+				createArenaDeltakerKafkaMessage(
+					position,
+					ignoredGjennomforingArenaId,
+					1L
+				)
 			)
-		)
-
-		getAndCheckArenaDataRepositoryEntry(AmtOperation.CREATED, position, IngestStatus.IGNORED)
+		}
 	}
 
 	test("Should process deleted deltaker") {

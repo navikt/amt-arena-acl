@@ -9,6 +9,7 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
+import no.nav.amt.arena.acl.exceptions.OperationNotImplementedException
 import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.processors.ArenaMessageProcessor
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
@@ -69,19 +70,23 @@ open class ArenaMessageProcessorService(
 			when (e) {
 				is DependencyNotIngestedException -> {
 					log.info("Dependency for $arenaId in table $arenaTableName is not ingested: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.RETRY))
+					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.RETRY, note = e.message))
 				}
 				is ValidationException -> {
 					log.info("$arenaId in table $arenaTableName is not valid: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.INVALID))
+					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.INVALID, note = e.message))
 				}
 				is IgnoredException -> {
 					log.info("$arenaId in table $arenaTableName: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.IGNORED))
+					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.IGNORED, note = e.message))
+				}
+				is OperationNotImplementedException -> {
+					log.info("Operation not supported for $arenaId in table $arenaTableName: '${e.message}'")
+					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.FAILED, note = e.message))
 				}
 				else -> {
 					log.error("$arenaId in table $arenaTableName: ${e.message}", e)
-					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.RETRY))
+					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.RETRY, note = e.message))
 				}
 			}
 		}

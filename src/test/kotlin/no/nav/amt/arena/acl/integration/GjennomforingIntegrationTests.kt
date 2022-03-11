@@ -54,8 +54,8 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 		val firstResult = gjennomforingExecutor.execute(command)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
-			.arenaData { it.ingestAttempts shouldBe 1 }
-			.arenaData { it.lastAttempted shouldNotBe null }
+			.arenaData { it.ingestAttempts shouldBe 0 }
+			.arenaData { it.lastAttempted shouldBe null }
 			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 

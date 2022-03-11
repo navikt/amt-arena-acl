@@ -46,7 +46,7 @@ class TiltakIntegrationTests : IntegrationTestBase() {
 
 		tiltakExecutor.execute(SlettTiltakCommand(kode, navn))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.FAILED }
-			.arenaData { it.note shouldBe "Implementation of DELETE is not implemented." }
+			.arenaData { it.note shouldBe "Kan ikke håndtere tiltak med operation type DELETE" }
 			.tiltak { it.kode shouldBe kode }
 			.tiltak { it.navn shouldBe navn }
 	}
