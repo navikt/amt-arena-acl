@@ -2,9 +2,8 @@ package no.nav.amt.arena.acl.metrics
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
 import org.springframework.stereotype.Component
 
 @Component
@@ -12,12 +11,12 @@ class DeltakerMetricHandler(
 	private val registry: MeterRegistry
 ) {
 
-	fun publishMetrics(data: ArenaData) {
-		if (data.operation == AmtOperation.CREATED) {
+	fun publishMetrics(message: ArenaDeltakerKafkaMessage) {
+		if (message.operationType == AmtOperation.CREATED) {
 			registry.counter("amt.arena-acl.deltaker.ny").increment()
-		} else if (data.operation == AmtOperation.MODIFIED) {
-			val before = data.jsonObject<ArenaTiltakDeltaker>(data.before)
-			val after = data.jsonObject<ArenaTiltakDeltaker>(data.after)
+		} else if (message.operationType == AmtOperation.MODIFIED) {
+			val before = message.before
+			val after = message.after
 
 			if (before?.DATO_FRA != after?.DATO_FRA) {
 				registry.counter(

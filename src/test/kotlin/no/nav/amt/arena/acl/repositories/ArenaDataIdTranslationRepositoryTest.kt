@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
-import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
+import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.util.*
@@ -18,7 +18,7 @@ class ArenaDataIdTranslationRepositoryTest : FunSpec({
 
 	lateinit var repository: ArenaDataIdTranslationRepository
 
-	val testObject = ArenaDataIdTranslation(
+	val testObject = ArenaDataIdTranslationDbo(
 		amtId = UUID.randomUUID(),
 		arenaTableName = "ARENA_TABLE_NAME",
 		arenaId = "ARENA_ID",

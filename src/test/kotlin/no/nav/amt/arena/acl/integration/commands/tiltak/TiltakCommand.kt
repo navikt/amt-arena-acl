@@ -1,15 +1,15 @@
 package no.nav.amt.arena.acl.integration.commands.tiltak
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
-import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaTiltak
 import no.nav.amt.arena.acl.integration.commands.Command
 
 abstract class TiltakCommand : Command() {
 
 	abstract fun execute(
 		position: String,
-		executor: (wrapper: ArenaWrapper, kode: String) -> TiltakResult
+		executor: (wrapper: ArenaKafkaMessageDto, kode: String) -> TiltakResult
 	): TiltakResult
 
 	fun createPayload(kode: String, navn: String): JsonNode {

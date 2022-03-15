@@ -2,7 +2,7 @@ package no.nav.amt.arena.acl.schedule
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tags
-import no.nav.amt.arena.acl.domain.IngestStatus
+import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ONE_MINUTE
 import org.slf4j.LoggerFactory

@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.repositories
 
-import no.nav.amt.arena.acl.domain.amt.AmtTiltak
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
 import no.nav.amt.arena.acl.utils.getUUID
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource

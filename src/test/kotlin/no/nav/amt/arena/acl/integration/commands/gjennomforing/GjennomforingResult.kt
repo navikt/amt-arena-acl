@@ -1,24 +1,24 @@
 package no.nav.amt.arena.acl.integration.commands.gjennomforing
 
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
-import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
-import no.nav.amt.arena.acl.domain.amt.AmtWrapper
+import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
+import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import org.junit.jupiter.api.fail
 
 data class GjennomforingResult(
 	val position: String,
-	val arenaData: ArenaData,
-	val translation: ArenaDataIdTranslation?,
-	val output: AmtWrapper<AmtGjennomforing>?
+	val arenaDataDbo: ArenaDataDbo,
+	val translation: ArenaDataIdTranslationDbo?,
+	val output: AmtKafkaMessageDto<AmtGjennomforing>?
 ) {
 
-	fun arenaData(check: (data: ArenaData) -> Unit): GjennomforingResult {
-		check.invoke(arenaData)
+	fun arenaData(check: (data: ArenaDataDbo) -> Unit): GjennomforingResult {
+		check.invoke(arenaDataDbo)
 		return this
 	}
 
-	fun translation(check: (data: ArenaDataIdTranslation) -> Unit): GjennomforingResult {
+	fun translation(check: (data: ArenaDataIdTranslationDbo) -> Unit): GjennomforingResult {
 		if (translation == null) {
 			fail("Trying to get translation, but it is null")
 		}
@@ -27,7 +27,7 @@ data class GjennomforingResult(
 		return this
 	}
 
-	fun output(check: (data: AmtWrapper<AmtGjennomforing>) -> Unit): GjennomforingResult {
+	fun output(check: (data: AmtKafkaMessageDto<AmtGjennomforing>) -> Unit): GjennomforingResult {
 		if (output == null) {
 			fail("Trying to get output, but it is null")
 		}
@@ -36,19 +36,9 @@ data class GjennomforingResult(
 		return this
 	}
 
-	fun result(check: (arenaData: ArenaData, translation: ArenaDataIdTranslation?, output: AmtWrapper<AmtGjennomforing>?) -> Unit): GjennomforingResult {
-		check.invoke(arenaData, translation, output)
+	fun result(check: (arenaDataDbo: ArenaDataDbo, translation: ArenaDataIdTranslationDbo?, output: AmtKafkaMessageDto<AmtGjennomforing>?) -> Unit): GjennomforingResult {
+		check.invoke(arenaDataDbo, translation, output)
 		return this
 	}
-
-	fun outgoingPayload(check: (payload: AmtGjennomforing) -> Unit): GjennomforingResult {
-		if (output?.payload == null) {
-			fail("Forsøker å hente payload på en outgoing melding som er null")
-		}
-
-		check.invoke(output.payload!!)
-		return this
-	}
-
 
 }

@@ -1,9 +1,9 @@
 package no.nav.amt.arena.acl.integration.executors
 
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.arena.ArenaOperation
+import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
+import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaOperation
 import no.nav.amt.arena.acl.integration.utils.asyncRetryHandler
 import no.nav.amt.arena.acl.integration.utils.nullableAsyncRetryHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
@@ -32,7 +32,7 @@ abstract class TestExecutor(
 		kafkaProducer.send(ProducerRecord(topic, payload))
 	}
 
-	fun getArenaData(table: String, operation: AmtOperation, position: String): ArenaData {
+	fun getArenaData(table: String, operation: AmtOperation, position: String): ArenaDataDbo {
 		return asyncRetryHandler({
 			arenaDataRepository.getAll().find {
 				it.arenaTableName == table
@@ -42,7 +42,7 @@ abstract class TestExecutor(
 		})
 	}
 
-	fun getTranslation(table: String, arenaId: String): ArenaDataIdTranslation? {
+	fun getTranslation(table: String, arenaId: String): ArenaDataIdTranslationDbo? {
 		return nullableAsyncRetryHandler({ translationRepository.get(table, arenaId) })
 	}
 

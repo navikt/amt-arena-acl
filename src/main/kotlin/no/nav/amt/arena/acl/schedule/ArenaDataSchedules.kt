@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.schedule
 
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.services.ArenaMessageProcessorService
+import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
 import no.nav.amt.arena.acl.utils.AT_MIDNIGHT
 import no.nav.amt.arena.acl.utils.ONE_HOUR
 import no.nav.amt.arena.acl.utils.ONE_MINUTE
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 
 @Component
 open class ArenaDataSchedules(
-	private val messageProcessorService: ArenaMessageProcessorService,
+	private val retryArenaMessageProcessorService: RetryArenaMessageProcessorService,
 	private val arenaDataRepository: ArenaDataRepository,
 	private val leaderElectionClient: LeaderElectionClient
 ) {
@@ -23,14 +23,14 @@ open class ArenaDataSchedules(
 	@Scheduled(fixedDelay = 10 * 1000L, initialDelay = ONE_MINUTE)
 	open fun processArenaMessages() {
 		if (leaderElectionClient.isLeader) {
-			JobRunner.run("process_arena_messages", messageProcessorService::processMessages)
+			JobRunner.run("process_arena_messages", retryArenaMessageProcessorService::processMessages)
 		}
 	}
 
 	@Scheduled(cron = AT_MIDNIGHT)
 	open fun processFailedArenaMessages() {
 		if (leaderElectionClient.isLeader) {
-			JobRunner.run("process_failed_arena_messages", messageProcessorService::processFailedMessages)
+			JobRunner.run("process_failed_arena_messages", retryArenaMessageProcessorService::processFailedMessages)
 		}
 	}
 

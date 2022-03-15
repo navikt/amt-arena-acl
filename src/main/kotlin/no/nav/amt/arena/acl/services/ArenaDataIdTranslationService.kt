@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.services
 
-import no.nav.amt.arena.acl.domain.ArenaDataIdTranslation
+import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
@@ -33,7 +33,8 @@ open class ArenaDataIdTranslationService(
 		)
 	}
 
-	fun findGjennomforingIdTranslation(gjennomforingArenaId: String): ArenaDataIdTranslation?  {
+
+	fun findGjennomforingIdTranslation(gjennomforingArenaId: String): ArenaDataIdTranslationDbo?  {
 		return arenaDataIdTranslationRepository.get(ARENA_GJENNOMFORING_TABLE_NAME, gjennomforingArenaId)
 	}
 
@@ -62,7 +63,7 @@ open class ArenaDataIdTranslationService(
 	}
 
 	private fun upsertTranslation(arenaId: String, arenaTableName: String, amtId: UUID, ignored: Boolean) {
-		val translation = ArenaDataIdTranslation(
+		val translation = ArenaDataIdTranslationDbo(
 			amtId = amtId,
 			arenaTableName = arenaTableName,
 			arenaId = arenaId,

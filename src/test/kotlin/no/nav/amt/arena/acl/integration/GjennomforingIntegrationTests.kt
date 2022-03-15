@@ -2,8 +2,8 @@ package no.nav.amt.arena.acl.integration
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.amt.arena.acl.domain.IngestStatus
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.db.IngestStatus
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingInput
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCommand
 import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
@@ -54,8 +54,8 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 		val firstResult = gjennomforingExecutor.execute(command)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
-			.arenaData { it.ingestAttempts shouldBe 1 }
-			.arenaData { it.lastAttempted shouldNotBe null }
+			.arenaData { it.ingestAttempts shouldBe 0 }
+			.arenaData { it.lastAttempted shouldBe null }
 			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 

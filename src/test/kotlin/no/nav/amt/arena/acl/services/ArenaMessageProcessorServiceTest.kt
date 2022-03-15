@@ -6,35 +6,34 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.amt.arena.acl.database.DatabaseTestUtils
-import no.nav.amt.arena.acl.database.SingletonPostgresContainer
-import no.nav.amt.arena.acl.domain.ArenaData
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
-import no.nav.amt.arena.acl.processors.TiltakGjennomforingProcessor
+import no.nav.amt.arena.acl.processors.GjennomforingProcessor
 import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 class ArenaMessageProcessorServiceTest : StringSpec({
 
-	val dataSource = SingletonPostgresContainer.getDataSource()
-
-	val objectMapper = ObjectMapperFactory.get()
+	val mapper = ObjectMapperFactory.get()
 
 	lateinit var arenaDataRepository: ArenaDataRepository
 
 	lateinit var tiltakProcessor: TiltakProcessor
 
-	lateinit var tiltakGjennomforingProcessor: TiltakGjennomforingProcessor
+	lateinit var gjennomforingProcessor: GjennomforingProcessor
 
 	lateinit var deltakerProcessor: DeltakerProcessor
+
+	lateinit var meterRegistry: MeterRegistry
 
 	lateinit var messageProcessor: ArenaMessageProcessorService
 
@@ -42,30 +41,29 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		val rootLogger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 		rootLogger.level = Level.WARN
 
-		arenaDataRepository = ArenaDataRepository(NamedParameterJdbcTemplate(dataSource))
-
+		arenaDataRepository = mockk()
 		tiltakProcessor = mockk()
-		tiltakGjennomforingProcessor = mockk()
+		gjennomforingProcessor = mockk()
 		deltakerProcessor = mockk()
+		meterRegistry = SimpleMeterRegistry()
 
 		messageProcessor = ArenaMessageProcessorService(
-			arenaDataRepository,
-			tiltakProcessor,
-			tiltakGjennomforingProcessor,
-			deltakerProcessor
+			tiltakProcessor = tiltakProcessor,
+			gjennomforingProcessor = gjennomforingProcessor,
+			deltakerProcessor = deltakerProcessor,
+			arenaDataRepository = arenaDataRepository,
+			meterRegistry = meterRegistry
 		)
-
-		DatabaseTestUtils.cleanDatabase(dataSource)
 	}
 
 	"should handle arena deltaker message" {
 		val tiltakdeltakereJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakdeltakerendret-v1.json").readText()
-		val tiltakdeltakere: List<JsonNode> = objectMapper.readValue(tiltakdeltakereJsonFileContent)
+		val tiltakdeltakere: List<JsonNode> = mapper.readValue(tiltakdeltakereJsonFileContent)
 		val deltakerJson = tiltakdeltakere.toList()[0].toString()
 
 		every {
-			deltakerProcessor.handle(any())
+			deltakerProcessor.handleArenaMessage(any())
 		} returns Unit
 
 		messageProcessor.handleArenaGoldenGateRecord(
@@ -73,18 +71,18 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		)
 
 		verify(exactly = 1) {
-			deltakerProcessor.handle(any())
+			deltakerProcessor.handleArenaMessage(any())
 		}
 	}
 
 	"should handle arena gjennomforing message" {
 		val tiltakgjennomforingerJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakgjennomforingendret-v1.json").readText()
-		val tiltakgjennomforinger: List<JsonNode> = objectMapper.readValue(tiltakgjennomforingerJsonFileContent)
+		val tiltakgjennomforinger: List<JsonNode> = mapper.readValue(tiltakgjennomforingerJsonFileContent)
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
 		every {
-			tiltakGjennomforingProcessor.handle(any())
+			gjennomforingProcessor.handleArenaMessage(any())
 		} returns Unit
 
 		messageProcessor.handleArenaGoldenGateRecord(
@@ -92,18 +90,18 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		)
 
 		verify(exactly = 1) {
-			tiltakGjennomforingProcessor.handle(any())
+			gjennomforingProcessor.handleArenaMessage(any())
 		}
 	}
 
 	"should handle arena tiltak message" {
 		val tiltakJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakendret-v1.json").readText()
-		val tiltakList: List<JsonNode> = objectMapper.readValue(tiltakJsonFileContent)
+		val tiltakList: List<JsonNode> = mapper.readValue(tiltakJsonFileContent)
 		val tiltakJson = tiltakList.toList()[0].toString()
 
 		every {
-			tiltakProcessor.handle(any())
+			tiltakProcessor.handleArenaMessage(any())
 		} returns Unit
 
 		messageProcessor.handleArenaGoldenGateRecord(
@@ -111,7 +109,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		)
 
 		verify(exactly = 1) {
-			tiltakProcessor.handle(any())
+			tiltakProcessor.handleArenaMessage(any())
 		}
 	}
 
@@ -119,26 +117,26 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		val tiltakgjennomforingerJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakgjennomforingendret-v1-bad-unicode.json")
 				.readText()
-		val tiltakgjennomforinger: List<JsonNode> = objectMapper.readValue(tiltakgjennomforingerJsonFileContent)
+		val tiltakgjennomforinger: List<JsonNode> = mapper.readValue(tiltakgjennomforingerJsonFileContent)
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
 		every {
-			tiltakGjennomforingProcessor.handle(any())
+			gjennomforingProcessor.handleArenaMessage(any())
 		} returns Unit
 
 		messageProcessor.handleArenaGoldenGateRecord(
 			ConsumerRecord("test", 1, 1, "123456", tiltakgjennomforingJson)
 		)
 
-		val capturingSlot = CapturingSlot<ArenaData>()
+		val capturingSlot = CapturingSlot<ArenaGjennomforingKafkaMessage>()
 
 		verify(exactly = 1) {
-			tiltakGjennomforingProcessor.handle(capture(capturingSlot))
+			gjennomforingProcessor.handleArenaMessage(capture(capturingSlot))
 		}
 
 		val capturedData = capturingSlot.captured
 
-		capturedData.after?.get("VURDERING_GJENNOMFORING")?.textValue() shouldBe "Vurdering"
+		capturedData.after?.VURDERING_GJENNOMFORING shouldBe "Vurdering"
 	}
 
 })

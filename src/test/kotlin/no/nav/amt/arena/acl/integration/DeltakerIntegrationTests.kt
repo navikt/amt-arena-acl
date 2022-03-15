@@ -2,9 +2,9 @@ package no.nav.amt.arena.acl.integration
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.amt.arena.acl.domain.IngestStatus
-import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.db.IngestStatus
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerInput
 import no.nav.amt.arena.acl.integration.commands.deltaker.NyDeltakerCommand
 import no.nav.amt.arena.acl.integration.commands.deltaker.OppdaterDeltakerCommand
@@ -174,7 +174,7 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 			)
 		)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.IGNORED }
-			.arenaData { it.note shouldBe "Ikke støttet tiltak" }
+			.arenaData { it.note shouldBe "Er deltaker på en gjennomførig som ikke er støttet" }
 	}
 
 	@Test

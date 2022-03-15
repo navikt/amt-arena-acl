@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.integration.commands.deltaker
 
-import no.nav.amt.arena.acl.domain.arena.ArenaOperation
-import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaOperation
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import java.time.LocalDateTime
 
@@ -10,12 +10,12 @@ class OppdaterDeltakerCommand(
 	val updatedDeltakerData: DeltakerInput
 ) : DeltakerCommand() {
 
-	override fun execute(position: String, executor: (wrapper: ArenaWrapper) -> DeltakerResult): DeltakerResult {
-		val wrapper = ArenaWrapper(
+	override fun execute(position: String, executor: (wrapper: ArenaKafkaMessageDto) -> DeltakerResult): DeltakerResult {
+		val wrapper = ArenaKafkaMessageDto(
 			table = ARENA_DELTAKER_TABLE_NAME,
-			operation = ArenaOperation.U,
-			operationTimestampString = LocalDateTime.now().format(opTsFormatter),
-			operationPosition = position,
+			opType = ArenaOperation.U.name,
+			opTs = LocalDateTime.now().format(opTsFormatter),
+			pos = position,
 			before = createPayload(oldDeltakerData),
 			after = createPayload(updatedDeltakerData)
 		)

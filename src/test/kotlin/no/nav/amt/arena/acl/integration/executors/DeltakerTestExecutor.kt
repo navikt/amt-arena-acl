@@ -1,8 +1,9 @@
 package no.nav.amt.arena.acl.integration.executors
 
-import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.amt.AmtWrapper
-import no.nav.amt.arena.acl.domain.arena.ArenaWrapper
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerCommand
 import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerResult
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
@@ -23,7 +24,7 @@ class DeltakerTestExecutor(
 ) {
 
 	private val topic = "deltaker"
-	private val outputMessages = mutableListOf<AmtWrapper<AmtDeltaker>>()
+	private val outputMessages = mutableListOf<AmtKafkaMessageDto<AmtDeltaker>>()
 
 	init {
 		KafkaAmtIntegrationConsumer.subscribeDeltaker { outputMessages.add(it) }
@@ -37,16 +38,16 @@ class DeltakerTestExecutor(
 		return command.execute(position) { getResults(it) }
 	}
 
-	private fun sendAndCheck(wrapper: ArenaWrapper): DeltakerResult {
+	private fun sendAndCheck(wrapper: ArenaKafkaMessageDto): DeltakerResult {
 		sendKafkaMessage(topic, objectMapper.writeValueAsString(wrapper))
 		return getResults(wrapper)
 	}
 
-	private fun getResults(wrapper: ArenaWrapper): DeltakerResult {
+	private fun getResults(wrapper: ArenaKafkaMessageDto): DeltakerResult {
 		val arenaData = getArenaData(
 			ARENA_DELTAKER_TABLE_NAME,
-			wrapper.operation.toAmtOperation(),
-			wrapper.operationPosition
+			AmtOperation.fromArenaOperationString(wrapper.opType),
+			wrapper.pos
 		)
 
 		val translation = getTranslation(ARENA_DELTAKER_TABLE_NAME, arenaData.arenaId)
@@ -60,7 +61,7 @@ class DeltakerTestExecutor(
 		)
 	}
 
-	private fun getOutputMessage(id: UUID): AmtWrapper<AmtDeltaker>? {
+	private fun getOutputMessage(id: UUID): AmtKafkaMessageDto<AmtDeltaker>? {
 		var attempts = 0
 		while (attempts < 5) {
 			val data = outputMessages.firstOrNull { it.payload != null && (it.payload as AmtDeltaker).id == id }

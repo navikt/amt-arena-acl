@@ -2,10 +2,7 @@ package no.nav.amt.arena.acl.integration.kafka
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.amt.arena.acl.domain.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.amt.AmtGjennomforing
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.amt.AmtWrapper
+import no.nav.amt.arena.acl.domain.kafka.amt.*
 import no.nav.amt.arena.acl.kafka.KafkaProperties
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import no.nav.common.kafka.consumer.KafkaConsumerClient
@@ -24,17 +21,17 @@ class KafkaAmtIntegrationConsumer(
 
 
 	companion object {
-		private val deltakerSubsctiptions = mutableMapOf<UUID, (wrapper: AmtWrapper<AmtDeltaker>) -> Unit>()
-		private val gjennomforingSubscriptions = mutableMapOf<UUID, (wrapper: AmtWrapper<AmtGjennomforing>) -> Unit>()
+		private val deltakerSubsctiptions = mutableMapOf<UUID, (wrapper: AmtKafkaMessageDto<AmtDeltaker>) -> Unit>()
+		private val gjennomforingSubscriptions = mutableMapOf<UUID, (wrapper: AmtKafkaMessageDto<AmtGjennomforing>) -> Unit>()
 
-		fun subscribeDeltaker(handler: (record: AmtWrapper<AmtDeltaker>) -> Unit): UUID {
+		fun subscribeDeltaker(handler: (record: AmtKafkaMessageDto<AmtDeltaker>) -> Unit): UUID {
 			val id = UUID.randomUUID()
 			deltakerSubsctiptions[id] = handler
 
 			return id
 		}
 
-		fun subscribeGjennomforing(handler: (record: AmtWrapper<AmtGjennomforing>) -> Unit): UUID {
+		fun subscribeGjennomforing(handler: (record: AmtKafkaMessageDto<AmtGjennomforing>) -> Unit): UUID {
 			val id = UUID.randomUUID()
 			gjennomforingSubscriptions[id] = handler
 
@@ -70,14 +67,14 @@ class KafkaAmtIntegrationConsumer(
 		val unknownMessageWrapper = fromJson(record.value(), UnknownMessageWrapper::class.java)
 
 		when (unknownMessageWrapper.type) {
-			"DELTAKER" -> {
+			PayloadType.DELTAKER -> {
 				val deltakerPayload =
 					ObjectMapperFactory.get().treeToValue(unknownMessageWrapper.payload, AmtDeltaker::class.java)
 				val message = toKnownMessageWrapper(deltakerPayload, unknownMessageWrapper)
 				deltakerSubsctiptions.values.forEach { it.invoke(message) }
 
 			}
-			"GJENNOMFORING" -> {
+			PayloadType.GJENNOMFORING -> {
 				val gjennomforingPayload =
 					ObjectMapperFactory.get().treeToValue(unknownMessageWrapper.payload, AmtGjennomforing::class.java)
 				val message = toKnownMessageWrapper(gjennomforingPayload, unknownMessageWrapper)
@@ -87,8 +84,8 @@ class KafkaAmtIntegrationConsumer(
 		}
 	}
 
-	private fun <T> toKnownMessageWrapper(payload: T, unknownMessageWrapper: UnknownMessageWrapper): AmtWrapper<T> {
-		return AmtWrapper(
+	private fun <T> toKnownMessageWrapper(payload: T, unknownMessageWrapper: UnknownMessageWrapper): AmtKafkaMessageDto<T> {
+		return AmtKafkaMessageDto(
 			transactionId = UUID.fromString(unknownMessageWrapper.transactionId),
 			type = unknownMessageWrapper.type,
 			timestamp = unknownMessageWrapper.timestamp,
@@ -104,7 +101,7 @@ class KafkaAmtIntegrationConsumer(
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	data class UnknownMessageWrapper(
 		val transactionId: String,
-		val type: String,
+		val type: PayloadType,
 		val timestamp: LocalDateTime,
 		val operation: AmtOperation,
 		val payload: JsonNode

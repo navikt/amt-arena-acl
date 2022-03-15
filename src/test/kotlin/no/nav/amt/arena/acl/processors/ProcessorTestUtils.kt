@@ -1,49 +1,15 @@
 package no.nav.amt.arena.acl.processors
 
-import com.fasterxml.jackson.databind.JsonNode
-import no.nav.amt.arena.acl.domain.ArenaData
-import no.nav.amt.arena.acl.domain.IngestStatus
-import no.nav.amt.arena.acl.domain.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.arena.ArenaTiltak
-import no.nav.amt.arena.acl.domain.arena.ArenaTiltakDeltaker
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaTiltak
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
-import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
-import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
 
-
-fun createNewTiltakArenaData(position: String, tiltakKode: String, tiltakNavn: String): ArenaData {
-	return createArenaData(
-		position = position,
-		table = ARENA_TILTAK_TABLE_NAME,
-		operation = AmtOperation.CREATED,
-		after = createTiltak(tiltakKode, tiltakNavn)
-	)
-}
-
-fun createUpdateTiltakArenaData(position: String, before: JsonNode, kode: String, newNavn: String): ArenaData {
-	return createArenaData(
-		position = position,
-		table = ARENA_TILTAK_TABLE_NAME,
-		operation = AmtOperation.MODIFIED,
-		before = before,
-		after = createTiltak(kode, newNavn)
-	)
-}
-
-fun createDeleteTiltakArenaData(position: String, before: JsonNode): ArenaData {
-	return createArenaData(
-		position = position,
-		table = ARENA_TILTAK_TABLE_NAME,
-		operation = AmtOperation.DELETED,
-		before = before
-	)
-}
-
-fun createNewDeltakerArenaData(
+fun createArenaDeltakerKafkaMessage(
 	position: String,
 	tiltakGjennomforingArenaId: Long,
 	deltakerArenaId: Long,
@@ -56,98 +22,31 @@ fun createNewDeltakerArenaData(
 	prosentDeltid: Float = 0.0f,
 	registrertDato: LocalDateTime = LocalDateTime.now(),
 	operation: AmtOperation = AmtOperation.CREATED
-): ArenaData {
-	val deltaker = createDeltaker(
-		tiltakGjennomforingArenaId = tiltakGjennomforingArenaId,
-		deltakerArenaId = deltakerArenaId,
-		arenaPersonId = arenaPersonId,
-		oppstartDato = oppstartDato,
-		sluttDato = sluttDato,
-		deltakerStatusKode = deltakerStatusKode,
-		statusEndringDato = statusEndringDato,
-		dagerPerUke = dagerPerUke,
-		prosentDeltid = prosentDeltid,
-		registrertDato = registrertDato
+): ArenaDeltakerKafkaMessage {
+	val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+	val deltaker = emptyArenaTiltakDeltaker().copy(
+		TILTAKGJENNOMFORING_ID = tiltakGjennomforingArenaId,
+		TILTAKDELTAKER_ID = deltakerArenaId,
+		PERSON_ID = arenaPersonId,
+		DATO_FRA = oppstartDato?.format(formatter),
+		DATO_TIL = sluttDato?.format(formatter),
+		DELTAKERSTATUSKODE = deltakerStatusKode,
+		DATO_STATUSENDRING = statusEndringDato?.format(formatter),
+		ANTALL_DAGER_PR_UKE = dagerPerUke,
+		PROSENT_DELTID = prosentDeltid,
+		REG_DATO = registrertDato.format(formatter)
 	)
 
-	return createArenaData(
-		position = position,
-		table = ARENA_DELTAKER_TABLE_NAME,
-		operation = operation,
-		arenaId = deltakerArenaId.toString(),
+	return ArenaDeltakerKafkaMessage(
+		arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+		operationType = operation,
+		operationTimestamp = LocalDateTime.now(),
+		operationPosition = position,
 		after = if (operation != AmtOperation.DELETED) deltaker else null,
 		before = if (operation != AmtOperation.CREATED) deltaker else null
 	)
 }
-
-private fun createArenaData(
-	operation: AmtOperation,
-	position: String,
-	table: String,
-	arenaId: String = UUID.randomUUID().toString(),
-	status: IngestStatus = IngestStatus.NEW,
-	before: JsonNode? = null,
-	after: JsonNode? = null,
-): ArenaData {
-	return ArenaData(
-		id = -1,
-		arenaTableName = table,
-		arenaId = arenaId,
-		operation = operation,
-		operationPosition = position,
-		operationTimestamp = LocalDateTime.now(),
-		ingestStatus = status,
-		ingestedTimestamp = null,
-		ingestAttempts = 0,
-		before = before,
-		after = after
-	)
-}
-
-private fun createTiltak(tiltakKode: String, tiltakNavn: String): JsonNode {
-
-	val mapper = ObjectMapperFactory.get()
-
-	return mapper.valueToTree(
-		emptyArenaTiltak().copy(
-			TILTAKSNAVN = tiltakNavn,
-			TILTAKSKODE = tiltakKode
-		)
-	)
-}
-
-private fun createDeltaker(
-	tiltakGjennomforingArenaId: Long,
-	deltakerArenaId: Long,
-	arenaPersonId: Long,
-	oppstartDato: LocalDate? = null,
-	sluttDato: LocalDate? = null,
-	deltakerStatusKode: String,
-	statusEndringDato: LocalDate? = null,
-	dagerPerUke: Int? = null,
-	prosentDeltid: Float,
-	registrertDato: LocalDateTime
-): JsonNode {
-	val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-
-	val mapper = ObjectMapperFactory.get()
-
-	return mapper.valueToTree(
-		emptyArenaTiltakDeltaker().copy(
-			TILTAKGJENNOMFORING_ID = tiltakGjennomforingArenaId,
-			TILTAKDELTAKER_ID = deltakerArenaId,
-			PERSON_ID = arenaPersonId,
-			DATO_FRA = oppstartDato?.format(formatter),
-			DATO_TIL = sluttDato?.format(formatter),
-			DELTAKERSTATUSKODE = deltakerStatusKode,
-			DATO_STATUSENDRING = statusEndringDato?.format(formatter),
-			ANTALL_DAGER_PR_UKE = dagerPerUke,
-			PROSENT_DELTID = prosentDeltid,
-			REG_DATO = registrertDato.format(formatter)
-		)
-	)
-}
-
 
 private fun emptyArenaTiltak(): ArenaTiltak {
 	val NOT_SET_STRING = "NOT_SET_STRING"
@@ -191,13 +90,13 @@ private fun emptyArenaTiltak(): ArenaTiltak {
 	)
 }
 
-private fun emptyArenaTiltakDeltaker(): ArenaTiltakDeltaker {
+private fun emptyArenaTiltakDeltaker(): ArenaDeltaker {
 	val NOT_SET_STRING = "NOT_SET_STRING"
 	val NOT_SET_INT = Int.MIN_VALUE
 	val NOT_SET_LONG = Long.MIN_VALUE
 	val NOT_SET_FLOAT = Float.MIN_VALUE
 
-	return ArenaTiltakDeltaker(
+	return ArenaDeltaker(
 		TILTAKDELTAKER_ID = NOT_SET_LONG,
 		PERSON_ID = NOT_SET_LONG,
 		TILTAKGJENNOMFORING_ID = NOT_SET_LONG,
