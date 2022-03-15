@@ -13,10 +13,10 @@ data class ArenaKafkaMessage<D>(
 ) {
 	fun getData(): D {
 		return when (operationType) {
-			AmtOperation.CREATED -> after
-			AmtOperation.MODIFIED -> after
-			AmtOperation.DELETED -> before
-		} ?: throw NoSuchElementException("Both before and after is null")
+			AmtOperation.CREATED -> after ?: throw NoSuchElementException("Message with opType=CREATED is missing 'after'")
+			AmtOperation.MODIFIED -> after ?: throw NoSuchElementException("Message with opType=MODIFIED is missing 'after'")
+			AmtOperation.DELETED -> before ?: throw NoSuchElementException("Message with opType=DELETED is missing 'before'")
+		}
 	}
 }
 

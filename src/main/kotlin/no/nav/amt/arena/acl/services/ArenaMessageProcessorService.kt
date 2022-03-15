@@ -3,7 +3,7 @@ package no.nav.amt.arena.acl.services
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.db.IngestStatus
-import no.nav.amt.arena.acl.domain.db.toUpsert
+import no.nav.amt.arena.acl.domain.db.toUpsertInput
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
@@ -70,23 +70,23 @@ open class ArenaMessageProcessorService(
 			when (e) {
 				is DependencyNotIngestedException -> {
 					log.info("Dependency for $arenaId in table $arenaTableName is not ingested: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.RETRY, note = e.message))
+					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.RETRY, note = e.message))
 				}
 				is ValidationException -> {
 					log.info("$arenaId in table $arenaTableName is not valid: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.INVALID, note = e.message))
+					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.INVALID, note = e.message))
 				}
 				is IgnoredException -> {
 					log.info("$arenaId in table $arenaTableName: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.IGNORED, note = e.message))
+					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.IGNORED, note = e.message))
 				}
 				is OperationNotImplementedException -> {
 					log.info("Operation not supported for $arenaId in table $arenaTableName: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.FAILED, note = e.message))
+					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.FAILED, note = e.message))
 				}
 				else -> {
 					log.error("$arenaId in table $arenaTableName: ${e.message}", e)
-					arenaDataRepository.upsert(msg.toUpsert(arenaId, ingestStatus = IngestStatus.RETRY, note = e.message))
+					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.RETRY, note = e.message))
 				}
 			}
 		}

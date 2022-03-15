@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
-import no.nav.amt.arena.acl.domain.db.ArenaDataUpsert
+import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertInput
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.DbUtils.isEqualTo
@@ -33,7 +33,7 @@ class ArenaDataRepositoryTest : FunSpec({
 	test("Insert and get should return inserted object") {
 		val after = "{\"test\": \"test\"}"
 
-		val data = ArenaDataUpsert(
+		val data = ArenaDataUpsertInput(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
@@ -54,7 +54,7 @@ class ArenaDataRepositoryTest : FunSpec({
 	}
 
 	test("Upserting a Inserted object should modify it") {
-		val data = ArenaDataUpsert(
+		val data = ArenaDataUpsertInput(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
@@ -88,7 +88,7 @@ class ArenaDataRepositoryTest : FunSpec({
 	test("Should delete all ignored arena data") {
 		val afterData = "{\"test\": \"test\"}"
 
-		val data1 = ArenaDataUpsert(
+		val data1 = ArenaDataUpsertInput(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
@@ -97,7 +97,7 @@ class ArenaDataRepositoryTest : FunSpec({
 			after = afterData
 		)
 
-		val data2 = ArenaDataUpsert(
+		val data2 = ArenaDataUpsertInput(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,
@@ -107,7 +107,7 @@ class ArenaDataRepositoryTest : FunSpec({
 			after = afterData
 		)
 
-		val data3 = ArenaDataUpsert(
+		val data3 = ArenaDataUpsertInput(
 			arenaTableName = "Table",
 			arenaId = "ARENA_ID",
 			operation = AmtOperation.CREATED,

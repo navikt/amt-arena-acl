@@ -5,7 +5,7 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import java.time.LocalDateTime
 
-data class ArenaDataUpsert(
+data class ArenaDataUpsertInput(
 	val arenaTableName: String,
 	val arenaId: String,
 	val operation: AmtOperation,
@@ -20,8 +20,8 @@ data class ArenaDataUpsert(
 
 private val objectMapper = ObjectMapperFactory.get()
 
-fun ArenaKafkaMessage<*>.toUpsert(arenaId: String, ingestStatus: IngestStatus, note: String? = null): ArenaDataUpsert {
-	return ArenaDataUpsert(
+fun ArenaKafkaMessage<*>.toUpsertInput(arenaId: String, ingestStatus: IngestStatus, note: String? = null): ArenaDataUpsertInput {
+	return ArenaDataUpsertInput(
 		arenaTableName = this.arenaTableName,
 		arenaId = arenaId,
 		operation = this.operationType,
@@ -35,6 +35,6 @@ fun ArenaKafkaMessage<*>.toUpsert(arenaId: String, ingestStatus: IngestStatus, n
 	)
 }
 
-fun ArenaKafkaMessage<*>.toUpsertWithStatusHandled(arenaId: String): ArenaDataUpsert {
-	return this.toUpsert(arenaId, IngestStatus.HANDLED, null)
+fun ArenaKafkaMessage<*>.toUpsertInputWithStatusHandled(arenaId: String): ArenaDataUpsertInput {
+	return this.toUpsertInput(arenaId, IngestStatus.HANDLED, null)
 }

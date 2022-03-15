@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.repositories
 
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
-import no.nav.amt.arena.acl.domain.db.ArenaDataUpsert
+import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertInput
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.dto.LogStatusCountDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
@@ -35,7 +35,7 @@ open class ArenaDataRepository(
 		)
 	}
 
-	fun upsert(upsertData: ArenaDataUpsert) {
+	fun upsert(upsertData: ArenaDataUpsertInput) {
 		val sql = """
 			INSERT INTO arena_data(arena_table_name, arena_id, operation_type, operation_pos, operation_timestamp, ingest_status,
 								   ingested_timestamp, before, after, note)

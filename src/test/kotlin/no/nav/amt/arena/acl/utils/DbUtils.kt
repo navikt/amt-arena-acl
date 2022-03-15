@@ -1,6 +1,7 @@
 package no.nav.amt.arena.acl.utils
 
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 object DbUtils {
 
@@ -12,13 +13,7 @@ object DbUtils {
 			return false
 		}
 
-		return this.year == other.year
-			&& this.month == other.month
-			&& this.dayOfMonth == other.dayOfMonth
-			&& this.hour == other.hour
-			&& this.minute == other.minute
-			&& this.second == other.second
-
+		return this.truncatedTo(ChronoUnit.SECONDS) == other.truncatedTo(ChronoUnit.SECONDS)
 	}
 
 }
