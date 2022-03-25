@@ -34,28 +34,13 @@ class DeltakerStatusConverterTest : StringSpec({
 
 	val converter = DeltakerStatusConverter(SimpleMeterRegistry())
 
-	"status - AKTUELL - returnerer VENTER_PÅ_OPPSTART" {
-		converter.convert("AKTUELL", now, null, null, null) shouldBe VENTER_PA_OPPSTART
+	"status - AKTUELL - returnerer IKKE_SYNLIG_FOR_TILTAKSARRANGOR" {
+		converter.convert("AKTUELL", now, null, null, null) shouldBe IKKE_SYNLIG_FOR_TILTAKSARRANGOR
 	}
-	"status - AKTUELL og har startdato i fortid - returnerer DELTAR" {
-		converter.convert("AKTUELL", now, yesterday, null, null) shouldBe DELTAR
-	}
-	"status - AKTUELL og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
-		converter.convert("AKTUELL", now, tomorrow, null, null) shouldBe VENTER_PA_OPPSTART
-	}
-	"status - AKTUELL og har sluttdato i fortid - returnerer HAR_SLUTTET" {
-		converter.convert("AKTUELL", now, yesterday.minusDays(1), yesterday, null) shouldBe HAR_SLUTTET
-	}
-	"status - AKTUELL og har sluttdato i fremtid - returnerer DELTAR" {
-		converter.convert("AKTUELL", now, yesterday, tomorrow, null) shouldBe DELTAR
-	}
-	"status - AKTUELL og har startdato i dag - returnerer DELTAR" {
-		converter.convert("AKTUELL", now, now.toLocalDate(), tomorrow, null) shouldBe DELTAR
-	}
+
 	"status - AVSLAG og mangler startdato - returnerer IKKE_AKTUELL" {
 		converter.convert("AVSLAG", now, null, null, null) shouldBe IKKE_AKTUELL
 	}
-
 
 	"status - DELAVB og mangler startdato - returnerer IKKE_AKTUELL" {
 		converter.convert("DELAVB", now, null, null, null) shouldBe IKKE_AKTUELL
@@ -98,8 +83,7 @@ class DeltakerStatusConverterTest : StringSpec({
 	"status - GJENN og har sluttdato i fremtid - returnerer GJENNOMFORES" {
 		converter.convert("GJENN", now, yesterday, tomorrow, null) shouldBe DELTAR
 	}
-
-
+	
 	"status - GJENN_AVB og mangler startdato - returnerer IKKE_AKTUELL" {
 		converter.convert("GJENN_AVB", now, null, null, null) shouldBe IKKE_AKTUELL
 	}
@@ -113,7 +97,6 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("GJENN_AVB", now, tomorrow, null, null) shouldBe IKKE_AKTUELL
 	}
 
-
 	"status - GJENN_AVL og mangler startdato - returnerer IKKE_AKTUELL" {
 		converter.convert("GJENN_AVL", now, null, null, null) shouldBe IKKE_AKTUELL
 	}
@@ -126,7 +109,6 @@ class DeltakerStatusConverterTest : StringSpec({
 	"status - GJENN_AVL og har startdato i fremtid - returnerer IKKE_AKTUELL" {
 		converter.convert("GJENN_AVL", now, tomorrow, null, null) shouldBe IKKE_AKTUELL
 	}
-
 
 	"status - IKKAKTUELL - returnerer IKKE_AKTUELL" {
 		converter.convert("IKKAKTUELL", now, null, null, null) shouldBe IKKE_AKTUELL
@@ -150,43 +132,17 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("IKKEM", now, tomorrow, null, null) shouldBe IKKE_AKTUELL
 	}
 
-
-	"status - INFOMOETE - returnerer VENTER_PÅ_OPPSTART" {
-		converter.convert("INFOMOETE", now, null, null, null) shouldBe VENTER_PA_OPPSTART
-	}
-	"status - INFOMOETE og har startdato i fortid - returnerer GJENNOMFORES" {
-		converter.convert("INFOMOETE", now, yesterday, null, null) shouldBe DELTAR
-	}
-	"status - INFOMOETE og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
-		converter.convert("INFOMOETE", now, tomorrow, null, null) shouldBe VENTER_PA_OPPSTART
-	}
-	"status - INFOMOETE og har sluttdato i fortid - returnerer HAR_SLUTTET" {
-		converter.convert("INFOMOETE", now, yesterday.minusDays(1), yesterday, null) shouldBe HAR_SLUTTET
-	}
-	"status - INFOMOETE og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		converter.convert("INFOMOETE", now, yesterday, tomorrow, null) shouldBe DELTAR
+	"status - INFOMOETE - returnerer IKKE_SYNLIG_FOR_TILTAKSARRANGOR" {
+		converter.convert("INFOMOETE", now, null, null, null) shouldBe IKKE_SYNLIG_FOR_TILTAKSARRANGOR
 	}
 
-	"status - JATAKK - returnerer VENTER_PÅ_OPPSTART" {
-		converter.convert("JATAKK", now, null, null, null) shouldBe VENTER_PA_OPPSTART
-	}
-	"status - JATAKK og har startdato i fortid - returnerer GJENNOMFORES" {
-		converter.convert("JATAKK", now, yesterday, null, null) shouldBe DELTAR
-	}
-	"status - JATAKK og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
-		converter.convert("JATAKK", now, tomorrow, null, null) shouldBe VENTER_PA_OPPSTART
-	}
-	"status - JATAKK og har sluttdato i fortid - returnerer HAR_SLUTTET" {
-		converter.convert("JATAKK", now, yesterday.minusDays(1), yesterday, null) shouldBe HAR_SLUTTET
-	}
-	"status - JATAKK og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		converter.convert("JATAKK", now, yesterday, tomorrow, null) shouldBe DELTAR
+	"status - JATAKK - returnerer IKKE_SYNLIG_FOR_TILTAKSARRANGOR" {
+		converter.convert("JATAKK", now, null, null, null) shouldBe IKKE_SYNLIG_FOR_TILTAKSARRANGOR
 	}
 
 	"status - NEITAKK - returnerer IKKE_AKTUELL" {
 		converter.convert("NEITAKK", now, null, null, null) shouldBe IKKE_AKTUELL
 	}
-
 
 	"status - TILBUD - returnerer VENTER_PÅ_OPPSTART" {
 		converter.convert("TILBUD", now, null, null, null) shouldBe VENTER_PA_OPPSTART
@@ -204,21 +160,8 @@ class DeltakerStatusConverterTest : StringSpec({
 		converter.convert("TILBUD", now, yesterday, tomorrow, null) shouldBe DELTAR
 	}
 
-
-	"status - VENTELISTE - returnerer VENTER_PÅ_OPPSTART" {
-		converter.convert("VENTELISTE", now, null, null, null) shouldBe VENTER_PA_OPPSTART
-	}
-	"status - VENTELISTE og har startdato i fortid - returnerer GJENNOMFORES" {
-		converter.convert("VENTELISTE", now, yesterday, null, null) shouldBe DELTAR
-	}
-	"status - VENTELISTE og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
-		converter.convert("VENTELISTE", now, tomorrow, null, null) shouldBe VENTER_PA_OPPSTART
-	}
-	"status - VENTELISTE og har sluttdato i fortid - returnerer HAR_SLUTTET" {
-		converter.convert("VENTELISTE", now, yesterday.minusDays(1), yesterday, null) shouldBe HAR_SLUTTET
-	}
-	"status - VENTELISTE og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		converter.convert("VENTELISTE", now, yesterday, tomorrow, null) shouldBe DELTAR
+	"status - VENTELISTE - returnerer IKKE_SYNLIG_FOR_TILTAKSARRANGOR" {
+		converter.convert("VENTELISTE", now, null, null, null) shouldBe IKKE_SYNLIG_FOR_TILTAKSARRANGOR
 	}
 
 })

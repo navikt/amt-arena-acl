@@ -38,6 +38,10 @@ open class DeltakerStatusConverter(
 			AmtDeltaker.Status.IKKE_AKTUELL
 	}
 
+	private val ikkeVisForTiltaksarrangorStatus: ConversionStrategy = {
+		AmtDeltaker.Status.IKKE_SYNLIG_FOR_TILTAKSARRANGOR
+	}
+
 	private val alleStatuser: Map<String, ConversionStrategy> = mapOf(
 		"DELAVB" to avsluttendeStatus, // Deltakelse avbrutt
 		"FULLF" to avsluttendeStatus, // Fullført
@@ -46,10 +50,10 @@ open class DeltakerStatusConverter(
 		"IKKEM" to avsluttendeStatus, // Ikke møtt
 
 		"GJENN" to gjennomforendeStatus, // Gjennomføres
-		"INFOMOETE" to gjennomforendeStatus, // Informasjonmøte
-		"JATAKK" to gjennomforendeStatus, // Takket ja  til tilbud
-		"VENTELISTE" to gjennomforendeStatus, // Venteliste
-		"AKTUELL" to gjennomforendeStatus, // Aktuell
+		"INFOMOETE" to ikkeVisForTiltaksarrangorStatus, // Informasjonmøte
+		"JATAKK" to ikkeVisForTiltaksarrangorStatus, // Takket ja  til tilbud
+		"VENTELISTE" to ikkeVisForTiltaksarrangorStatus, // Venteliste
+		"AKTUELL" to ikkeVisForTiltaksarrangorStatus, // Aktuell
 		"TILBUD" to gjennomforendeStatus, // Godkjent tiltaksplass
 
 		"IKKAKTUELL" to kanskjeFeilregistrert, // Ikke aktuell
