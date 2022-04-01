@@ -8,6 +8,7 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -99,6 +100,17 @@ open class ArenaDataRepository(
 				"id" to id
 			)
 		)
+	}
+
+	fun retryAll() {
+		val sql = """
+			UPDATE arena_data SET
+				ingest_status = 'RETRY',
+				ingest_attempts = 0,
+				last_attempted = null
+		""".trimIndent()
+
+		template.update(sql, MapSqlParameterSource())
 	}
 
 	fun get(tableName: String, operation: AmtOperation, position: String): ArenaDataDbo {

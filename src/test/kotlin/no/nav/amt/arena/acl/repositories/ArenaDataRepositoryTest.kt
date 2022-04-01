@@ -129,4 +129,41 @@ class ArenaDataRepositoryTest : FunSpec({
 		allData.size shouldBe 1
 	}
 
+	test("Retry all should set all to be reingested") {
+		val afterData = "{\"test\": \"test\"}"
+
+		val data1 = ArenaDataUpsertInput(
+			arenaTableName = "Table",
+			arenaId = "ARENA_ID",
+			operation = AmtOperation.CREATED,
+			operationPosition = "1",
+			operationTimestamp = LocalDateTime.now(),
+			ingestStatus = IngestStatus.HANDLED,
+			after = afterData
+		)
+
+		val data2 = ArenaDataUpsertInput(
+			arenaTableName = "Table",
+			arenaId = "ARENA_ID",
+			operation = AmtOperation.CREATED,
+			operationPosition = "2",
+			operationTimestamp = LocalDateTime.now(),
+			ingestStatus = IngestStatus.IGNORED,
+			after = afterData
+		)
+
+		repository.upsert(data1)
+		repository.upsert(data2)
+
+		repository.retryAll()
+
+		val data = repository.getAll()
+
+		data.forEach { entry ->
+			entry.ingestStatus shouldBe IngestStatus.RETRY
+			entry.ingestAttempts shouldBe 0
+			entry.ingestedTimestamp shouldBe null
+		}
+	}
+
 })
