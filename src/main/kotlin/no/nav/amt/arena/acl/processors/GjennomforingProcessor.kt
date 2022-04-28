@@ -12,6 +12,7 @@ import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.repositories.ArenaSakRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.services.TiltakService
@@ -22,6 +23,7 @@ import java.util.*
 @Component
 open class GjennomforingProcessor(
 	private val arenaDataRepository: ArenaDataRepository,
+	private val arenaSakRepository: ArenaSakRepository,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val tiltakService: TiltakService,
 	private val ordsClient: ArenaOrdsProxyClient,
@@ -63,10 +65,15 @@ open class GjennomforingProcessor(
 
 		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(gjennomforing.arbgivIdArrangor)
 
+		val sak = gjennomforing.sakId?.let { arenaSakRepository.hentSakMedArenaId(it) }
+
 		val amtGjennomforing = gjennomforing.toAmtGjennomforing(
 			amtTiltak = tiltak,
 			amtGjennomforingId = gjennomforingId,
-			virksomhetsnummer = virksomhetsnummer
+			virksomhetsnummer = virksomhetsnummer,
+			ansvarligNavEnhetId = sak?.ansvarligEnhetId,
+			sakAar = sak?.aar,
+			sakLopenr = sak?.lopenr,
 		)
 
 		arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
@@ -89,7 +96,10 @@ open class GjennomforingProcessor(
 	private fun TiltakGjennomforing.toAmtGjennomforing(
 		amtTiltak: AmtTiltak,
 		amtGjennomforingId: UUID,
-		virksomhetsnummer: String
+		virksomhetsnummer: String,
+		ansvarligNavEnhetId: String?,
+		sakAar: Int?,
+		sakLopenr: Int?
 	): AmtGjennomforing {
 
 		return AmtGjennomforing(
@@ -101,7 +111,10 @@ open class GjennomforingProcessor(
 			sluttDato = datoTil,
 			registrertDato = regDato,
 			fremmoteDato = datoFremmote,
-			status = statusConverter.convert(tiltakstatusKode)
+			status = statusConverter.convert(tiltakstatusKode),
+			ansvarligNavEnhetId = ansvarligNavEnhetId,
+			sakAar = sakAar,
+			sakLopenr = sakLopenr,
 		)
 	}
 

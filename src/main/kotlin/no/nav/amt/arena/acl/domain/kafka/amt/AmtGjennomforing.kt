@@ -13,7 +13,12 @@ data class AmtGjennomforing(
 	val sluttDato: LocalDate?,
 	val registrertDato: LocalDateTime,
 	val fremmoteDato: LocalDateTime?,
-	val status: Status
+	val status: Status,
+
+	// Hentet fra Sak
+	val ansvarligNavEnhetId: String?,
+	val sakAar: Int?,
+	val sakLopenr: Int?,
 ) {
 	enum class Status {
 		IKKE_STARTET,

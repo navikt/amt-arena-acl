@@ -15,7 +15,7 @@ open class KafkaConsumer(
 	kafkaProperties: KafkaProperties,
 	private val arenaMessageProcessorService: ArenaMessageProcessorService,
 ) {
-	
+
 	private val client: KafkaConsumerClient
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -24,7 +24,8 @@ open class KafkaConsumer(
 		val topicConfigs = listOf(
 			kafkaTopicProperties.arenaTiltakTopic,
 			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
-			kafkaTopicProperties.arenaTiltakDeltakerTopic
+			kafkaTopicProperties.arenaTiltakDeltakerTopic,
+			kafkaTopicProperties.arenaSakTopic
 		).map { topic ->
 			KafkaConsumerClientBuilder.TopicConfig<String, String>()
 				.withLogging()
