@@ -65,7 +65,8 @@ open class GjennomforingProcessor(
 
 		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(gjennomforing.arbgivIdArrangor)
 
-		val sak = gjennomforing.sakId?.let { arenaSakRepository.hentSakMedArenaId(it) }
+		// Kast DependencyNotIngestedException når vi får konsumert sak i prod
+		val sak = arenaSakRepository.hentSakMedArenaId(gjennomforing.sakId)
 
 		val amtGjennomforing = gjennomforing.toAmtGjennomforing(
 			amtTiltak = tiltak,
