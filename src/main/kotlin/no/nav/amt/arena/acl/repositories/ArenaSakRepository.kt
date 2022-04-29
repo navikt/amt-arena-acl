@@ -2,7 +2,7 @@ package no.nav.amt.arena.acl.repositories
 
 import no.nav.amt.arena.acl.domain.db.ArenaSakDbo
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
-import no.nav.amt.arena.acl.utils.getLocalDateTime
+import no.nav.amt.arena.acl.utils.getZonedDateTime
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -19,7 +19,7 @@ open class ArenaSakRepository(
 			aar = rs.getInt("aar"),
 			lopenr = rs.getInt("lopenr"),
 			ansvarligEnhetId = rs.getString("ansvarlig_enhet_id"),
-			createdAt = rs.getLocalDateTime("created_at")
+			createdAt = rs.getZonedDateTime("created_at")
 		)
 	}
 
@@ -43,10 +43,7 @@ open class ArenaSakRepository(
 			insert into arena_sak(arena_sak_id, aar, lopenr, ansvarlig_enhet_id, created_at)
 				values (:arenaSakId, :aar, :lopenr, :ansvarligEnhetId, current_timestamp)
 				ON CONFLICT (arena_sak_id) DO UPDATE
-				SET
-					aar	= :aar,
-					lopenr = :lopenr,
-					ansvarlig_enhet_id = :ansvarligEnhetId
+				SET ansvarlig_enhet_id = :ansvarligEnhetId
 		""".trimIndent()
 
 		val parameters = sqlParameters(

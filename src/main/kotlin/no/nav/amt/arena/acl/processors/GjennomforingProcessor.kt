@@ -113,8 +113,8 @@ open class GjennomforingProcessor(
 			fremmoteDato = datoFremmote,
 			status = statusConverter.convert(tiltakstatusKode),
 			ansvarligNavEnhetId = ansvarligNavEnhetId,
-			sakAar = sakAar,
-			sakLopenr = sakLopenr,
+			opprettetAar = sakAar,
+			lopenr = sakLopenr,
 		)
 	}
 

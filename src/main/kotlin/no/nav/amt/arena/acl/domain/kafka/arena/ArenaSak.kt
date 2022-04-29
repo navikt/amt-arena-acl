@@ -1,12 +1,14 @@
 package no.nav.amt.arena.acl.domain.kafka.arena
 
+import no.nav.amt.arena.acl.exceptions.ValidationException
+
 // @SONAR_START@
 data class ArenaSak(
 	val SAK_ID: Long,
 	val SAKSKODE: String,
-	val REG_DATO: String, // "2021-07-01 10:16:13"
+	val REG_DATO: String,
 	val REG_USER: String,
-	val MOD_DATO: String, // "2022-02-02 00:00:00"
+	val MOD_DATO: String,
 	val MOD_USER: String,
 	val TABELLNAVNALIAS: String,
 	val OBJEKT_ID: Long?,
@@ -17,19 +19,20 @@ data class ArenaSak(
 	val ARKIVNOKKEL: Long?,
 	val AETATENHET_ARKIV: String?,
 	val ARKIVHENVISNING: String?,
-	val BRUKERID_ANSVARLIG: String,
-	val AETATENHET_ANSVARLIG: String,
-	val OBJEKT_KODE: Long?,
-	val STATUS_ENDRET: String, // "2022-02-02 00:00:00"
+	val BRUKERID_ANSVARLIG: String?,
+	val AETATENHET_ANSVARLIG: String?,
+	val OBJEKT_KODE: String?,
+	val STATUS_ENDRET: String?,
 	val PARTISJON: Long?,
 	val ER_UTLAND: String,
 ) {
 	fun mapSak(): Sak {
 		return Sak(
 			sakId = SAK_ID,
+			sakskode = SAKSKODE,
 			aar = AAR,
 			lopenr = LOPENRSAK,
-			ansvarligEnhetId = AETATENHET_ANSVARLIG
+			ansvarligEnhetId = AETATENHET_ANSVARLIG ?: throw ValidationException("Sak mangler \"AETATENHET_ANSVARLIG\"")
 		)
 	}
 }
@@ -37,6 +40,7 @@ data class ArenaSak(
 
 data class Sak(
 	val sakId: Long,
+	val sakskode: String,
 	val aar: Int,
 	val lopenr: Int,
 	val ansvarligEnhetId: String,

@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.domain.db
 
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 data class ArenaSakDbo(
 	val id: Int,
@@ -8,5 +8,5 @@ data class ArenaSakDbo(
 	val aar: Int,
 	val lopenr: Int,
 	val ansvarligEnhetId: String,
-	val createdAt: LocalDateTime
+	val createdAt: ZonedDateTime
 )

@@ -17,8 +17,8 @@ data class AmtGjennomforing(
 
 	// Hentet fra Sak
 	val ansvarligNavEnhetId: String?,
-	val sakAar: Int?,
-	val sakLopenr: Int?,
+	val opprettetAar: Int?,
+	val lopenr: Int?,
 ) {
 	enum class Status {
 		IKKE_STARTET,
