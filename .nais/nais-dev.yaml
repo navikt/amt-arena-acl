@@ -51,6 +51,8 @@ spec:
       value: teamarenanais.aapen-arena-tiltakgjennomforingendret-v1-q2
     - name: ARENA_TILTAK_DELTAKER_TOPIC
       value: teamarenanais.aapen-arena-tiltakdeltakerendret-v1-q2
+    - name: ARENA_SAK_TOPIC
+      value: teamarenanais.aapen-arena-sakendret-v1-q2
   gcp:
     sqlInstances:
       - name: amt-arena-acl-v1
