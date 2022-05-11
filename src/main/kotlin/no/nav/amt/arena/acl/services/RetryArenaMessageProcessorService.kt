@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.services
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
+import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.GjennomforingProcessor
 import no.nav.amt.arena.acl.processors.SakProcessor
@@ -74,9 +75,14 @@ open class RetryArenaMessageProcessorService(
 			val currentIngestAttempts = arenaDataDbo.ingestAttempts + 1
 			val hasReachedMaxRetries = currentIngestAttempts >= MAX_INGEST_ATTEMPTS
 
-			if (arenaDataDbo.ingestStatus == IngestStatus.RETRY && hasReachedMaxRetries) {
+			if(e is IgnoredException) {
+				log.info("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}'")
+				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.IGNORED)
+			}
+			else if (arenaDataDbo.ingestStatus == IngestStatus.RETRY && hasReachedMaxRetries) {
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.FAILED)
 			}
+
 
 			arenaDataRepository.updateIngestAttempts(arenaDataDbo.id, currentIngestAttempts, e.message)
 		}
