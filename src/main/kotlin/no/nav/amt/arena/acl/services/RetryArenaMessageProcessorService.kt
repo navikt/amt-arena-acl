@@ -36,14 +36,15 @@ open class RetryArenaMessageProcessorService(
 		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_TILTAK_TABLE_NAME, IngestStatus.RETRY))
 		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_SAK_TABLE_NAME, IngestStatus.RETRY))
 		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_GJENNOMFORING_TABLE_NAME, IngestStatus.RETRY))
-		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_DELTAKER_TABLE_NAME, IngestStatus.RETRY))
+		processBatch(arenaDataRepository.getReingestableDeltakerWithStatus(IngestStatus.RETRY))
+
 	}
 
 	fun processFailedMessages() {
 		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_TILTAK_TABLE_NAME, IngestStatus.FAILED))
 		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_SAK_TABLE_NAME, IngestStatus.FAILED))
 		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_GJENNOMFORING_TABLE_NAME, IngestStatus.FAILED))
-		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_DELTAKER_TABLE_NAME, IngestStatus.FAILED))
+		processBatch(arenaDataRepository.getReingestableDeltakerWithStatus(IngestStatus.FAILED))
 	}
 
 	private fun processBatch(entries: List<ArenaDataDbo>) {
