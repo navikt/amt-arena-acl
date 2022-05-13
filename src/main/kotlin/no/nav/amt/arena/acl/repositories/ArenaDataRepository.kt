@@ -201,18 +201,18 @@ open class ArenaDataRepository(
 	): List<ArenaDataDbo> {
 		val sql = """
 			SELECT *
-				FROM arena_data deltaker join arena_data tiltak on deltaker.after ->> 'TILTAKGJENNOMFORING_ID' = tiltak.arena_id
-				WHERE deltaker.arena_table_name = :tableName
-				  AND tiltak.arena_table_name = :dependencyTableName
-				  AND deltaker.ingest_status = :ingestStatuses
-				  AND tiltak.ingest_status = :tiltakStatus
+				FROM arena_data deltaker join arena_data gjennomforing on deltaker.after ->> 'TILTAKGJENNOMFORING_ID' = gjennomforing.arena_id
+				WHERE deltaker.arena_table_name = '$ARENA_DELTAKER_TABLE_NAME'
+				  AND gjennomforing.arena_table_name = '$ARENA_GJENNOMFORING_TABLE_NAME'
+				  AND deltaker.ingest_status IN (:ingestStatuses)
+				  AND gjennomforing.ingest_status = :gjennomforingStatus
 		""".trimIndent()
 
 		val parameters = sqlParameters(
 			"ingestStatuses" to statuses.map { it.name }.toSet(),
 			"tableName" to ARENA_DELTAKER_TABLE_NAME,
 			"dependencyTableName" to ARENA_GJENNOMFORING_TABLE_NAME,
-			"tiltakStatus" to IngestStatus.HANDLED.toString(),
+			"gjennomforingStatus" to IngestStatus.HANDLED.toString(),
 			"offset" to offset,
 			"limit" to limit
 		)
