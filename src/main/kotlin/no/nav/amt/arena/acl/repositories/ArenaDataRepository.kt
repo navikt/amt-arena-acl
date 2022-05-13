@@ -5,6 +5,8 @@ import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertInput
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.dto.LogStatusCountDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
@@ -186,6 +188,36 @@ open class ArenaDataRepository(
 		""".trimIndent()
 
 		return template.update(sql, EmptySqlParameterSource())
+	}
+
+	fun getReingestableDeltakerWithStatus(status: IngestStatus): List<ArenaDataDbo> {
+		return getReingestableDeltakerWithStatus(listOf(status));
+	}
+
+	private fun getReingestableDeltakerWithStatus(
+		statuses: List<IngestStatus>,
+		offset: Int = 0,
+		limit: Int = 1000
+	): List<ArenaDataDbo> {
+		val sql = """
+			SELECT *
+				FROM arena_data deltaker join arena_data tiltak on deltaker.after ->> 'TILTAKGJENNOMFORING_ID' = tiltak.arena_id
+				WHERE deltaker.arena_table_name = :tableName
+				  AND tiltak.arena_table_name = :dependencyTableName
+				  AND deltaker.ingest_status = :ingestStatuses
+				  AND tiltak.ingest_status = :tiltakStatus
+		""".trimIndent()
+
+		val parameters = sqlParameters(
+			"ingestStatuses" to statuses.map { it.name }.toSet(),
+			"tableName" to ARENA_DELTAKER_TABLE_NAME,
+			"dependencyTableName" to ARENA_GJENNOMFORING_TABLE_NAME,
+			"tiltakStatus" to IngestStatus.HANDLED.toString(),
+			"offset" to offset,
+			"limit" to limit
+		)
+
+		return template.query(sql, parameters, rowMapper)
 	}
 
 }
