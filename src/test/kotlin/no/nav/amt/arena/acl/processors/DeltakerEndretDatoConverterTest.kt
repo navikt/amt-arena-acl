@@ -7,27 +7,39 @@ import java.time.LocalDateTime
 
 class DeltakerEndretDatoConverterTest {
 	private val converter = DeltakerEndretDatoConverter()
-	private val endretDato = LocalDateTime.now()
+	private val now = LocalDateTime.now()
 
 	@Test
-	fun `convert() - avsluttende status - endretdato før startdato - returnerer endretdato` () {
+	fun `convert() - avsluttende status - endretdato før startdato - returnerer endret dato` () {
 
 		val resultat = converter.convert(
 			deltakerStatus = "FULLF",
+			datoStatusEndring = now,
+			oppstartDato = now.plusDays(1),
+			sluttDato = now.plusDays (2)
+		)
+		resultat shouldBe now
+	}
+
+	@Test
+	fun `convert() - avsluttende status - sluttdato frem i tid - returnerer endret dato` () {
+		val endretDato = now.minusDays(2)
+		val resultat = converter.convert(
+			deltakerStatus = "FULLF",
 			datoStatusEndring = endretDato,
-			oppstartDato = endretDato.plusDays(1),
-			sluttDato = endretDato.plusDays (2)
+			oppstartDato = now.minusDays(5),
+			sluttDato = now.plusDays (2)
 		)
 		resultat shouldBe endretDato
 	}
 
 	@Test
 	fun `convert() - avsluttende status - endretdato mellom start og sluttdato - returnerer sluttdato` () {
-		val sluttdato = endretDato.plusDays(1)
+		val sluttdato = now.minusDays(1)
 		val resultat = converter.convert(
 			deltakerStatus = "FULLF",
-			datoStatusEndring = endretDato,
-			oppstartDato = endretDato.minusDays(1),
+			datoStatusEndring = now.minusDays(2),
+			oppstartDato = now.minusDays(3),
 			sluttDato = sluttdato
 		)
 		resultat shouldBe sluttdato
@@ -38,11 +50,11 @@ class DeltakerEndretDatoConverterTest {
 
 		val resultat = converter.convert(
 			deltakerStatus = "FULLF",
-			datoStatusEndring = endretDato,
-			oppstartDato = endretDato.minusDays(2),
-			sluttDato = endretDato.minusDays(1)
+			datoStatusEndring = now,
+			oppstartDato = now.minusDays(2),
+			sluttDato = now.minusDays(1)
 		)
-		resultat shouldBe endretDato
+		resultat shouldBe now
 	}
 
 	@Test
@@ -50,11 +62,11 @@ class DeltakerEndretDatoConverterTest {
 
 		val resultat = converter.convert(
 			deltakerStatus = "FULLF",
-			datoStatusEndring = endretDato,
-			oppstartDato = endretDato.minusDays(2),
+			datoStatusEndring = now,
+			oppstartDato = now.minusDays(2),
 			sluttDato = null
 		)
-		resultat shouldBe endretDato
+		resultat shouldBe now
 	}
 
 	@Test
@@ -62,32 +74,32 @@ class DeltakerEndretDatoConverterTest {
 
 		val resultat = converter.convert(
 			deltakerStatus = "GJENN",
-			datoStatusEndring = endretDato,
-			oppstartDato = endretDato.plusDays(1),
-			sluttDato = endretDato.plusDays(2)
+			datoStatusEndring = now,
+			oppstartDato = now.plusDays(1),
+			sluttDato = now.plusDays(2)
 		)
-		resultat shouldBe endretDato
+		resultat shouldBe now
 	}
 
 	@Test
-	fun `convert() - gjennomførende status - mellom start og sluttdato - returnerer startdato` () {
-		val oppstartDato = endretDato.minusDays(1)
+	fun `convert() - gjennomførende status - endrer status mellom start og sluttdato - returnerer startdato` () {
+		val oppstartDato = now.minusDays(1)
 		val resultat = converter.convert(
 			deltakerStatus = "GJENN",
-			datoStatusEndring = endretDato,
+			datoStatusEndring = now,
 			oppstartDato = oppstartDato,
-			sluttDato = endretDato.plusDays(2)
+			sluttDato = now.plusDays(2)
 		)
 		resultat shouldBe oppstartDato
 	}
 
 	@Test
 	fun `convert() - gjennomførende status - startdato og sluttdato har passert - returnerer sluttdato` () {
-		val sluttDato = endretDato.minusDays(1)
+		val sluttDato = now.minusDays(1)
 		val resultat = converter.convert(
 			deltakerStatus = "GJENN",
-			datoStatusEndring = endretDato,
-			oppstartDato = endretDato.minusDays(2),
+			datoStatusEndring = now,
+			oppstartDato = now.minusDays(2),
 			sluttDato = sluttDato
 		)
 		resultat shouldBe sluttDato
@@ -95,10 +107,10 @@ class DeltakerEndretDatoConverterTest {
 
 	@Test
 	fun `convert() - gjennomførende status - startdato passert og sluttdato mangler - returnerer oppstartDato` () {
-		val oppstartDato = endretDato.minusDays(2)
+		val oppstartDato = now.minusDays(2)
 		val resultat = converter.convert(
 			deltakerStatus = "GJENN",
-			datoStatusEndring = endretDato,
+			datoStatusEndring = now,
 			oppstartDato = oppstartDato,
 			sluttDato = null
 		)
@@ -109,11 +121,11 @@ class DeltakerEndretDatoConverterTest {
 	fun `convert() - ikke aktuell status - mellom start og slutt - returnerer endretdato` () {
 		val resultat = converter.convert(
 			deltakerStatus = "IKKEAKTUELL",
-			datoStatusEndring = endretDato,
-			oppstartDato = endretDato.minusDays(1),
-			sluttDato = endretDato.plusDays(2)
+			datoStatusEndring = now,
+			oppstartDato = now.minusDays(1),
+			sluttDato = now.plusDays(2)
 		)
-		resultat shouldBe endretDato
+		resultat shouldBe now
 	}
 
 }
