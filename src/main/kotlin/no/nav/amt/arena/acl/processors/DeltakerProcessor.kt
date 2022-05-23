@@ -98,14 +98,14 @@ open class DeltakerProcessor(
 				deltakerRegistrertDato = regDato,
 				startDato = datoFra,
 				sluttDato = datoTil,
-				datoStatusEndring = datoStatusendring
+				datoStatusEndring = datoStatusendring?.toLocalDate()
 			),
 			dagerPerUke = dagerPerUke,
 			prosentDeltid = prosentDeltid,
 			registrertDato = regDato,
 			statusEndretDato = statusEndretDatoConverter.convert(
 				deltakerStatus = deltakerStatusKode,
-				datoStatusEndring = datoStatusendring?.atStartOfDay(),
+				datoStatusEndring = datoStatusendring,
 				oppstartDato = datoFra?.atStartOfDay(),
 				sluttDato = datoTil?.atStartOfDay()
 			)

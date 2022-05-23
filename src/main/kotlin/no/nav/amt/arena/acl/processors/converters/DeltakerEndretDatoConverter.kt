@@ -1,5 +1,4 @@
 package no.nav.amt.arena.acl.processors.converters
-
 import java.time.LocalDateTime
 
 
@@ -17,26 +16,19 @@ class DeltakerEndretDatoConverter {
 		val now = LocalDateTime.now()
 		val harOppstartPassert = oppstartDato?.isBefore(now)?: false
 		val harSluttDatoPassert = sluttDato?.isBefore(now)?: false
+		val endretEtterOppstart = oppstartDato?.isBefore(datoStatusEndring)?: false
 
-		val haddeStartDatoPassert = oppstartDato?.isBefore(datoStatusEndring)?: false
-		val haddeSluttdatoPassert = sluttDato?.isBefore(datoStatusEndring)?: false
+		if (deltakerStatus in avsluttendeStatuser
+			&& endretEtterOppstart) return sluttDato // Konverterer vi til HAR_SLUTTA?
 
-		if (deltakerStatus in avsluttendeStatuser) {
-			if(!harSluttDatoPassert) return datoStatusEndring
-
-			if (haddeStartDatoPassert
-				&& !haddeSluttdatoPassert) return sluttDato
-		}
-		else if (deltakerStatus in gjennomforendeStatuser){
-			if (harOppstartPassert
-				&& harSluttDatoPassert) return sluttDato
-
+		else if (deltakerStatus in gjennomforendeStatuser) {
+			if (harSluttDatoPassert) return sluttDato
 			if (harOppstartPassert) return oppstartDato
-
 		}
-		return datoStatusEndring
+
+		return datoStatusEndring //Konverterer vi til IKKE_AKTUELL
 	}
 }
 
-//HVis vi får en som er avsluttet og sluttdato hadde passert når den ble avsluttet, så skal vi bruke sluttdato
-// Hvis vi får en som er avsluttet og
+
+//finnes det avsluttende status som ikke har sluttdato?

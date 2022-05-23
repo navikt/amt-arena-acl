@@ -33,9 +33,9 @@ open class DeltakerStatusConverter(
 
 	private val avsluttendeStatus: ConversionStrategy = {
 		if (it.endretEtterStartDato())
-			AmtDeltaker.Status.HAR_SLUTTET
+			AmtDeltaker.Status.HAR_SLUTTET //&& sluttdato
 		else
-			AmtDeltaker.Status.IKKE_AKTUELL
+			AmtDeltaker.Status.IKKE_AKTUELL //&& datostatuendring
 	}
 
 	private val alleStatuser: Map<String, ConversionStrategy> = mapOf(
@@ -75,20 +75,5 @@ open class DeltakerStatusConverter(
 				).increment()
 			}
 	}
-
-}
-
-private data class StatusDates(
-	private val start: LocalDate?,
-	private val end: LocalDate?,
-	private val datoStatusEndring: LocalDate?,
-	private val deltakerRegistrertDato: LocalDateTime
-) {
-
-	fun statusEndretSammeDagSomRegistrering() = datoStatusEndring != null && datoStatusEndring == deltakerRegistrertDato.toLocalDate()
-	fun starterIDag () = start?.equals(LocalDate.now()) == true
-	fun startDatoPassert() = start?.isBefore(LocalDate.now()) ?: false
-	fun sluttDatoPassert() = end?.isBefore(LocalDate.now()) ?: false
-	fun endretEtterStartDato() = start != null && datoStatusEndring?.isAfter(start) ?: false
 
 }
