@@ -2,6 +2,7 @@ package no.nav.amt.arena.acl.processors
 
 import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
@@ -11,8 +12,7 @@ import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
-import no.nav.amt.arena.acl.processors.converters.DeltakerEndretDatoConverter
-import no.nav.amt.arena.acl.processors.converters.DeltakerStatusConverter
+import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.KafkaProducerService
@@ -32,8 +32,6 @@ open class DeltakerProcessor(
 ) : ArenaMessageProcessor<ArenaDeltakerKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
-	private val statusConverter = DeltakerStatusConverter(meterRegistry)
-	private val statusEndretDatoConverter = DeltakerEndretDatoConverter()
 
 	override fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
 		val arenaDeltaker = message.getData()
@@ -60,6 +58,11 @@ open class DeltakerProcessor(
 			personIdent = personIdent
 		)
 
+		meterRegistry.counter(
+				"amt.arena-acl.deltaker.status",
+				listOf(Tag.of("arena", deltaker.deltakerStatusKode), Tag.of("amt-tiltak", deltaker.deltakerStatusKode))
+			).increment()
+
 		arenaDataIdTranslationService.upsertDeltakerIdTranslation(
 			deltakerArenaId = deltaker.tiltakdeltakerId,
 			deltakerAmtId = deltakerAmtId,
@@ -69,7 +72,7 @@ open class DeltakerProcessor(
 		val amtData = AmtKafkaMessageDto(
 			type = PayloadType.DELTAKER,
 			operation = message.operationType,
-			payload = deltaker.toAmtDeltaker(deltakerAmtId, gjennomforingInfo.amtId, personIdent)
+			payload = amtDeltaker
 		)
 
 		kafkaProducerService.sendTilAmtTiltak(amtDeltaker.id, amtData)
@@ -86,6 +89,13 @@ open class DeltakerProcessor(
 		gjennomforingId: UUID,
 		personIdent: String
 	): AmtDeltaker {
+		val converter = ArenaDeltakerStatusConverter(
+			deltakerStatusKode = deltakerStatusKode,
+			deltakerRegistrertDato = regDato,
+			startDato = datoFra,
+			sluttDato = datoTil,
+			datoStatusEndring = datoStatusendring?.toLocalDate(),
+		)
 
 		return AmtDeltaker(
 			id = amtDeltakerId,
@@ -93,22 +103,11 @@ open class DeltakerProcessor(
 			personIdent = personIdent,
 			startDato = datoFra,
 			sluttDato = datoTil,
-			status = statusConverter.convert(
-				deltakerStatusCode = deltakerStatusKode,
-				deltakerRegistrertDato = regDato,
-				startDato = datoFra,
-				sluttDato = datoTil,
-				datoStatusEndring = datoStatusendring
-			),
+			status = converter.getStatus(),
 			dagerPerUke = dagerPerUke,
 			prosentDeltid = prosentDeltid,
 			registrertDato = regDato,
-			statusEndretDato = statusEndretDatoConverter.convert(
-				deltakerStatus = deltakerStatusKode,
-				datoStatusEndring = datoStatusendring?.atStartOfDay(),
-				oppstartDato = datoFra?.atStartOfDay(),
-				sluttDato = datoTil?.atStartOfDay()
-			)
+			statusEndretDato = converter.getEndretDato()
 		)
 	}
 
