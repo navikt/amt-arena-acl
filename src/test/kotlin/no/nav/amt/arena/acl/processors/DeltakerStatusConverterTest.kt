@@ -74,7 +74,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		val endretDato = yesterday
 		val status = ArenaDeltakerStatusConverter("FULLF", now, endretDato.minusDays(1), null, endretDato)
 		status.getStatus() shouldBe HAR_SLUTTET
-		status.getEndretDato() shouldBe endretDato
+		status.getEndretDato() shouldBe endretDato.atStartOfDay()
 	}
 	"status - FULLF og har startdato etter endretdato - returnerer IKKE_AKTUELL" {
 		val endretDato = yesterday.minusDays(1)
@@ -82,7 +82,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		val status = ArenaDeltakerStatusConverter("FULLF", now, yesterday, null, endretDato)
 
 		status.getStatus() shouldBe IKKE_AKTUELL
-		status.getEndretDato() shouldBe endretDato
+		status.getEndretDato() shouldBe endretDato.atStartOfDay()
 	}
 	"status - FULLF og har startdato i fremtid - returnerer IKKE_AKTUELL" {
 		ArenaDeltakerStatusConverter("FULLF", now, tomorrow, null, null).getStatus() shouldBe IKKE_AKTUELL
@@ -94,7 +94,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		val status = ArenaDeltakerStatusConverter("FULLF", now, sluttDato.minusDays(1), sluttDato, sluttDato.plusDays(1))
 
 		status.getStatus() shouldBe HAR_SLUTTET
-		status.getEndretDato() shouldBe sluttDato
+		status.getEndretDato() shouldBe sluttDato.atStartOfDay()
 	}
 
 	"status - GJENN - returnerer VENTER_PÅ_OPPSTART" {
@@ -104,13 +104,13 @@ class DeltakerStatusConverterTest : StringSpec({
 		val startDato = yesterday.minusDays(1)
 		val status = ArenaDeltakerStatusConverter("GJENN", now, startDato, null, startDato.plusDays(1))
 		status.getStatus() shouldBe DELTAR
-		status.getEndretDato() shouldBe startDato
+		status.getEndretDato() shouldBe startDato.atStartOfDay()
 	}
 	"status - GJENN og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
 		val datoEndret = tomorrow
 		val status = ArenaDeltakerStatusConverter("GJENN", now, datoEndret.plusDays(2), null, datoEndret)
 		status.getStatus() shouldBe VENTER_PA_OPPSTART
-		status.getEndretDato() shouldBe datoEndret
+		status.getEndretDato() shouldBe datoEndret.atStartOfDay()
 	}
 	"status - GJENN og har sluttdato i fortid - returnerer HAR_SLUTTET" {
 		ArenaDeltakerStatusConverter("GJENN", now, yesterday.minusDays(1), yesterday, null).getStatus() shouldBe HAR_SLUTTET
@@ -119,13 +119,13 @@ class DeltakerStatusConverterTest : StringSpec({
 		val startDato = yesterday
 		val status = ArenaDeltakerStatusConverter("GJENN", now, startDato, tomorrow.plusDays(1), tomorrow)
 		status.getStatus() shouldBe DELTAR
-		status.getEndretDato() shouldBe startDato
+		status.getEndretDato() shouldBe startDato.atStartOfDay()
 	}
 	"status - GJENN og har sluttdato har passert - returnerer HAR_SLUTTET" {
 		val sluttDato = yesterday
 		val status = ArenaDeltakerStatusConverter("GJENN", now, sluttDato.minusDays(1), sluttDato, sluttDato.plusDays(1))
 		status.getStatus() shouldBe HAR_SLUTTET
-		status.getEndretDato() shouldBe sluttDato
+		status.getEndretDato() shouldBe sluttDato.atStartOfDay()
 	}
 
 
@@ -161,7 +161,7 @@ class DeltakerStatusConverterTest : StringSpec({
 		val statusEndret = yesterday.minusDays(5)
 		val status = ArenaDeltakerStatusConverter("IKKAKTUELL", now, statusEndret.plusDays(2), statusEndret.plusDays(4), statusEndret)
 		status.getStatus() shouldBe IKKE_AKTUELL
-		status.getEndretDato() shouldBe statusEndret
+		status.getEndretDato() shouldBe statusEndret.atStartOfDay()
 	}
 
 	"status - IKKAKTUELL - returnerer FEILREGISTRERT hvis registrert dato er samme dag som status endring" {

@@ -79,8 +79,8 @@ internal data class ArenaDeltakerStatusConverter(
 		return status.navn
 	}
 
-	override fun getEndretDato () : LocalDate? {
-		return status.endretDato
+	override fun getEndretDato () : LocalDateTime? {
+		return status.endretDato?.atStartOfDay()
 	}
 
 
