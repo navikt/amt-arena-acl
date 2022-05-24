@@ -14,7 +14,7 @@ data class AmtDeltaker(
 	val dagerPerUke: Int?,
 	val prosentDeltid: Float?,
 	val registrertDato: LocalDateTime,
-	val statusEndretDato: LocalDateTime?
+	val statusEndretDato: LocalDate?
 ) {
 
 	enum class Status {
