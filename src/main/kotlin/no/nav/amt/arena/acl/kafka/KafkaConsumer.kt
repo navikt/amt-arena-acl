@@ -21,15 +21,7 @@ open class KafkaConsumer(
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	init {
-		// Dette er midlertidig siden vi ikke har tilgang til sak-topicen i prod
-
-		val erProd = System.getenv("NAIS_CLUSTER_NAME") == "prod-gcp"
-
-		val topics = if (erProd) listOf(
-			kafkaTopicProperties.arenaTiltakTopic,
-			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
-			kafkaTopicProperties.arenaTiltakDeltakerTopic,
-		) else listOf(
+		val topics = listOf(
 			kafkaTopicProperties.arenaTiltakTopic,
 			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
 			kafkaTopicProperties.arenaTiltakDeltakerTopic,
