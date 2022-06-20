@@ -27,13 +27,18 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 
 		val gjennomforingResult = ingestGjennomforingOgTiltak(gjennomforingId)
 
-		val deltakerInput = DeltakerInput(tiltakDeltakerId = deltakerId, tiltakgjennomforingId = gjennomforingId)
+		val deltakerInput = DeltakerInput(
+			tiltakDeltakerId = deltakerId,
+			tiltakgjennomforingId = gjennomforingId,
+			begrunnelseForDeltakelse = "begrunnelse"
+		)
 
 		deltakerExecutor.execute(NyDeltakerCommand(deltakerInput))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 			.output { it.operation shouldBe AmtOperation.CREATED }
 			.result { _, translation, output -> translation!!.amtId shouldBe output!!.payload!!.id }
 			.outgoingPayload { it.gjennomforingId shouldBe gjennomforingResult.output!!.payload!!.id }
+			.outgoingPayload { it.begrunnelseForDeltakelse shouldBe "begrunnelse" }
 			.outgoingPayload { it.status shouldBe AmtDeltaker.Status.DELTAR }
 	}
 
