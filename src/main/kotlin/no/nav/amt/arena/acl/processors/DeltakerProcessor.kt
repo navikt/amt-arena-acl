@@ -107,7 +107,8 @@ open class DeltakerProcessor(
 			dagerPerUke = dagerPerUke,
 			prosentDeltid = prosentDeltid,
 			registrertDato = regDato,
-			statusEndretDato = converter.getEndretDato()
+			statusEndretDato = converter.getEndretDato(),
+			innsokBegrunnelse = innsokBegrunnelse
 		)
 	}
 
