@@ -72,7 +72,7 @@ data class ArenaDeltaker(
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
 			regDato = regDato,
-			begrunnelseForDeltakelse = BEGRUNNELSE_BESTILLING
+			innsokBegrunnelse = BEGRUNNELSE_BESTILLING
 		)
 	}
 
@@ -90,5 +90,5 @@ data class TiltakDeltaker(
 	val dagerPerUke: Int?,
 	val prosentDeltid: Float?,
 	val regDato: LocalDateTime,
-	val begrunnelseForDeltakelse: String?
+	val innsokBegrunnelse: String?
 )

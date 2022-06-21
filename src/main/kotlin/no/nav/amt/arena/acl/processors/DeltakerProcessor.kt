@@ -108,7 +108,7 @@ open class DeltakerProcessor(
 			prosentDeltid = prosentDeltid,
 			registrertDato = regDato,
 			statusEndretDato = converter.getEndretDato(),
-			begrunnelseForDeltakelse = begrunnelseForDeltakelse
+			innsokBegrunnelse = innsokBegrunnelse
 		)
 	}
 

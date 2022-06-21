@@ -30,7 +30,7 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 		val deltakerInput = DeltakerInput(
 			tiltakDeltakerId = deltakerId,
 			tiltakgjennomforingId = gjennomforingId,
-			begrunnelseForDeltakelse = "begrunnelse"
+			innsokBegrunnelse = "begrunnelse"
 		)
 
 		deltakerExecutor.execute(NyDeltakerCommand(deltakerInput))
@@ -38,7 +38,7 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 			.output { it.operation shouldBe AmtOperation.CREATED }
 			.result { _, translation, output -> translation!!.amtId shouldBe output!!.payload!!.id }
 			.outgoingPayload { it.gjennomforingId shouldBe gjennomforingResult.output!!.payload!!.id }
-			.outgoingPayload { it.begrunnelseForDeltakelse shouldBe "begrunnelse" }
+			.outgoingPayload { it.innsokBegrunnelse shouldBe "begrunnelse" }
 			.outgoingPayload { it.status shouldBe AmtDeltaker.Status.DELTAR }
 	}
 

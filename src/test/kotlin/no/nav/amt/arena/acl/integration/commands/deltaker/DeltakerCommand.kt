@@ -43,7 +43,7 @@ abstract class DeltakerCommand : Command() {
 			STATUS_OPPTAK_PAKKE = GENERIC_STRING,
 			OPPLYSNINGER_INNSOK = GENERIC_STRING,
 			PARTISJON = GENERIC_INT,
-			BEGRUNNELSE_BESTILLING = input.begrunnelseForDeltakelse,
+			BEGRUNNELSE_BESTILLING = input.innsokBegrunnelse,
 			ANTALL_DAGER_PR_UKE = input.antallDagerPerUke
 		)
 		return objectMapper.readTree(objectMapper.writeValueAsString(data))
