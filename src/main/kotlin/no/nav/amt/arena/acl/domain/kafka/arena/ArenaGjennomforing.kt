@@ -72,16 +72,3 @@ data class ArenaGjennomforing(
 	}
 }
 // @SONAR_STOP@
-
-data class TiltakGjennomforing(
-	val tiltakgjennomforingId: String,
-	val sakId: Long,
-	val tiltakskode: String,
-	val arbgivIdArrangor: String,
-	val lokaltNavn: String,
-	val datoFra: LocalDate?,
-	val datoTil: LocalDate?,
-	val datoFremmote: LocalDateTime?,
-	val tiltakstatusKode: String,
-	val regDato: LocalDateTime
-)
