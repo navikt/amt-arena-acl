@@ -13,6 +13,7 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaSak
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaSakKafkaMessage
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.integration.commands.Command.Companion.objectMapper
+import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.ArenaSakRepository
 import no.nav.amt.arena.acl.utils.ARENA_SAK_TABLE_NAME
 import org.slf4j.LoggerFactory
@@ -24,7 +25,7 @@ class SakProcessorTest : FunSpec({
 	val dataSource = SingletonPostgresContainer.getDataSource()
 
 	lateinit var sakProcessor: SakProcessor
-
+	lateinit var arenaDataRepository: ArenaDataRepository
 	lateinit var arenaSakRepository: ArenaSakRepository
 
 
@@ -33,9 +34,9 @@ class SakProcessorTest : FunSpec({
 		rootLogger.level = Level.WARN
 
 		val template = NamedParameterJdbcTemplate(dataSource)
-
+		arenaDataRepository = ArenaDataRepository(template)
 		arenaSakRepository = ArenaSakRepository(template)
-		sakProcessor = SakProcessor(arenaSakRepository)
+		sakProcessor = SakProcessor(arenaDataRepository, arenaSakRepository)
 
 		DatabaseTestUtils.cleanDatabase(dataSource)
 	}
