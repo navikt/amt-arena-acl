@@ -4,6 +4,7 @@ import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.integration.executors.DeltakerTestExecutor
 import no.nav.amt.arena.acl.integration.executors.GjennomforingTestExecutor
+import no.nav.amt.arena.acl.integration.executors.SakTestExecutor
 import no.nav.amt.arena.acl.integration.executors.TiltakTestExecutor
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.integration.kafka.SingletonKafkaProvider
@@ -11,6 +12,7 @@ import no.nav.amt.arena.acl.kafka.KafkaProperties
 import no.nav.amt.arena.acl.mocks.OrdsClientMock
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.repositories.ArenaSakRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
 import no.nav.amt.arena.acl.services.TiltakService
@@ -47,6 +49,9 @@ abstract class IntegrationTestBase {
 
 	@Autowired
 	lateinit var gjennomforingExecutor: GjennomforingTestExecutor
+
+	@Autowired
+	lateinit var sakExecutor: SakTestExecutor
 
 	@Autowired
 	lateinit var deltakerExecutor: DeltakerTestExecutor
@@ -93,6 +98,16 @@ open class IntegrationTestConfiguration(
 		translationRepository: ArenaDataIdTranslationRepository
 	): GjennomforingTestExecutor {
 		return GjennomforingTestExecutor(kafkaProducer, arenaDataRepository, translationRepository)
+	}
+
+	@Bean
+	open fun sakExecutor(
+		kafkaProducer: KafkaProducerClientImpl<String, String>,
+		arenaDataRepository: ArenaDataRepository,
+		translationRepository: ArenaDataIdTranslationRepository,
+		sakRepository: ArenaSakRepository
+	): SakTestExecutor {
+		return SakTestExecutor(kafkaProducer, arenaDataRepository, translationRepository, sakRepository)
 	}
 
 	@Bean
