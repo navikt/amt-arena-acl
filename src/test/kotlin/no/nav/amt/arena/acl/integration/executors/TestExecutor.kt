@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.integration.executors
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.kafka.arena.ArenaOperation
 import no.nav.amt.arena.acl.integration.utils.asyncRetryHandler
 import no.nav.amt.arena.acl.integration.utils.nullableAsyncRetryHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
@@ -44,13 +43,5 @@ abstract class TestExecutor(
 
 	fun getTranslation(table: String, arenaId: String): ArenaDataIdTranslationDbo? {
 		return nullableAsyncRetryHandler({ translationRepository.get(table, arenaId) })
-	}
-
-	fun ArenaOperation.toAmtOperation(): AmtOperation {
-		return when (this) {
-			ArenaOperation.I -> AmtOperation.CREATED
-			ArenaOperation.U -> AmtOperation.MODIFIED
-			ArenaOperation.D -> AmtOperation.DELETED
-		}
 	}
 }

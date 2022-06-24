@@ -42,3 +42,7 @@ fun ResultSet.getZonedDateTime(columnLabel: String): ZonedDateTime {
 	return getNullableZonedDateTime(columnLabel) ?: throw IllegalStateException("Expected $columnLabel not to be null")
 }
 
+fun ResultSet.getNullableInteger(columnLabel: String): Int? {
+	val value = this.getInt(columnLabel)
+	return if (this.wasNull()) null else value
+}

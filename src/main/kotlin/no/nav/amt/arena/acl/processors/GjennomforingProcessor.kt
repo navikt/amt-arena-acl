@@ -12,6 +12,7 @@ import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.repositories.ArenaGjennomforingRepository
 import no.nav.amt.arena.acl.repositories.ArenaSakRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.KafkaProducerService
@@ -24,6 +25,7 @@ import java.util.*
 open class GjennomforingProcessor(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val arenaSakRepository: ArenaSakRepository,
+	private val arenaGjennomforingRepository: ArenaGjennomforingRepository,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val tiltakService: TiltakService,
 	private val ordsClient: ArenaOrdsProxyClient,
@@ -91,6 +93,7 @@ open class GjennomforingProcessor(
 
 		kafkaProducerService.sendTilAmtTiltak(amtGjennomforing.id, amtData)
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(gjennomforing.tiltakgjennomforingId))
+		arenaGjennomforingRepository.upsert(amtGjennomforing.toInsertDbo(gjennomforing.sakId))
 		log.info("Melding for gjennomføring id=$gjennomforingId arenaId=${gjennomforing.tiltakgjennomforingId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 	}
 
