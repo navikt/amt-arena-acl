@@ -62,7 +62,7 @@ class SakTestExecutor (
 	private fun getOutputMessage(id: UUID): AmtKafkaMessageDto<AmtGjennomforing>? {
 		var attempts = 0
 		while (attempts < 5) {
-			val data = outputMessages.firstOrNull { it.payload != null && (it.payload as AmtGjennomforing).id == id }
+			val data = outputMessages.lastOrNull { it.payload != null && (it.payload as AmtGjennomforing).id == id }
 
 			if (data != null) {
 				outputMessages.clear()

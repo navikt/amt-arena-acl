@@ -134,6 +134,11 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 		sakExecutor.execute(NySakCommand(sakInput, gjennomforingInput.gjennomforingId))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.result {_, _, _, storedSak -> storedSak.lopenr shouldBe sakInput.lopenr }
+			.result {_, _, _, storedSak -> storedSak.aar shouldBe sakInput.aar }
+			.result {_, _, _, storedSak -> storedSak.ansvarligEnhetId shouldBe sakInput.ansvarligEnhetId }
+			.result {_, _, _, storedSak -> storedSak.arenaSakId shouldBe sakInput.sakId }
+			.result {_, _, _, storedSak -> storedSak.createdAt shouldNotBe null}
 
 		gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
@@ -141,7 +146,29 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 			.result { _, translation, output -> translation!!.amtId shouldBe output!!.payload!!.id }
 			.output { it.payload!!.lopenr shouldBe sakInput.lopenr}
 			.output { it.payload!!.opprettetAar shouldBe sakInput.aar}
+			.output { it.payload!!.ansvarligNavEnhetId shouldBe sakInput.ansvarligEnhetId }
 
 	}
 
+	@Test
+	fun `Konsumer sak - gjennomføring er allerede konsumert - produserer gjennomføring med løpenummer`() {
+		val gjennomforingInput = GjennomforingInput()
+		val sakInput = SakInput(sakId = gjennomforingInput.sakId)
+
+		tiltakExecutor.execute(NyttTiltakCommand())
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+
+		gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.output { it.operation shouldBe AmtOperation.CREATED }
+			.result { _, translation, output -> translation!!.amtId shouldBe output!!.payload!!.id }
+
+		sakExecutor.execute(NySakCommand(sakInput, gjennomforingInput.gjennomforingId))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.output { it.operation shouldBe AmtOperation.MODIFIED }
+			.output { it.payload!!.lopenr shouldBe sakInput.lopenr }
+			.output { it.payload!!.opprettetAar shouldBe sakInput.aar }
+			.output { it.payload!!.ansvarligNavEnhetId shouldBe sakInput.ansvarligEnhetId }
+
+	}
 }
