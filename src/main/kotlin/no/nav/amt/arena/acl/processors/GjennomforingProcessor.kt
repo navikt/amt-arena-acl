@@ -93,7 +93,7 @@ open class GjennomforingProcessor(
 
 		kafkaProducerService.sendTilAmtTiltak(amtGjennomforing.id, amtData)
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(gjennomforing.tiltakgjennomforingId))
-		arenaGjennomforingRepository.upsert(gjennomforing.sakId, amtGjennomforing)
+		arenaGjennomforingRepository.upsert(amtGjennomforing.toInsertDbo(gjennomforing.sakId))
 		log.info("Melding for gjennomføring id=$gjennomforingId arenaId=${gjennomforing.tiltakgjennomforingId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 	}
 

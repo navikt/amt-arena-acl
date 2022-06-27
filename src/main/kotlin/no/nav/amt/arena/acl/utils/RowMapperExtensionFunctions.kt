@@ -46,3 +46,8 @@ fun ResultSet.getInteger(columnLabel: String): Int? {
 	val value = this.getInt(columnLabel)
 	return if (this.wasNull()) null else value
 }
+
+fun ResultSet.getNullableLong(columnLabel: String): Long? {
+	val value = this.getLong(columnLabel)
+	return if (this.wasNull()) null else value
+}

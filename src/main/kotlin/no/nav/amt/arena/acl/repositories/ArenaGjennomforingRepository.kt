@@ -1,7 +1,6 @@
 package no.nav.amt.arena.acl.repositories
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
 import no.nav.amt.arena.acl.utils.*
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
 import org.springframework.jdbc.core.RowMapper
@@ -14,12 +13,10 @@ class ArenaGjennomforingRepository (
 	val template: NamedParameterJdbcTemplate
 ) {
 	val rowMapper = RowMapper { rs, _ ->
-		AmtGjennomforing(
+		ArenaGjennomforingDbo(
 			id = rs.getUUID("id"),
-			tiltak = AmtTiltak(
-				rs.getUUID("tiltak_id"),
-				rs.getString("tiltak_navn"),
-				rs.getString("tiltak_kode")),
+			arenaSakId = rs.getNullableLong("arena_sak_id"),
+			tiltakKode = rs.getString("tiltak_kode"),
 			virksomhetsnummer = rs.getString("virksomhetsnummer"),
 			navn = rs.getString("navn"),
 			startDato = rs.getNullableLocalDate("start_dato"),
@@ -33,7 +30,7 @@ class ArenaGjennomforingRepository (
 		)
 	}
 
-	fun get(id: UUID) : AmtGjennomforing? {
+	fun get(id: UUID) : ArenaGjennomforingDbo? {
 		//language=PostgreSQL
 		val sql = """
 			SELECT * FROM arena_gjennomforing where id = :id
@@ -42,7 +39,7 @@ class ArenaGjennomforingRepository (
 		return template.query(sql, params, rowMapper).firstOrNull()
 	}
 
-	fun getBySakId(arenaSakId: Long) : AmtGjennomforing? {
+	fun getBySakId(arenaSakId: Long) : ArenaGjennomforingDbo? {
 		//language=PostgreSQL
 		val sql = """
 			SELECT * FROM arena_gjennomforing where arena_sak_id = :arena_sak_id
@@ -51,14 +48,12 @@ class ArenaGjennomforingRepository (
 		return template.query(sql, params, rowMapper).firstOrNull()
 	}
 
-	fun upsert(arenaSakId: Long?, gjennomforing: AmtGjennomforing) {
+	fun upsert(gjennomforing: ArenaGjennomforingDbo) {
 			//language=PostgreSQL
 			val sql = """
-				INSERT INTO arena_gjennomforing (id, tiltak_id, tiltak_navn, tiltak_kode, virksomhetsnummer, navn, start_dato, slutt_dato, registrert_dato, fremmote_dato, status, ansvarlig_nav_enhetId, opprettet_aar, lopenr, arena_sak_id)
-				VALUES (:id, :tiltak_id, :tiltak_navn, :tiltak_kode, :virksomhetsnummer, :navn, :start_dato, :slutt_dato, :registrert_dato, :fremmote_dato, :status, :ansvarlig_nav_enhetId, :opprettet_aar, :lopenr, :arena_sak_id)
+				INSERT INTO arena_gjennomforing (id, tiltak_kode, virksomhetsnummer, navn, start_dato, slutt_dato, registrert_dato, fremmote_dato, status, ansvarlig_nav_enhetId, opprettet_aar, lopenr, arena_sak_id)
+				VALUES (:id, :tiltak_kode, :virksomhetsnummer, :navn, :start_dato, :slutt_dato, :registrert_dato, :fremmote_dato, :status, :ansvarlig_nav_enhetId, :opprettet_aar, :lopenr, :arena_sak_id)
 				ON CONFLICT(id) DO UPDATE SET
-					tiltak_id = :tiltak_id,
-					tiltak_navn = :tiltak_navn,
 					tiltak_kode = :tiltak_kode,
 					virksomhetsnummer = :virksomhetsnummer,
 					navn = :navn,
@@ -75,9 +70,7 @@ class ArenaGjennomforingRepository (
 
 		val params = sqlParameters(
 				"id" to gjennomforing.id,
-				"tiltak_id" to gjennomforing.tiltak.id,
-				"tiltak_navn" to gjennomforing.tiltak.navn,
-				"tiltak_kode" to gjennomforing.tiltak.kode,
+				"tiltak_kode" to gjennomforing.tiltakKode,
 				"virksomhetsnummer" to gjennomforing.virksomhetsnummer,
 				"navn" to gjennomforing.navn,
 				"start_dato" to gjennomforing.startDato,
@@ -88,7 +81,7 @@ class ArenaGjennomforingRepository (
 				"ansvarlig_nav_enhetId" to gjennomforing.ansvarligNavEnhetId,
 				"opprettet_aar" to gjennomforing.opprettetAar,
 				"lopenr" to gjennomforing.lopenr,
-				"arena_sak_id" to arenaSakId
+				"arena_sak_id" to gjennomforing.arenaSakId
 			)
 
 		template.update(sql, params)

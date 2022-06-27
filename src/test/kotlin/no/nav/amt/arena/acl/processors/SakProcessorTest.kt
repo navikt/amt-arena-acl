@@ -42,7 +42,7 @@ class SakProcessorTest : FunSpec({
 		arenaSakRepository = ArenaSakRepository(template)
 		arenaGjennomforingRepository = ArenaGjennomforingRepository(template)
 		kafkaProducerService = mockk()
-		sakProcessor = SakProcessor(arenaDataRepository, arenaSakRepository, arenaGjennomforingRepository, kafkaProducerService)
+		sakProcessor = SakProcessor(arenaDataRepository, arenaSakRepository, arenaGjennomforingRepository, kafkaProducerService, mockk())
 
 		DatabaseTestUtils.cleanDatabase(dataSource)
 	}

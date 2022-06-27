@@ -6,7 +6,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.time.LocalDateTime
 import java.util.*
@@ -27,7 +26,7 @@ class ArenaGjennomforingRepositoryTest : FunSpec({
 		this shouldHaveMinute other.minute
 	}
 
-	infix fun AmtGjennomforing.shouldCompareTo(other: AmtGjennomforing) {
+	infix fun ArenaGjennomforingDbo.shouldCompareTo(other: ArenaGjennomforingDbo) {
 		this.registrertDato shouldBeCloseTo other.registrertDato
 
 		if(fremmoteDato == null) other.fremmoteDato shouldBe null
@@ -36,9 +35,9 @@ class ArenaGjennomforingRepositoryTest : FunSpec({
 	}
 
 	test("upsert - skal inserte ny record") {
-		val gjennomforing = AmtGjennomforing(
+		val gjennomforing = ArenaGjennomforingDbo(
 			id = UUID.randomUUID(),
-			tiltak = AmtTiltak(UUID.randomUUID(), "Tiltakkode", "Tiltakkode"),
+			tiltakKode = "INDOPPFAG",
 			virksomhetsnummer = "123",
 			navn = "Gjennomføringnavn",
 			startDato = now.toLocalDate(),
@@ -49,18 +48,20 @@ class ArenaGjennomforingRepositoryTest : FunSpec({
 			ansvarligNavEnhetId = "1233",
 			opprettetAar = 2001,
 			lopenr = 902380943,
+			arenaSakId = 4892304830924
 		)
-		repository.upsert(4892304830924, gjennomforing)
+		repository.upsert(gjennomforing)
 
 		val inserted = repository.get(gjennomforing.id)
 		inserted shouldNotBe null
-		inserted!! shouldCompareTo gjennomforing.copy()
+		inserted!! shouldCompareTo gjennomforing
 	}
 
 	test("upsert - kun obligatoriske felter - skal inserte ny record") {
-		val gjennomforing = AmtGjennomforing(
+		val gjennomforing = ArenaGjennomforingDbo(
 			id = UUID.randomUUID(),
-			tiltak = AmtTiltak(UUID.randomUUID(), "Tiltakkode", "Tiltakkode"),
+			arenaSakId = null,
+			tiltakKode = "INDOPPFAG",
 			virksomhetsnummer = "123",
 			navn = "Gjennomføringnavn",
 			startDato = null,
@@ -72,7 +73,7 @@ class ArenaGjennomforingRepositoryTest : FunSpec({
 			opprettetAar = null,
 			lopenr = null,
 		)
-		repository.upsert(null, gjennomforing)
+		repository.upsert(gjennomforing)
 
 		val inserted = repository.get(gjennomforing.id)
 
@@ -82,9 +83,10 @@ class ArenaGjennomforingRepositoryTest : FunSpec({
 	}
 
 	test("getBySakId - gjennomføring med sakId eksisterer - skal hente") {
-		val gjennomforing = AmtGjennomforing(
+		val gjennomforing = ArenaGjennomforingDbo(
 			id = UUID.randomUUID(),
-			tiltak = AmtTiltak(UUID.randomUUID(), "Tiltakkode", "Tiltakkode"),
+			arenaSakId = 3453453453534,
+			tiltakKode = "INDOPPFAG",
 			virksomhetsnummer = "123",
 			navn = "Gjennomføringnavn",
 			startDato = null,
@@ -96,10 +98,9 @@ class ArenaGjennomforingRepositoryTest : FunSpec({
 			opprettetAar = null,
 			lopenr = null,
 		)
-		val sakId = 3453453453534
-		repository.upsert(sakId, gjennomforing)
+		repository.upsert(gjennomforing)
 
-		val inserted = repository.getBySakId(sakId)
+		val inserted = repository.getBySakId(gjennomforing.arenaSakId!!)
 
 		inserted shouldNotBe null
 		inserted!! shouldCompareTo gjennomforing

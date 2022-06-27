@@ -1,8 +1,6 @@
 CREATE TABLE arena_gjennomforing
 (
         id                      UUID PRIMARY KEY        NOT NULL,
-        tiltak_id               UUID                    NOT NULL,
-        tiltak_navn             VARCHAR                 NOT NULL,
         tiltak_kode             VARCHAR                 NOT NULL,
         virksomhetsnummer       VARCHAR                 NOT NULL,
         navn                    VARCHAR                 NOT NULL,
