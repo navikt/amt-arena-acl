@@ -68,10 +68,11 @@ data class ArenaDeltaker(
 			datoFra = DATO_FRA?.asValidatedLocalDate("DATO_FRA"),
 			datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
 			deltakerStatusKode = DELTAKERSTATUSKODE,
-			datoStatusendring = DATO_STATUSENDRING?.asValidatedLocalDate("DATO_STATUSENDRING"),
+			datoStatusendring = DATO_STATUSENDRING?.asValidatedLocalDateTime("DATO_STATUSENDRING"),
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
-			regDato = regDato
+			regDato = regDato,
+			innsokBegrunnelse = BEGRUNNELSE_BESTILLING
 		)
 	}
 
@@ -85,8 +86,9 @@ data class TiltakDeltaker(
 	val datoFra: LocalDate?,
 	val datoTil: LocalDate?,
 	val deltakerStatusKode: String,
-	val datoStatusendring: LocalDate?,
+	val datoStatusendring: LocalDateTime?,
 	val dagerPerUke: Int?,
 	val prosentDeltid: Float?,
-	val regDato: LocalDateTime
+	val regDato: LocalDateTime,
+	val innsokBegrunnelse: String?
 )

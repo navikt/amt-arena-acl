@@ -6,6 +6,8 @@ import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingInput
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCommand
+import no.nav.amt.arena.acl.integration.commands.sak.NySakCommand
+import no.nav.amt.arena.acl.integration.commands.sak.SakInput
 import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
 import no.nav.amt.arena.acl.mocks.OrdsClientMock
 import org.junit.jupiter.api.Test
@@ -14,7 +16,7 @@ import java.util.*
 class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 	@Test
-	fun `Legg til ny gjennomforing`() {
+	fun `Konsumer gjennomføring - gyldig gjennomføring - ingestes uten feil`() {
 		val gjennomforingInput = GjennomforingInput(
 			gjennomforingId = Random().nextLong()
 		)
@@ -29,7 +31,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	}
 
 	@Test
-	fun `Gjennomforing pa ignorert tiltak lager tranlation tabell med ignored lik true`() {
+	fun `Konsumer gjennomføring - ignorert tiltak - settes til ignored`() {
 
 		val input = GjennomforingInput(
 			gjennomforingId = Random().nextLong(),
@@ -43,7 +45,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	}
 
 	@Test
-	fun tiltakKommerEtterGjennomforingBlirSendtVedNesteJobb() {
+	fun `Konsumer tiltak - tiltak har ventende gjennomføringer - gjennomføringer prosessert`() {
 		val tiltakNavn = UUID.randomUUID().toString()
 
 		val command = NyGjennomforingCommand(
@@ -71,7 +73,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	}
 
 	@Test
-	fun shouldRetryWhenOrdsClientThrowsError() {
+	fun `Konsumer gjennomføring - Feilet på første forsøk - Skal settes til RETRY`() {
 		val virksomhetsId = 456785618L
 
 		tiltakExecutor.execute(NyttTiltakCommand())
@@ -91,7 +93,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	}
 
 	@Test
-	fun `Should be invalid if arbeidsgiverid is null`() {
+	fun `Konsumer gjennomføring - arbgiverid er null - status settes til INVALID`() {
 		tiltakExecutor.execute(NyttTiltakCommand())
 
 		val input = GjennomforingInput(
@@ -107,7 +109,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	}
 
 	@Test
-	fun `Should be invalid if lokaltnavn is null`() {
+	fun `Konsumer gjennomføring - lokaltnavn er null - status settes til INVALID`() {
 		tiltakExecutor.execute(NyttTiltakCommand())
 
 		val input = GjennomforingInput(
@@ -120,6 +122,26 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 			.arenaData { it.note shouldBe "LOKALTNAVN er null" }
 			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
+	}
+
+	@Test
+	fun `Konsumer gjennomføring - med sakId, sak record er allerede konsumert - produserer record med sakid`() {
+		val gjennomforingInput = GjennomforingInput()
+		val sakInput = SakInput(sakId = gjennomforingInput.sakId)
+
+		tiltakExecutor.execute(NyttTiltakCommand())
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+
+		sakExecutor.execute(NySakCommand(sakInput, gjennomforingInput.gjennomforingId))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+
+		gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.output { it.operation shouldBe AmtOperation.CREATED }
+			.result { _, translation, output -> translation!!.amtId shouldBe output!!.payload!!.id }
+			.output { it.payload!!.lopenr shouldBe sakInput.lopenr}
+			.output { it.payload!!.opprettetAar shouldBe sakInput.aar}
+
 	}
 
 }

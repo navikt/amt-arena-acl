@@ -15,17 +15,20 @@ open class KafkaConsumer(
 	kafkaProperties: KafkaProperties,
 	private val arenaMessageProcessorService: ArenaMessageProcessorService,
 ) {
-	
+
 	private val client: KafkaConsumerClient
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	init {
-		val topicConfigs = listOf(
+		val topics = listOf(
 			kafkaTopicProperties.arenaTiltakTopic,
 			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
-			kafkaTopicProperties.arenaTiltakDeltakerTopic
-		).map { topic ->
+			kafkaTopicProperties.arenaTiltakDeltakerTopic,
+			kafkaTopicProperties.arenaSakTopic
+		)
+
+		val topicConfigs = topics.map { topic ->
 			KafkaConsumerClientBuilder.TopicConfig<String, String>()
 				.withLogging()
 				.withConsumerConfig(

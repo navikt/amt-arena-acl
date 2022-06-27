@@ -53,6 +53,7 @@ data class ArenaGjennomforing(
 	fun mapTiltakGjennomforing(): TiltakGjennomforing {
 		return TiltakGjennomforing(
 			tiltakgjennomforingId = TILTAKGJENNOMFORING_ID.toString(),
+			sakId = SAK_ID ?: throw ValidationException("SAK_ID er null"),
 			tiltakskode = TILTAKSKODE,
 			arbgivIdArrangor = ARBGIV_ID_ARRANGOR?.toString()
 				?: throw ValidationException("ARBGIV_ID_ARRANGOR er null"),
@@ -71,15 +72,3 @@ data class ArenaGjennomforing(
 	}
 }
 // @SONAR_STOP@
-
-data class TiltakGjennomforing(
-	val tiltakgjennomforingId: String,
-	val tiltakskode: String,
-	val arbgivIdArrangor: String,
-	val lokaltNavn: String,
-	val datoFra: LocalDate?,
-	val datoTil: LocalDate?,
-	val datoFremmote: LocalDateTime?,
-	val tiltakstatusKode: String,
-	val regDato: LocalDateTime
-)
