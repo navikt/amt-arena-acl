@@ -16,7 +16,7 @@ fun createArenaDeltakerKafkaMessage(
 	arenaPersonId: Long = 100L,
 	oppstartDato: LocalDate? = null,
 	sluttDato: LocalDate? = null,
-	deltakerStatusKode: String = "AKTUELL",
+	deltakerStatusKode: String = "GJENN",
 	statusEndringDato: LocalDate? = null,
 	dagerPerUke: Int? = null,
 	prosentDeltid: Float = 0.0f,
