@@ -12,6 +12,8 @@ CREATE TABLE arena_gjennomforing
         ansvarlig_nav_enhetId   VARCHAR,
         opprettet_aar           INT,
         lopenr                  INT,
-        arena_sak_id            BIGINT
+        arena_sak_id            BIGINT,
+        modified_at             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        created_at              TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

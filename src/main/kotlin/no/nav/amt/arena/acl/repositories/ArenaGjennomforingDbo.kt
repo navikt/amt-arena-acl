@@ -20,7 +20,7 @@ data class ArenaGjennomforingDbo(
 
 	val ansvarligNavEnhetId: String?,
 	val opprettetAar: Int?,
-	val lopenr: Int?,
+	val lopenr: Int?
 ) {
 	fun toAmtGjennomforing(tiltak: AmtTiltak) = AmtGjennomforing(
 		id = id,

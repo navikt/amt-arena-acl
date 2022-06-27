@@ -65,7 +65,9 @@ class ArenaGjennomforingRepository (
 					ansvarlig_nav_enhetId = :ansvarlig_nav_enhetId,
 					opprettet_aar = :opprettet_aar,
 					lopenr = :lopenr,
-					arena_sak_id = :arena_sak_id
+					arena_sak_id = :arena_sak_id,
+					modified_at = CURRENT_TIMESTAMP
+
 			""".trimIndent()
 
 		val params = sqlParameters(
