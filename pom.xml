@@ -23,12 +23,12 @@
         <kotlin.version>1.6.10</kotlin.version>
         <java.version>17</java.version>
 
-        <common.version>2.2022.02.18_14.38-8d8bb494bd41</common.version>
+        <common.version>2.2022.05.02_07.06-017c98866fa7</common.version>
         <kotest.version>5.0.0.M2</kotest.version>
         <testcontainers.version>1.16.0</testcontainers.version>
         <okhttp.version>4.9.3</okhttp.version>
-        <nimbus.version>9.25</nimbus.version>
-        <token-support.version>2.0.20</token-support.version>
+        <nimbus.version>9.27</nimbus.version>
+        <token-support.version>2.0.21</token-support.version>
         <mockito-kotlin.version>3.2.0</mockito-kotlin.version>
         <wiremock.version>2.31.0</wiremock.version>
         <schedlock.version>4.33.0</schedlock.version>
@@ -125,7 +125,7 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>7.0.1</version>
+            <version>7.1</version>
         </dependency>
         <dependency>
             <groupId>net.javacrumbs.shedlock</groupId>

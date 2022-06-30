@@ -15,6 +15,7 @@ import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.repositories.ArenaGjennomforingRepository
 import no.nav.amt.arena.acl.repositories.ArenaSakRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.KafkaProducerService
@@ -59,6 +60,7 @@ class TiltakGjennomforingProcessorTest {
 		gjennomforingProcessor = GjennomforingProcessor(
 			repository,
 			ArenaSakRepository(jdbcTemplate),
+			ArenaGjennomforingRepository(jdbcTemplate),
 			ArenaDataIdTranslationService(translationRepository),
 			tiltakService,
 			ordsClient,

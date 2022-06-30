@@ -37,6 +37,10 @@ open class DeltakerProcessor(
 		val arenaDeltaker = message.getData()
 		val arenaGjennomforingId = arenaDeltaker.TILTAKGJENNOMFORING_ID.toString()
 
+		if (harStatusSomSkalIgnoreres(arenaDeltaker.DELTAKERSTATUSKODE)) {
+			throw IgnoredException("Deltakeren har status=${arenaDeltaker.DELTAKERSTATUSKODE} som ikke skal håndteres")
+		}
+
 		val gjennomforingInfo =
 			arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaGjennomforingId)
 				?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
@@ -110,6 +114,11 @@ open class DeltakerProcessor(
 			statusEndretDato = converter.getEndretDato(),
 			innsokBegrunnelse = innsokBegrunnelse
 		)
+	}
+
+	private fun harStatusSomSkalIgnoreres(arenaDeltakerStatusKode: String): Boolean {
+		val statuserSomIgnoreres = listOf("VENTELISTE", "AKTUELL", "JATAKK", "INFOMOETE")
+		return statuserSomIgnoreres.contains(arenaDeltakerStatusKode)
 	}
 
 }

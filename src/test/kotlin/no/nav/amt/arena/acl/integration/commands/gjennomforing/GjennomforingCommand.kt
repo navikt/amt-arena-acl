@@ -15,7 +15,7 @@ abstract class GjennomforingCommand : Command() {
 	fun createPayload(input: GjennomforingInput): JsonNode {
 		val data = ArenaGjennomforing(
 			TILTAKGJENNOMFORING_ID = input.gjennomforingId,
-			SAK_ID = GENERIC_LONG,
+			SAK_ID = input.sakId,
 			TILTAKSKODE = input.tiltakKode,
 			ANTALL_DELTAKERE = GENERIC_INT,
 			ANTALL_VARIGHET = GENERIC_INT,

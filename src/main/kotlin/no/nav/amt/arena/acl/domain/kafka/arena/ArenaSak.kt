@@ -38,10 +38,3 @@ data class ArenaSak(
 }
 // @SONAR_STOP@
 
-data class Sak(
-	val sakId: Long,
-	val sakskode: String,
-	val aar: Int,
-	val lopenr: Int,
-	val ansvarligEnhetId: String,
-)

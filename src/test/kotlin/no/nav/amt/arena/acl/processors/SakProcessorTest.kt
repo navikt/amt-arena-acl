@@ -6,6 +6,7 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.mockk
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
@@ -13,7 +14,10 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaSak
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaSakKafkaMessage
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.integration.commands.Command.Companion.objectMapper
+import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.repositories.ArenaGjennomforingRepository
 import no.nav.amt.arena.acl.repositories.ArenaSakRepository
+import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.utils.ARENA_SAK_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -24,18 +28,21 @@ class SakProcessorTest : FunSpec({
 	val dataSource = SingletonPostgresContainer.getDataSource()
 
 	lateinit var sakProcessor: SakProcessor
-
+	lateinit var arenaDataRepository: ArenaDataRepository
 	lateinit var arenaSakRepository: ArenaSakRepository
-
+	lateinit var arenaGjennomforingRepository: ArenaGjennomforingRepository
+	lateinit var kafkaProducerService: KafkaProducerService
 
 	beforeEach {
 		val rootLogger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 		rootLogger.level = Level.WARN
 
 		val template = NamedParameterJdbcTemplate(dataSource)
-
+		arenaDataRepository = ArenaDataRepository(template)
 		arenaSakRepository = ArenaSakRepository(template)
-		sakProcessor = SakProcessor(arenaSakRepository)
+		arenaGjennomforingRepository = ArenaGjennomforingRepository(template)
+		kafkaProducerService = mockk()
+		sakProcessor = SakProcessor(arenaDataRepository, arenaSakRepository, arenaGjennomforingRepository, kafkaProducerService, mockk())
 
 		DatabaseTestUtils.cleanDatabase(dataSource)
 	}

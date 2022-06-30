@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.domain.kafka.amt
 
+import no.nav.amt.arena.acl.repositories.ArenaGjennomforingDbo
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -25,4 +26,20 @@ data class AmtGjennomforing(
 		GJENNOMFORES,
 		AVSLUTTET
 	}
+
+	fun toInsertDbo(sakId: Long?) = ArenaGjennomforingDbo (
+		 id = id,
+			arenaSakId = sakId,
+			tiltakKode = tiltak.kode,
+			virksomhetsnummer = virksomhetsnummer,
+			navn = navn,
+			startDato = startDato,
+			sluttDato = sluttDato,
+			registrertDato = registrertDato,
+			fremmoteDato = fremmoteDato,
+			status = status,
+			ansvarligNavEnhetId = ansvarligNavEnhetId,
+			opprettetAar = opprettetAar,
+			lopenr = lopenr,
+		)
 }
