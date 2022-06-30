@@ -52,7 +52,7 @@ spec:
     - name: ARENA_TILTAK_DELTAKER_TOPIC
       value: teamarenanais.aapen-arena-tiltakdeltakerendret-v1-p
     - name: ARENA_SAK_TOPIC
-      value: teamarenanais.aapen-arena-sakendret-v1-p
+      value: teamarenanais.aapen-arena-tiltakssakendret-v1-p
   gcp:
     sqlInstances:
       - name: amt-arena-acl-v1
