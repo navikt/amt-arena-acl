@@ -58,6 +58,7 @@ open class SakProcessor(
 			ansvarligNavEnhetId = ansvarligNavEnhetId
 		)
 
+		arenaGjennomforingRepository.upsert(nyGjennomforing)
 		val kafkaMessage = AmtKafkaMessageDto(
 			type = PayloadType.GJENNOMFORING,
 			operation = AmtOperation.MODIFIED,
