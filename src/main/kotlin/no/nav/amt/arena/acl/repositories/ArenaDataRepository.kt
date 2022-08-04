@@ -191,12 +191,11 @@ open class ArenaDataRepository(
 	}
 
 	fun getReingestableDeltakerWithStatus(status: IngestStatus): List<ArenaDataDbo> {
-		return getReingestableDeltakerWithStatus(listOf(status));
+		return getReingestableDeltakerWithStatus(listOf(status))
 	}
 
 	private fun getReingestableDeltakerWithStatus(
 		statuses: List<IngestStatus>,
-		offset: Int = 0,
 		limit: Int = 1000
 	): List<ArenaDataDbo> {
 		val sql = """
@@ -206,6 +205,7 @@ open class ArenaDataRepository(
 				  AND gjennomforing.arena_table_name = '$ARENA_GJENNOMFORING_TABLE_NAME'
 				  AND deltaker.ingest_status IN (:ingestStatuses)
 				  AND gjennomforing.ingest_status = :gjennomforingStatus
+				  LIMIT :limit
 		""".trimIndent()
 
 		val parameters = sqlParameters(
@@ -213,7 +213,6 @@ open class ArenaDataRepository(
 			"tableName" to ARENA_DELTAKER_TABLE_NAME,
 			"dependencyTableName" to ARENA_GJENNOMFORING_TABLE_NAME,
 			"gjennomforingStatus" to IngestStatus.HANDLED.toString(),
-			"offset" to offset,
 			"limit" to limit
 		)
 
