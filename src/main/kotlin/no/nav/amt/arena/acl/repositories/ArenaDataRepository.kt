@@ -200,11 +200,11 @@ open class ArenaDataRepository(
 	): List<ArenaDataDbo> {
 		val sql = """
 			SELECT *
-				FROM arena_data deltaker join arena_data gjennomforing on deltaker.after ->> 'TILTAKGJENNOMFORING_ID' = gjennomforing.arena_id
+				FROM arena_data deltaker
+				JOIN arena_data_id_translation translation on deltaker.after ->> 'TILTAKGJENNOMFORING_ID' = translation.arena_id
 				WHERE deltaker.arena_table_name = '$ARENA_DELTAKER_TABLE_NAME'
-				  AND gjennomforing.arena_table_name = '$ARENA_GJENNOMFORING_TABLE_NAME'
+				  AND translation.arena_table_name = '$ARENA_GJENNOMFORING_TABLE_NAME'
 				  AND deltaker.ingest_status IN (:ingestStatuses)
-				  AND gjennomforing.ingest_status = :gjennomforingStatus
 				  LIMIT :limit
 		""".trimIndent()
 
