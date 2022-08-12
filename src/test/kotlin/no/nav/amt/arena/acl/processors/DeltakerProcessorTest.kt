@@ -117,21 +117,6 @@ class DeltakerProcessorTest : FunSpec({
 		translationEntry!!.ignored shouldBe false
 	}
 
-	test("Skal kaste ignored exception for ignorerte statuser") {
-		val statuser = listOf("VENTELISTE", "AKTUELL", "JATAKK", "INFOMOETE")
-
-		statuser.forEachIndexed { idx, status ->
-			shouldThrowExactly<IgnoredException> {
-				deltakerProcessor.handleArenaMessage(createArenaDeltakerKafkaMessage(
-					position = UUID.randomUUID().toString(),
-					tiltakGjennomforingArenaId = nonIgnoredGjennomforingArenaId,
-					deltakerArenaId = idx.toLong(),
-					deltakerStatusKode = status
-				))
-			}
-		}
-	}
-
 	test("Insert Deltaker with gjennomføring not processed should throw exception") {
 		val position = UUID.randomUUID().toString()
 
