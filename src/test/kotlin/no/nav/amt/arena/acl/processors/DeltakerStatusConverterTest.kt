@@ -31,28 +31,13 @@ private val now = LocalDateTime.now()
 
 class DeltakerStatusConverterTest : StringSpec({
 
-	"status - AKTUELL - returnerer VENTER_PÅ_OPPSTART" {
-		ArenaDeltakerStatusConverter("AKTUELL", now, null, null, null).getStatus() shouldBe VENTER_PA_OPPSTART
+	"status - AKTUELL - returnerer PABEGYNT" {
+		ArenaDeltakerStatusConverter("AKTUELL", now, null, null, null).getStatus() shouldBe PABEGYNT
 	}
-	"status - AKTUELL og har startdato i fortid - returnerer DELTAR" {
-		ArenaDeltakerStatusConverter("AKTUELL", now, yesterday, null, null).getStatus() shouldBe DELTAR
-	}
-	"status - AKTUELL og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
-		ArenaDeltakerStatusConverter("AKTUELL", now, tomorrow, null, null).getStatus() shouldBe VENTER_PA_OPPSTART
-	}
-	"status - AKTUELL og har sluttdato i fortid - returnerer HAR_SLUTTET" {
-		ArenaDeltakerStatusConverter("AKTUELL", now, yesterday.minusDays(1), yesterday, null).getStatus() shouldBe HAR_SLUTTET
-	}
-	"status - AKTUELL og har sluttdato i fremtid - returnerer DELTAR" {
-		ArenaDeltakerStatusConverter("AKTUELL", now, yesterday, tomorrow, null).getStatus() shouldBe DELTAR
-	}
-	"status - AKTUELL og har startdato i dag - returnerer DELTAR" {
-		ArenaDeltakerStatusConverter("AKTUELL", now, now.toLocalDate(), tomorrow, null).getStatus() shouldBe DELTAR
-	}
+
 	"status - AVSLAG og mangler startdato - returnerer IKKE_AKTUELL" {
 		ArenaDeltakerStatusConverter("AVSLAG", now, null, null, null).getStatus() shouldBe IKKE_AKTUELL
 	}
-
 
 	"status - DELAVB og mangler startdato - returnerer IKKE_AKTUELL" {
 		ArenaDeltakerStatusConverter("DELAVB", now, null, null, null).getStatus() shouldBe IKKE_AKTUELL
@@ -181,45 +166,15 @@ class DeltakerStatusConverterTest : StringSpec({
 	"status - IKKEM og har startdato i fremtid - returnerer IKKE_AKTUELL" {
 		ArenaDeltakerStatusConverter("IKKEM", now, tomorrow, null, null).getStatus() shouldBe IKKE_AKTUELL
 	}
-
-
-	"status - INFOMOETE - returnerer VENTER_PÅ_OPPSTART" {
-		ArenaDeltakerStatusConverter("INFOMOETE", now, null, null, null).getStatus() shouldBe VENTER_PA_OPPSTART
+	"status - INFOMOETE - returnerer PABEGYNT" {
+		ArenaDeltakerStatusConverter("INFOMOETE", now, null, null, null).getStatus() shouldBe PABEGYNT
 	}
-	"status - INFOMOETE og har startdato i fortid - returnerer GJENNOMFORES" {
-		ArenaDeltakerStatusConverter("INFOMOETE", now, yesterday, null, null).getStatus() shouldBe DELTAR
+	"status - JATAKK - returnerer PABEGYNT" {
+		ArenaDeltakerStatusConverter("JATAKK", now, null, null, null).getStatus() shouldBe PABEGYNT
 	}
-	"status - INFOMOETE og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
-		ArenaDeltakerStatusConverter("INFOMOETE", now, tomorrow, null, null).getStatus() shouldBe VENTER_PA_OPPSTART
-	}
-	"status - INFOMOETE og har sluttdato i fortid - returnerer HAR_SLUTTET" {
-		ArenaDeltakerStatusConverter("INFOMOETE", now, yesterday.minusDays(1), yesterday, null).getStatus() shouldBe HAR_SLUTTET
-	}
-	"status - INFOMOETE og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		ArenaDeltakerStatusConverter("INFOMOETE", now, yesterday, tomorrow, null).getStatus() shouldBe DELTAR
-	}
-
-	"status - JATAKK - returnerer VENTER_PÅ_OPPSTART" {
-		ArenaDeltakerStatusConverter("JATAKK", now, null, null, null).getStatus() shouldBe VENTER_PA_OPPSTART
-	}
-	"status - JATAKK og har startdato i fortid - returnerer GJENNOMFORES" {
-		ArenaDeltakerStatusConverter("JATAKK", now, yesterday, null, null).getStatus() shouldBe DELTAR
-	}
-	"status - JATAKK og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
-		ArenaDeltakerStatusConverter("JATAKK", now, tomorrow, null, null).getStatus() shouldBe VENTER_PA_OPPSTART
-	}
-	"status - JATAKK og har sluttdato i fortid - returnerer HAR_SLUTTET" {
-		ArenaDeltakerStatusConverter("JATAKK", now, yesterday.minusDays(1), yesterday, null).getStatus() shouldBe HAR_SLUTTET
-	}
-	"status - JATAKK og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		ArenaDeltakerStatusConverter("JATAKK", now, yesterday, tomorrow, null).getStatus() shouldBe DELTAR
-	}
-
 	"status - NEITAKK - returnerer IKKE_AKTUELL" {
 		ArenaDeltakerStatusConverter("NEITAKK", now, null, null, null).getStatus() shouldBe IKKE_AKTUELL
 	}
-
-
 	"status - TILBUD - returnerer VENTER_PÅ_OPPSTART" {
 		ArenaDeltakerStatusConverter("TILBUD", now, null, null, null).getStatus() shouldBe VENTER_PA_OPPSTART
 	}
@@ -236,21 +191,9 @@ class DeltakerStatusConverterTest : StringSpec({
 		ArenaDeltakerStatusConverter("TILBUD", now, yesterday, tomorrow, null).getStatus() shouldBe DELTAR
 	}
 
+	"status - PABEGYNT - returnerer VENTER_PÅ_OPPSTART" {
+		ArenaDeltakerStatusConverter("VENTELISTE", now, null, null, null).getStatus() shouldBe PABEGYNT
+	}
 
-	"status - VENTELISTE - returnerer VENTER_PÅ_OPPSTART" {
-		ArenaDeltakerStatusConverter("VENTELISTE", now, null, null, null).getStatus() shouldBe VENTER_PA_OPPSTART
-	}
-	"status - VENTELISTE og har startdato i fortid - returnerer GJENNOMFORES" {
-		ArenaDeltakerStatusConverter("VENTELISTE", now, yesterday, null, null).getStatus() shouldBe DELTAR
-	}
-	"status - VENTELISTE og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
-		ArenaDeltakerStatusConverter("VENTELISTE", now, tomorrow, null, null).getStatus() shouldBe VENTER_PA_OPPSTART
-	}
-	"status - VENTELISTE og har sluttdato i fortid - returnerer HAR_SLUTTET" {
-		ArenaDeltakerStatusConverter("VENTELISTE", now, yesterday.minusDays(1), yesterday, null).getStatus() shouldBe HAR_SLUTTET
-	}
-	"status - VENTELISTE og har sluttdato i fremtid - returnerer GJENNOMFORES" {
-		ArenaDeltakerStatusConverter("VENTELISTE", now, yesterday, tomorrow, null).getStatus() shouldBe DELTAR
-	}
 
 })

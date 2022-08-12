@@ -51,6 +51,10 @@ internal data class ArenaDeltakerStatusConverter(
 			Status(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
 	}
 
+	private val ventendeStatus: () -> Status = {
+		Status(AmtDeltaker.Status.PABEGYNT, datoStatusEndring)
+	}
+
 	private val alleStatuser: Map<String, () -> Status> = mapOf(
 		"DELAVB" to avsluttendeStatus, // Deltakelse avbrutt
 		"FULLF" to avsluttendeStatus, // Fullført
@@ -68,7 +72,10 @@ internal data class ArenaDeltakerStatusConverter(
 		"IKKAKTUELL" to kanskjeFeilregistrert, // Ikke aktuell
 		"AVSLAG" to alltidIkkeAktuell, // Fått avslag
 		"NEITAKK" to alltidIkkeAktuell, // Takket nei til tilbud
-
+		"VENTELISTE" to ventendeStatus,
+		"AKTUELL" to ventendeStatus,
+		"JATAKK" to ventendeStatus,
+		"INFOMOETE" to ventendeStatus
 	)
 
 	init {
@@ -82,6 +89,5 @@ internal data class ArenaDeltakerStatusConverter(
 	override fun getEndretDato () : LocalDateTime? {
 		return status.endretDato?.atStartOfDay()
 	}
-
 
 }
