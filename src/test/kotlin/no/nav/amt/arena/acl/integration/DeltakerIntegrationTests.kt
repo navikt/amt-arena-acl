@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.integration.commands.deltaker.DeleteDeltakerCommand
 import no.nav.amt.arena.acl.integration.commands.deltaker.DeltakerInput
 import no.nav.amt.arena.acl.integration.commands.deltaker.NyDeltakerCommand
 import no.nav.amt.arena.acl.integration.commands.deltaker.OppdaterDeltakerCommand
@@ -43,7 +44,7 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 	}
 
 	@Test
-	fun `ingest deltaker - deltaker ingestet med andre data - oppdaterer deltaker ` () {
+	fun `ingest deltaker - deltaker ingestet med andre data - oppdaterer deltaker `() {
 		val gjennomforingId = Random().nextLong()
 		val deltakerId = Random().nextLong()
 
@@ -126,6 +127,32 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
 			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
+	}
+
+
+	@Test
+	fun `slett deltaker - Deltaker blir slettet`() {
+		val rnd = Random()
+		val gjennomforingId = rnd.nextLong()
+
+		ingestGjennomforingOgTiltak(gjennomforingId)
+
+		val input = DeltakerInput(
+			tiltakDeltakerId = rnd.nextLong(),
+			tiltakgjennomforingId = gjennomforingId
+		)
+
+		val nyDeltakerCommand = NyDeltakerCommand(input)
+
+		val nyResult = deltakerExecutor.execute(nyDeltakerCommand)
+
+		val deleteDeltakerCommand = DeleteDeltakerCommand(input)
+
+		deltakerExecutor.execute(deleteDeltakerCommand)
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.arenaData { it.operation shouldBe AmtOperation.DELETED }
+			.output { it.payload?.id shouldBe nyResult.output?.payload?.id }
+			.output { it.operation shouldBe AmtOperation.DELETED }
 	}
 
 	@Test
@@ -290,7 +317,6 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 		deltakerExecutor.updateResults(firstResult.position, command)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
 			.arenaData { it.ingestAttempts shouldBe 0 }
-
 	}
 
 	fun ingestGjennomforingOgTiltak(gjennomforingId: Long): GjennomforingResult {
@@ -302,10 +328,12 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 	}
 
 	fun ingestInvalidGjennomforing(gjennomforingId: Long): GjennomforingResult {
-		val gjennomforingCmd = NyGjennomforingCommand(GjennomforingInput(
-			gjennomforingId = gjennomforingId,
-			arbeidsgiverIdArrangor = null
-		))
+		val gjennomforingCmd = NyGjennomforingCommand(
+			GjennomforingInput(
+				gjennomforingId = gjennomforingId,
+				arbeidsgiverIdArrangor = null
+			)
+		)
 
 		tiltakExecutor.execute(NyttTiltakCommand())
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
