@@ -135,7 +135,7 @@ open class ArenaDataRepository(
 		""".trimIndent()
 
 		val parameters = sqlParameters(
-			"ingestStatuses" to status,
+			"ingestStatus" to status.name,
 			"tableName" to tableName,
 		)
 
