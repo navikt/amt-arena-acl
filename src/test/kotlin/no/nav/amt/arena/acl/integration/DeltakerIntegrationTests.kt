@@ -294,31 +294,6 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 			.result { _, _, output -> output shouldNotBe null }
 	}
 
-	@Test
-	fun `processMessages - deltaker er RETRY pga ugyldig gjennomføring - deltaker øker ikke ingest attempts`() {
-		val gjennomforingId = Random().nextLong()
-
-		ingestInvalidGjennomforing(gjennomforingId)
-
-		val input = DeltakerInput(
-			tiltakDeltakerId = Random().nextLong(),
-			tiltakgjennomforingId = gjennomforingId
-		)
-
-		val command = NyDeltakerCommand(input)
-
-		val firstResult = deltakerExecutor.execute(command)
-			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
-			.arenaData { it.ingestAttempts shouldBe 0 }
-			.arenaData { it.note shouldBe "Venter på at gjennomføring med id=$gjennomforingId skal bli håndtert" }
-
-		processMessages()
-
-		deltakerExecutor.updateResults(firstResult.position, command)
-			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
-			.arenaData { it.ingestAttempts shouldBe 0 }
-	}
-
 	fun ingestGjennomforingOgTiltak(gjennomforingId: Long): GjennomforingResult {
 		tiltakExecutor.execute(NyttTiltakCommand())
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }

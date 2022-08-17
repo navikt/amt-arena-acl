@@ -5,6 +5,7 @@ import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
 import no.nav.amt.arena.acl.utils.AT_MIDNIGHT
 import no.nav.amt.arena.acl.utils.ONE_HOUR
 import no.nav.amt.arena.acl.utils.ONE_MINUTE
+import no.nav.amt.arena.acl.utils.TEN_MINUTES
 import no.nav.common.job.JobRunner
 import no.nav.common.job.leader_election.LeaderElectionClient
 import org.slf4j.LoggerFactory
@@ -20,7 +21,7 @@ open class ArenaDataSchedules(
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	@Scheduled(fixedDelay = 10 * 1000L, initialDelay = ONE_MINUTE)
+	@Scheduled(fixedDelay = TEN_MINUTES, initialDelay = ONE_MINUTE)
 	open fun processArenaMessages() {
 		if (leaderElectionClient.isLeader) {
 			JobRunner.run("process_arena_messages", retryArenaMessageProcessorService::processMessages)

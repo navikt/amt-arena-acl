@@ -41,27 +41,30 @@ open class RetryArenaMessageProcessorService(
 	}
 
 	private fun processMessagesWithStatus(status: IngestStatus) {
-		processBatch(status, arenaDataRepository.getByIngestStatus(ARENA_TILTAK_TABLE_NAME, status))
-		processBatch(status, arenaDataRepository.getByIngestStatus(ARENA_SAK_TABLE_NAME, status))
-		processBatch(status, arenaDataRepository.getByIngestStatus(ARENA_GJENNOMFORING_TABLE_NAME, status))
-		processBatch(status, arenaDataRepository.getReingestableDeltakerWithStatus(status))
+		processMessages(ARENA_TILTAK_TABLE_NAME, status)
+		processMessages(ARENA_SAK_TABLE_NAME, status)
+		processMessages(ARENA_GJENNOMFORING_TABLE_NAME, status)
+		processMessages(ARENA_DELTAKER_TABLE_NAME, status)
 	}
 
-	private fun processBatch(status: IngestStatus, entries: List<ArenaDataDbo>) {
-		if (entries.isEmpty()) {
-			return
-		}
+	private fun processMessages(tableName: String, status: IngestStatus) {
+		var fromId = 0
+		var data: List<ArenaDataDbo>
 
 		val start = Instant.now()
+		var totalHandled = 0
 
-		entries.forEach {
-			process(it)
-		}
+		do {
+			data = arenaDataRepository.getByIngestStatus(tableName, status, fromId)
+			data.forEach { process(it) }
+			totalHandled += data.size
+			fromId = data.maxOfOrNull { it.id.plus(1) } ?: Int.MAX_VALUE
+		} while (data.isNotEmpty())
 
-		val table = entries.first().arenaTableName
 		val duration = Duration.between(start, Instant.now())
 
-		log.info("[$table]: Handled ${entries.size} $status messages in ${duration.toSeconds()}.${duration.toMillisPart()} seconds.")
+		if (totalHandled > 0)
+			log.info("[$tableName]: Handled $totalHandled $status messages in ${duration.toSeconds()}.${duration.toMillisPart()} seconds.")
 	}
 
 	private fun process(arenaDataDbo: ArenaDataDbo) {
