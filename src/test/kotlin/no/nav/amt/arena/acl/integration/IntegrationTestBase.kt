@@ -68,8 +68,8 @@ abstract class IntegrationTestBase {
 		OrdsClientMock.virksomhetsHandler.clear()
 	}
 
-	fun processMessages() {
-		retryArenaMessageProcessorService.processMessages()
+	fun processMessages(batchSize: Int = 500) {
+		retryArenaMessageProcessorService.processMessages(batchSize)
 	}
 }
 

@@ -32,22 +32,22 @@ open class RetryArenaMessageProcessorService(
 		private const val MAX_INGEST_ATTEMPTS = 10
 	}
 
-	fun processMessages() {
-		processMessagesWithStatus(IngestStatus.RETRY)
+	fun processMessages(batchSize: Int = 500) {
+		processMessagesWithStatus(IngestStatus.RETRY, batchSize)
 	}
 
-	fun processFailedMessages() {
-		processMessagesWithStatus(IngestStatus.FAILED)
+	fun processFailedMessages(batchSize: Int = 500) {
+		processMessagesWithStatus(IngestStatus.FAILED, batchSize)
 	}
 
-	private fun processMessagesWithStatus(status: IngestStatus) {
-		processMessages(ARENA_TILTAK_TABLE_NAME, status)
-		processMessages(ARENA_SAK_TABLE_NAME, status)
-		processMessages(ARENA_GJENNOMFORING_TABLE_NAME, status)
-		processMessages(ARENA_DELTAKER_TABLE_NAME, status)
+	private fun processMessagesWithStatus(status: IngestStatus, batchSize: Int) {
+		processMessages(ARENA_TILTAK_TABLE_NAME, status, batchSize)
+		processMessages(ARENA_SAK_TABLE_NAME, status, batchSize)
+		processMessages(ARENA_GJENNOMFORING_TABLE_NAME, status, batchSize)
+		processMessages(ARENA_DELTAKER_TABLE_NAME, status, batchSize)
 	}
 
-	private fun processMessages(tableName: String, status: IngestStatus) {
+	private fun processMessages(tableName: String, status: IngestStatus, batchSize: Int) {
 		var fromId = 0
 		var data: List<ArenaDataDbo>
 
@@ -55,7 +55,7 @@ open class RetryArenaMessageProcessorService(
 		var totalHandled = 0
 
 		do {
-			data = arenaDataRepository.getByIngestStatus(tableName, status, fromId)
+			data = arenaDataRepository.getByIngestStatus(tableName, status, fromId, batchSize)
 			data.forEach { process(it) }
 			totalHandled += data.size
 			fromId = data.maxOfOrNull { it.id.plus(1) } ?: Int.MAX_VALUE
