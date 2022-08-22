@@ -67,7 +67,7 @@ class DeltakerTestExecutor(
 			val data = outputMessages.firstOrNull { it.payload != null && (it.payload as AmtDeltaker).id == id }
 
 			if (data != null) {
-				outputMessages.clear()
+				outputMessages.remove(data)
 				return data
 			}
 
@@ -75,7 +75,6 @@ class DeltakerTestExecutor(
 			attempts++
 		}
 
-		outputMessages.clear()
 		return null
 	}
 

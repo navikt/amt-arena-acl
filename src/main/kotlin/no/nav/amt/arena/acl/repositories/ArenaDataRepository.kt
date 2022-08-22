@@ -5,8 +5,6 @@ import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertInput
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.dto.LogStatusCountDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
-import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
-import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
@@ -57,18 +55,20 @@ open class ArenaDataRepository(
 					note 			   = :note
 		""".trimIndent()
 
-		template.update(sql, sqlParameters(
-			"arena_table_name" to upsertData.arenaTableName,
-			"arena_id" to upsertData.arenaId,
-			"operation_type" to upsertData.operation.name,
-			"operation_pos" to upsertData.operationPosition,
-			"operation_timestamp" to upsertData.operationTimestamp,
-			"ingest_status" to upsertData.ingestStatus.name,
-			"ingested_timestamp" to upsertData.ingestedTimestamp,
-			"before" to upsertData.before,
-			"after" to upsertData.after,
-			"note" to upsertData.note,
-		))
+		template.update(
+			sql, sqlParameters(
+				"arena_table_name" to upsertData.arenaTableName,
+				"arena_id" to upsertData.arenaId,
+				"operation_type" to upsertData.operation.name,
+				"operation_pos" to upsertData.operationPosition,
+				"operation_timestamp" to upsertData.operationTimestamp,
+				"ingest_status" to upsertData.ingestStatus.name,
+				"ingested_timestamp" to upsertData.ingestedTimestamp,
+				"before" to upsertData.before,
+				"after" to upsertData.after,
+				"note" to upsertData.note,
+			)
+		)
 	}
 
 	fun updateIngestStatus(id: Int, ingestStatus: IngestStatus) {
@@ -122,34 +122,26 @@ open class ArenaDataRepository(
 			?: throw NoSuchElementException("Element from table $tableName, operation: $operation, position: $position does not exist")
 	}
 
-	fun getByIngestStatusIn(
+	fun getByIngestStatus(
 		tableName: String,
 		status: IngestStatus,
-		offset: Int = 0,
+		fromId: Int,
 		limit: Int = 500
-	): List<ArenaDataDbo> {
-		return getByIngestStatusIn(tableName, listOf(status), offset, limit)
-	}
-
-	private fun getByIngestStatusIn(
-		tableName: String,
-		statuses: List<IngestStatus>,
-		offset: Int = 0,
-		limit: Int = 1000
 	): List<ArenaDataDbo> {
 		val sql = """
 			SELECT *
 			FROM arena_data
-			WHERE ingest_status IN (:ingestStatuses)
+			WHERE ingest_status = :ingestStatus
 			AND arena_table_name = :tableName
-			ORDER BY operation_pos ASC
-			OFFSET :offset LIMIT :limit
+			AND id >= :fromId
+			ORDER BY id ASC
+			LIMIT :limit
 		""".trimIndent()
 
 		val parameters = sqlParameters(
-			"ingestStatuses" to statuses.map { it.name }.toSet(),
+			"ingestStatus" to status.name,
 			"tableName" to tableName,
-			"offset" to offset,
+			"fromId" to fromId,
 			"limit" to limit
 		)
 
@@ -189,34 +181,4 @@ open class ArenaDataRepository(
 
 		return template.update(sql, EmptySqlParameterSource())
 	}
-
-	fun getReingestableDeltakerWithStatus(status: IngestStatus): List<ArenaDataDbo> {
-		return getReingestableDeltakerWithStatus(listOf(status))
-	}
-
-	private fun getReingestableDeltakerWithStatus(
-		statuses: List<IngestStatus>,
-		limit: Int = 1000
-	): List<ArenaDataDbo> {
-		val sql = """
-			SELECT *
-				FROM arena_data deltaker
-				JOIN arena_data_id_translation translation on deltaker.after ->> 'TILTAKGJENNOMFORING_ID' = translation.arena_id
-				WHERE deltaker.arena_table_name = '$ARENA_DELTAKER_TABLE_NAME'
-				  AND translation.arena_table_name = '$ARENA_GJENNOMFORING_TABLE_NAME'
-				  AND deltaker.ingest_status IN (:ingestStatuses)
-				  LIMIT :limit
-		""".trimIndent()
-
-		val parameters = sqlParameters(
-			"ingestStatuses" to statuses.map { it.name }.toSet(),
-			"tableName" to ARENA_DELTAKER_TABLE_NAME,
-			"dependencyTableName" to ARENA_GJENNOMFORING_TABLE_NAME,
-			"gjennomforingStatus" to IngestStatus.HANDLED.toString(),
-			"limit" to limit
-		)
-
-		return template.query(sql, parameters, rowMapper)
-	}
-
 }

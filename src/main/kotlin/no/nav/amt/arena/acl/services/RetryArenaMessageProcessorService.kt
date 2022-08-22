@@ -32,43 +32,50 @@ open class RetryArenaMessageProcessorService(
 		private const val MAX_INGEST_ATTEMPTS = 10
 	}
 
-	fun processMessages() {
-		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_TILTAK_TABLE_NAME, IngestStatus.RETRY))
-		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_SAK_TABLE_NAME, IngestStatus.RETRY))
-		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_GJENNOMFORING_TABLE_NAME, IngestStatus.RETRY))
-		processBatch(arenaDataRepository.getReingestableDeltakerWithStatus(IngestStatus.RETRY))
-
+	fun processMessages(batchSize: Int = 500) {
+		processMessagesWithStatus(IngestStatus.RETRY, batchSize)
 	}
 
-	fun processFailedMessages() {
-		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_TILTAK_TABLE_NAME, IngestStatus.FAILED))
-		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_SAK_TABLE_NAME, IngestStatus.FAILED))
-		processBatch(arenaDataRepository.getByIngestStatusIn(ARENA_GJENNOMFORING_TABLE_NAME, IngestStatus.FAILED))
-		processBatch(arenaDataRepository.getReingestableDeltakerWithStatus(IngestStatus.FAILED))
+	fun processFailedMessages(batchSize: Int = 500) {
+		processMessagesWithStatus(IngestStatus.FAILED, batchSize)
 	}
 
-	private fun processBatch(entries: List<ArenaDataDbo>) {
-		if (entries.isEmpty()) {
-			return
-		}
+	private fun processMessagesWithStatus(status: IngestStatus, batchSize: Int) {
+		processMessages(ARENA_TILTAK_TABLE_NAME, status, batchSize)
+		processMessages(ARENA_SAK_TABLE_NAME, status, batchSize)
+		processMessages(ARENA_GJENNOMFORING_TABLE_NAME, status, batchSize)
+		processMessages(ARENA_DELTAKER_TABLE_NAME, status, batchSize)
+	}
+
+	private fun processMessages(tableName: String, status: IngestStatus, batchSize: Int) {
+		var fromId = 0
+		var data: List<ArenaDataDbo>
 
 		val start = Instant.now()
+		var totalHandled = 0
 
-		entries.forEach {
-			process(it)
-		}
+		do {
+			data = arenaDataRepository.getByIngestStatus(tableName, status, fromId, batchSize)
+			data.forEach { process(it) }
+			totalHandled += data.size
+			fromId = data.maxOfOrNull { it.id.plus(1) } ?: Int.MAX_VALUE
+		} while (data.isNotEmpty())
 
-		val table = entries.first().arenaTableName
 		val duration = Duration.between(start, Instant.now())
 
-		log.info("[$table]: Handled ${entries.size} messages in ${duration.toSeconds()}.${duration.toMillisPart()} seconds.")
+		if (totalHandled > 0)
+			log.info("[$tableName]: Handled $totalHandled $status messages in ${duration.toSeconds()}.${duration.toMillisPart()} seconds.")
 	}
 
 	private fun process(arenaDataDbo: ArenaDataDbo) {
 		try {
 			when (arenaDataDbo.arenaTableName) {
 				ARENA_TILTAK_TABLE_NAME -> tiltakProcessor.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
-				ARENA_GJENNOMFORING_TABLE_NAME -> gjennomforingProcessor.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
+				ARENA_GJENNOMFORING_TABLE_NAME -> gjennomforingProcessor.handleArenaMessage(
+					toArenaKafkaMessage(
+						arenaDataDbo
+					)
+				)
 				ARENA_DELTAKER_TABLE_NAME -> deltakerProcessor.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
 				ARENA_SAK_TABLE_NAME -> sakProcessor.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
 			}
@@ -76,11 +83,10 @@ open class RetryArenaMessageProcessorService(
 			val currentIngestAttempts = arenaDataDbo.ingestAttempts + 1
 			val hasReachedMaxRetries = currentIngestAttempts >= MAX_INGEST_ATTEMPTS
 
-			if(e is IgnoredException) {
+			if (e is IgnoredException) {
 				log.info("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}'")
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.IGNORED)
-			}
-			else if (arenaDataDbo.ingestStatus == IngestStatus.RETRY && hasReachedMaxRetries) {
+			} else if (arenaDataDbo.ingestStatus == IngestStatus.RETRY && hasReachedMaxRetries) {
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.FAILED)
 			}
 
