@@ -63,15 +63,12 @@ internal data class ArenaDeltakerStatusConverter(
 		"IKKEM" to avsluttendeStatus, // Ikke møtt
 
 		"GJENN" to gjennomforendeStatus, // Gjennomføres
-		"INFOMOETE" to gjennomforendeStatus, // Informasjonmøte
-		"JATAKK" to gjennomforendeStatus, // Takket ja  til tilbud
-		"VENTELISTE" to gjennomforendeStatus, // Venteliste
-		"AKTUELL" to gjennomforendeStatus, // Aktuell
 		"TILBUD" to gjennomforendeStatus, // Godkjent tiltaksplass
 
 		"IKKAKTUELL" to kanskjeFeilregistrert, // Ikke aktuell
 		"AVSLAG" to alltidIkkeAktuell, // Fått avslag
 		"NEITAKK" to alltidIkkeAktuell, // Takket nei til tilbud
+
 		"VENTELISTE" to ventendeStatus,
 		"AKTUELL" to ventendeStatus,
 		"JATAKK" to ventendeStatus,
