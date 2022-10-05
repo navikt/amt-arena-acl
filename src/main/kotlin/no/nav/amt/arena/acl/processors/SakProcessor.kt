@@ -42,14 +42,14 @@ open class SakProcessor(
 			ansvarligEnhetId = sak.ansvarligEnhetId
 		)
 
-		sendGjennomforing(sak.sakId, sak.lopenr, sak.aar, sak.ansvarligEnhetId)
+		sendGjennomforing(sak.sakId, sak.lopenr, sak.aar, sak.ansvarligEnhetId, message.operationType)
 
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(sak.sakId.toString()))
 		log.info("Upsert av sak id=${sak.sakId}")
 
 	}
 
-	private fun sendGjennomforing(sakId: Long, lopenr: Int, opprettetAar: Int, ansvarligNavEnhetId: String?) {
+	private fun sendGjennomforing(sakId: Long, lopenr: Int, opprettetAar: Int, ansvarligNavEnhetId: String?, opType: AmtOperation) {
 		val gjennomforing = arenaGjennomforingRepository.getBySakId(sakId) ?: return
 		val tiltak = tiltakRepository.getByKode(gjennomforing.tiltakKode) ?: throw IllegalStateException("Fant ikke tiltak med kode: ${gjennomforing.tiltakKode}")
 		val nyGjennomforing = gjennomforing.copy(
@@ -61,7 +61,7 @@ open class SakProcessor(
 		arenaGjennomforingRepository.upsert(nyGjennomforing)
 		val kafkaMessage = AmtKafkaMessageDto(
 			type = PayloadType.GJENNOMFORING,
-			operation = AmtOperation.MODIFIED,
+			operation = opType,
 			payload = nyGjennomforing.toAmtGjennomforing(tiltak)
 		)
 

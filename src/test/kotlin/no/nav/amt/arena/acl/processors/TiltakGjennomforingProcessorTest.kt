@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
+import no.nav.amt.arena.acl.domain.db.ArenaSakDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
@@ -30,6 +31,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -38,6 +40,7 @@ class TiltakGjennomforingProcessorTest {
 	private lateinit var repository: ArenaDataRepository
 	private lateinit var translationRepository: ArenaDataIdTranslationRepository
 	private lateinit var tiltakService: TiltakService
+	private lateinit var sakRepository: ArenaSakRepository
 	private lateinit var ordsClient: ArenaOrdsProxyClient
 	private lateinit var kafkaProducerService: KafkaProducerService
 	private lateinit var gjennomforingProcessor: GjennomforingProcessor
@@ -47,6 +50,7 @@ class TiltakGjennomforingProcessorTest {
 	var tiltakKode = "INDOPPFAG"
 	var ukjentTiltakType = "UKJENTTILTAK"
 	var ARBGIV_ID_ARRANGOR = "661733"
+	var sakId = Random().nextLong()
 
 	@BeforeAll
 	fun beforeAll() {
@@ -54,19 +58,20 @@ class TiltakGjennomforingProcessorTest {
 		repository = ArenaDataRepository(jdbcTemplate)
 		translationRepository = ArenaDataIdTranslationRepository(jdbcTemplate)
 		tiltakService = mock(TiltakService::class.java)
+		sakRepository = mock(ArenaSakRepository::class.java)
 		ordsClient = mock(ArenaOrdsProxyClient::class.java)
 		kafkaProducerService = mock(KafkaProducerService::class.java)
 
 		gjennomforingProcessor = GjennomforingProcessor(
 			repository,
-			ArenaSakRepository(jdbcTemplate),
+			sakRepository,
 			ArenaGjennomforingRepository(jdbcTemplate),
 			ArenaDataIdTranslationService(translationRepository),
 			tiltakService,
 			ordsClient,
 			kafkaProducerService
 		)
-
+		`when`(sakRepository.hentSakMedArenaId(sakId)).thenReturn(ArenaSakDbo(Random().nextInt(), sakId, 2001, 123213, "4324", ZonedDateTime.now()))
 		`when`(this.tiltakService.getByKode(tiltakKode)).thenReturn(AmtTiltak(UUID.randomUUID(), kode=tiltakKode, navn="Oppfølging"))
 		`when`(ordsClient.hentVirksomhetsnummer(ARBGIV_ID_ARRANGOR)).thenReturn("123")
 	}
@@ -260,7 +265,7 @@ class TiltakGjennomforingProcessorTest {
 	private val arenaGjennomforingJson = """
 		{
 		  "TILTAKGJENNOMFORING_ID": 3728063,
-		  "SAK_ID": 13467550,
+		  "SAK_ID": $sakId,
 		  "TILTAKSKODE": "$tiltakKode",
 		  "ANTALL_DELTAKERE": 70,
 		  "ANTALL_VARIGHET": null,

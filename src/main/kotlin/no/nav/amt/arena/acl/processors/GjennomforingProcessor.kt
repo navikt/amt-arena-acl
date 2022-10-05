@@ -66,9 +66,13 @@ open class GjennomforingProcessor(
 			?: throw DependencyNotIngestedException("Venter på at tiltaket med koden=$arenaGjennomforingTiltakskode skal bli håndtert")
 
 		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(gjennomforing.arbgivIdArrangor)
-
-		// Kast DependencyNotIngestedException når vi får konsumert sak i prod
 		val sak = arenaSakRepository.hentSakMedArenaId(gjennomforing.sakId)
+
+		arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
+			gjennomforingArenaId = gjennomforing.tiltakgjennomforingId,
+			gjennomforingAmtId = gjennomforingId,
+			ignored = false
+		)
 
 		val amtGjennomforing = gjennomforing.toAmtGjennomforing(
 			amtTiltak = tiltak,
@@ -79,11 +83,9 @@ open class GjennomforingProcessor(
 			sakLopenr = sak?.lopenr,
 		)
 
-		arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
-			gjennomforingArenaId = gjennomforing.tiltakgjennomforingId,
-			gjennomforingAmtId = gjennomforingId,
-			ignored = false
-		)
+		arenaGjennomforingRepository.upsert(amtGjennomforing.toInsertDbo(gjennomforing.sakId))
+
+		if (sak == null) throw DependencyNotIngestedException("Venter på at sak med id: ${gjennomforing.sakId} skal bli håndtert")
 
 		val amtData = AmtKafkaMessageDto(
 			type = PayloadType.GJENNOMFORING,
@@ -93,7 +95,6 @@ open class GjennomforingProcessor(
 
 		kafkaProducerService.sendTilAmtTiltak(amtGjennomforing.id, amtData)
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(gjennomforing.tiltakgjennomforingId))
-		arenaGjennomforingRepository.upsert(amtGjennomforing.toInsertDbo(gjennomforing.sakId))
 		log.info("Melding for gjennomføring id=$gjennomforingId arenaId=${gjennomforing.tiltakgjennomforingId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 	}
 

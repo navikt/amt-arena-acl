@@ -12,6 +12,8 @@ import no.nav.amt.arena.acl.integration.commands.deltaker.OppdaterDeltakerComman
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingInput
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingResult
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCommand
+import no.nav.amt.arena.acl.integration.commands.sak.NySakCommand
+import no.nav.amt.arena.acl.integration.commands.sak.SakInput
 import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
 import no.nav.amt.arena.acl.mocks.OrdsClientMock
 import org.junit.jupiter.api.Test
@@ -34,8 +36,8 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 			innsokBegrunnelse = "begrunnelse"
 		)
 
-		deltakerExecutor.execute(NyDeltakerCommand(deltakerInput))
-			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+		val result = deltakerExecutor.execute(NyDeltakerCommand(deltakerInput))
+		result.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 			.output { it.operation shouldBe AmtOperation.CREATED }
 			.result { _, translation, output -> translation!!.amtId shouldBe output!!.payload!!.id }
 			.outgoingPayload { it.gjennomforingId shouldBe gjennomforingResult.output!!.payload!!.id }
@@ -286,7 +288,6 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 		ingestGjennomforingOgTiltak(gjennomforingId)
 
 		processMessages()
-
 		deltakerExecutor.updateResults(firstResult.position, command)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 			.arenaData { it.note shouldBe null }
@@ -295,10 +296,15 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 	}
 
 	fun ingestGjennomforingOgTiltak(gjennomforingId: Long): GjennomforingResult {
+		val gjennomforingInput = GjennomforingInput(gjennomforingId = gjennomforingId)
+		val sakInput = SakInput(sakId = gjennomforingInput.sakId)
+
 		tiltakExecutor.execute(NyttTiltakCommand())
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 
-		return gjennomforingExecutor.execute(NyGjennomforingCommand(GjennomforingInput(gjennomforingId = gjennomforingId)))
+		sakExecutor.execute(NySakCommand(sakInput, gjennomforingId))
+
+		return gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 	}
 
