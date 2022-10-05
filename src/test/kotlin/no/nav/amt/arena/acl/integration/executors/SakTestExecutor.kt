@@ -38,12 +38,12 @@ class SakTestExecutor (
 		return command.execute(incrementAndGetPosition()) { wrapper, gjennomforingId -> sendAndCheck(wrapper, gjennomforingId) }
 	}
 
-	private fun sendAndCheck(arenaWrapper: ArenaKafkaMessageDto, gjennomforingId: Long): SakResult {
+	private fun sendAndCheck(arenaWrapper: ArenaKafkaMessageDto, gjennomforingId: Long?): SakResult {
 		sendKafkaMessage(topic, objectMapper.writeValueAsString(arenaWrapper))
 		return getResults(arenaWrapper, gjennomforingId)
 	}
 
-	private fun getResults(arenaWrapper: ArenaKafkaMessageDto, gjennomforingId: Long): SakResult {
+	private fun getResults(arenaWrapper: ArenaKafkaMessageDto, gjennomforingId: Long?): SakResult {
 		val arenaData = getArenaData(
 			ARENA_SAK_TABLE_NAME,
 			AmtOperation.fromArenaOperationString(arenaWrapper.opType),

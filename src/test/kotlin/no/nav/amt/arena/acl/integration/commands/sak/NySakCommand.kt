@@ -7,13 +7,14 @@ import java.time.LocalDateTime
 
 class NySakCommand(
 	private val input: SakInput,
-	private val gjennomforingId: Long
+	private val gjennomforingId: Long?,
+	private val opType: ArenaOperation = ArenaOperation.I
 ): SakCommand() {
 
-	override fun execute(position: String, executor: (wrapper: ArenaKafkaMessageDto, gjennomforingId: Long) -> SakResult): SakResult {
+	override fun execute(position: String, executor: (wrapper: ArenaKafkaMessageDto, gjennomforingId: Long?) -> SakResult): SakResult {
 		val wrapper = ArenaKafkaMessageDto(
 			table = ARENA_SAK_TABLE_NAME,
-			opType = ArenaOperation.I.name,
+			opType = opType.name,
 			opTs = LocalDateTime.now().format(opTsFormatter),
 			pos = position,
 			before = null,

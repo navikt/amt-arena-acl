@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaOperation
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingInput
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCommand
 import no.nav.amt.arena.acl.integration.commands.sak.NySakCommand
@@ -17,12 +18,19 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 	@Test
 	fun `Konsumer gjennomføring - gyldig gjennomføring - ingestes uten feil`() {
+		val sakId = Random().nextLong()
+
 		val gjennomforingInput = GjennomforingInput(
-			gjennomforingId = Random().nextLong()
+			gjennomforingId = Random().nextLong(),
+			sakId = sakId
 		)
+		val sakCmd = NySakCommand(SakInput(sakId = sakId), null)
 
 		tiltakExecutor.execute(NyttTiltakCommand())
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+
+		sakExecutor.execute(sakCmd)
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED}
 
 		gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
@@ -47,26 +55,32 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	@Test
 	fun `Konsumer tiltak - tiltak har ventende gjennomføringer - gjennomføringer prosessert`() {
 		val tiltakNavn = UUID.randomUUID().toString()
+		val sakId = Random().nextLong()
 
-		val command = NyGjennomforingCommand(
+		val gjennomforingCmd = NyGjennomforingCommand(
 			GjennomforingInput(
-				gjennomforingId = Random().nextLong()
+				gjennomforingId = Random().nextLong(),
+				sakId = sakId
 			)
 		)
+		val sakCmd = NySakCommand(SakInput(sakId = sakId), null)
 
-		val firstResult = gjennomforingExecutor.execute(command)
+		val firstResult = gjennomforingExecutor.execute(gjennomforingCmd)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
 			.arenaData { it.ingestAttempts shouldBe 0 }
 			.arenaData { it.lastAttempted shouldBe null }
 			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 
+		sakExecutor.execute(sakCmd)
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED}
+
 		tiltakExecutor.execute(NyttTiltakCommand(navn = tiltakNavn))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 
 		processMessages()
 
-		gjennomforingExecutor.updateResults(firstResult.position, command)
+		gjennomforingExecutor.updateResults(firstResult.position, gjennomforingCmd)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 			.arenaData { it.ingestedTimestamp shouldNotBe null }
 			.output { it.payload!!.tiltak.navn shouldBe tiltakNavn }
@@ -159,19 +173,45 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 
 		gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
-			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
-			.output { it.operation shouldBe AmtOperation.CREATED }
-			.result { _, translation, output -> translation!!.amtId shouldBe output!!.payload!!.id }
+			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
 
 		sakExecutor.execute(NySakCommand(sakInput, gjennomforingInput.gjennomforingId))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
-			.output { it.operation shouldBe AmtOperation.MODIFIED }
+			.output { it.operation shouldBe AmtOperation.CREATED }
 			.output { it.payload!!.lopenr shouldBe sakInput.lopenr }
 			.output { it.payload!!.opprettetAar shouldBe sakInput.aar }
 			.output { it.payload!!.ansvarligNavEnhetId shouldBe sakInput.ansvarligEnhetId }
 			.output { it.payload!!.tiltak.kode shouldBe gjennomforingInput.tiltakKode}
 			.output { it.payload!!.tiltak.navn shouldNotBe null}
 
+	}
+
+	@Test
+	fun `Konsumer sak - sak og gjennomføring med ansvarlig enhet er allerede lagt på kafka - produserer gjennomføring ny enhet`() {
+		val gjennomforingInput = GjennomforingInput()
+		val sakInput1 = SakInput(sakId = gjennomforingInput.sakId)
+		val sakInput2 = sakInput1.copy(ansvarligEnhetId = kotlin.random.Random.nextInt().toString())
+
+		tiltakExecutor.execute(NyttTiltakCommand())
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+
+		sakExecutor.execute(NySakCommand(sakInput1, gjennomforingInput.gjennomforingId))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+
+		gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.output { it.payload!!.ansvarligNavEnhetId shouldBe sakInput1.ansvarligEnhetId }
+			.output { it.payload!!.lopenr shouldBe sakInput1.lopenr }
+			.output { it.payload!!.opprettetAar shouldBe sakInput1.aar }
+
+		sakExecutor.execute(NySakCommand(sakInput2, gjennomforingInput.gjennomforingId, ArenaOperation.U))
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
+			.output { it.payload!!.lopenr shouldBe sakInput1.lopenr }
+			.output { it.payload!!.opprettetAar shouldBe sakInput1.aar }
+			.output { it.payload!!.ansvarligNavEnhetId shouldBe sakInput2.ansvarligEnhetId }
+			.output { it.payload!!.tiltak.kode shouldBe gjennomforingInput.tiltakKode}
+			.output { it.payload!!.tiltak.navn shouldNotBe null}
+			.output { it.operation shouldBe AmtOperation.MODIFIED }
 
 	}
 }

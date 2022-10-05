@@ -9,6 +9,8 @@ import no.nav.amt.arena.acl.integration.commands.deltaker.NyDeltakerCommand
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingInput
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.GjennomforingResult
 import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCommand
+import no.nav.amt.arena.acl.integration.commands.sak.NySakCommand
+import no.nav.amt.arena.acl.integration.commands.sak.SakInput
 import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
 import org.junit.jupiter.api.Test
 import java.util.*
@@ -60,10 +62,15 @@ class ReingestionIntegrationTests : IntegrationTestBase() {
 	}
 
 	private fun ingestGjennomforingOgTiltak(gjennomforingId: Long): GjennomforingResult {
+		val gjennomforingInput = GjennomforingInput(gjennomforingId = gjennomforingId)
+		val sakInput = SakInput(sakId = gjennomforingInput.sakId)
+
 		tiltakExecutor.execute(NyttTiltakCommand())
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 
-		return gjennomforingExecutor.execute(NyGjennomforingCommand(GjennomforingInput(gjennomforingId = gjennomforingId)))
+		sakExecutor.execute(NySakCommand(sakInput, gjennomforingId))
+
+		return gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 	}
 

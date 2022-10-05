@@ -9,7 +9,7 @@ abstract class SakCommand : Command() {
 
 	abstract fun execute(
 		position: String,
-		executor: (wrapper: ArenaKafkaMessageDto, gjennomforingId: Long) -> SakResult
+		executor: (wrapper: ArenaKafkaMessageDto, gjennomforingId: Long?) -> SakResult
 	): SakResult
 
 	internal fun createPayload(input: SakInput) : JsonNode {
