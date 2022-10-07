@@ -4,22 +4,18 @@ import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
-import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
-import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.utils.SecureLog.secureLog
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.*
 
 @Component
 open class DeltakerProcessor(
@@ -36,7 +32,7 @@ open class DeltakerProcessor(
 	override fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
 		val arenaDeltaker = message.getData()
 		val arenaGjennomforingId = arenaDeltaker.TILTAKGJENNOMFORING_ID.toString()
-		
+
 		val gjennomforingInfo =
 			arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaGjennomforingId)
 				?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
@@ -60,7 +56,7 @@ open class DeltakerProcessor(
 
 		meterRegistry.counter(
 				"amt.arena-acl.deltaker.status",
-				listOf(Tag.of("arena", deltaker.deltakerStatusKode), Tag.of("amt-tiltak", deltaker.deltakerStatusKode))
+				listOf(Tag.of("arena", deltaker.deltakerStatusKode.name), Tag.of("amt-tiltak", deltaker.deltakerStatusKode.name))
 			).increment()
 
 		arenaDataIdTranslationService.upsertDeltakerIdTranslation(
@@ -83,33 +79,4 @@ open class DeltakerProcessor(
 		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${deltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 		metrics.publishMetrics(message)
 	}
-
-	private fun TiltakDeltaker.toAmtDeltaker(
-		amtDeltakerId: UUID,
-		gjennomforingId: UUID,
-		personIdent: String
-	): AmtDeltaker {
-		val converter = ArenaDeltakerStatusConverter(
-			deltakerStatusKode = deltakerStatusKode,
-			deltakerRegistrertDato = regDato,
-			startDato = datoFra,
-			sluttDato = datoTil,
-			datoStatusEndring = datoStatusendring?.toLocalDate(),
-		)
-
-		return AmtDeltaker(
-			id = amtDeltakerId,
-			gjennomforingId = gjennomforingId,
-			personIdent = personIdent,
-			startDato = datoFra,
-			sluttDato = datoTil,
-			status = converter.getStatus(),
-			dagerPerUke = dagerPerUke,
-			prosentDeltid = prosentDeltid,
-			registrertDato = regDato,
-			statusEndretDato = converter.getEndretDato(),
-			innsokBegrunnelse = innsokBegrunnelse
-		)
-	}
-
 }
