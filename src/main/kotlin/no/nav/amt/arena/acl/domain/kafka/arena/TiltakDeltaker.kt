@@ -1,8 +1,12 @@
 package no.nav.amt.arena.acl.domain.kafka.arena
 
 
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
+import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerAarsakConverter
+import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 
 data class TiltakDeltaker(
 	val tiltakdeltakerId: String,
@@ -10,6 +14,7 @@ data class TiltakDeltaker(
 	val personId: String,
 	val datoFra: LocalDate?,
 	val datoTil: LocalDate?,
+	val statusAarsakKode: StatusAarsak?,
 	val deltakerStatusKode: Status,
 	val datoStatusendring: LocalDateTime?,
 	val dagerPerUke: Int?,
@@ -34,4 +39,46 @@ data class TiltakDeltaker(
 		INFOMOETE
 	}
 
+	enum class StatusAarsak {
+		HENLU, // Henlagt etter utredning
+		SYK, // syk
+		FRISM,  // Friskmeldt
+		ANN, //Annet
+		BEGA, //Begynt i arbeid
+		UTV,  // Utvist
+		FTOAT, // Fått tilbud om annet tiltak
+	}
+
+	fun toAmtDeltaker(
+		amtDeltakerId: UUID,
+		gjennomforingId: UUID,
+		personIdent: String
+	): AmtDeltaker {
+		val statusConverter = ArenaDeltakerStatusConverter(
+			deltakerRegistrertDato = regDato,
+			startDato = datoFra,
+			sluttDato = datoTil,
+			deltakerStatusKode = deltakerStatusKode,
+			datoStatusEndring = datoStatusendring?.toLocalDate(),
+		)
+		val aarsakConverter = ArenaDeltakerAarsakConverter(
+			deltakerStatusKode,
+			statusConverter.getStatus(),
+			statusAarsakKode)
+
+		return AmtDeltaker(
+			id = amtDeltakerId,
+			gjennomforingId = gjennomforingId,
+			personIdent = personIdent,
+			startDato = datoFra,
+			sluttDato = datoTil,
+			statusAarsak = aarsakConverter.convert(),
+			dagerPerUke = dagerPerUke,
+			prosentDeltid = prosentDeltid,
+			registrertDato = regDato,
+			status = statusConverter.getStatus(),
+			statusEndretDato = statusConverter.getEndretDato(),
+			innsokBegrunnelse = innsokBegrunnelse
+		)
+	}
 }

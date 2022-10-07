@@ -68,6 +68,7 @@ data class ArenaDeltaker(
 			datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
 			deltakerStatusKode = TiltakDeltaker.Status.valueOf(DELTAKERSTATUSKODE),
 			datoStatusendring = DATO_STATUSENDRING?.asValidatedLocalDateTime("DATO_STATUSENDRING"),
+			statusAarsakKode = AARSAKVERDIKODE_STATUS?.let {TiltakDeltaker.StatusAarsak.valueOf(AARSAKVERDIKODE_STATUS)},
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
 			regDato = regDato,

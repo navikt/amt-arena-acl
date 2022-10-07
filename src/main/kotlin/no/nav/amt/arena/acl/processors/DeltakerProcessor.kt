@@ -87,32 +87,4 @@ open class DeltakerProcessor(
 		return gjennomforingInfo
 	}
 
-	private fun TiltakDeltaker.toAmtDeltaker(
-		amtDeltakerId: UUID,
-		gjennomforingId: UUID,
-		personIdent: String
-	): AmtDeltaker {
-		val converter = ArenaDeltakerStatusConverter(
-			deltakerStatusKode = deltakerStatusKode,
-			deltakerRegistrertDato = regDato,
-			startDato = datoFra,
-			sluttDato = datoTil,
-			datoStatusEndring = datoStatusendring?.toLocalDate(),
-		)
-
-		return AmtDeltaker(
-			id = amtDeltakerId,
-			gjennomforingId = gjennomforingId,
-			personIdent = personIdent,
-			startDato = datoFra,
-			sluttDato = datoTil,
-			status = converter.getStatus(),
-			dagerPerUke = dagerPerUke,
-			prosentDeltid = prosentDeltid,
-			registrertDato = regDato,
-			statusEndretDato = converter.getEndretDato(),
-			innsokBegrunnelse = innsokBegrunnelse
-		)
-	}
-
 }
