@@ -4,7 +4,6 @@ import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.utils.asValidatedLocalDate
 import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
 
@@ -67,7 +66,7 @@ data class ArenaDeltaker(
 			personId = PERSON_ID?.toString() ?: throw ValidationException("PERSON_ID er null"),
 			datoFra = DATO_FRA?.asValidatedLocalDate("DATO_FRA"),
 			datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
-			deltakerStatusKode = DELTAKERSTATUSKODE,
+			deltakerStatusKode = TiltakDeltaker.Status.valueOf(DELTAKERSTATUSKODE),
 			datoStatusendring = DATO_STATUSENDRING?.asValidatedLocalDateTime("DATO_STATUSENDRING"),
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
@@ -78,17 +77,3 @@ data class ArenaDeltaker(
 
 }
 // @SONAR_STOP@
-
-data class TiltakDeltaker(
-	val tiltakdeltakerId: String,
-	val tiltakgjennomforingId: String,
-	val personId: String,
-	val datoFra: LocalDate?,
-	val datoTil: LocalDate?,
-	val deltakerStatusKode: String,
-	val datoStatusendring: LocalDateTime?,
-	val dagerPerUke: Int?,
-	val prosentDeltid: Float?,
-	val regDato: LocalDateTime,
-	val innsokBegrunnelse: String?
-)

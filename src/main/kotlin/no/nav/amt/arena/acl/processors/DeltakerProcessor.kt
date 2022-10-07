@@ -55,7 +55,7 @@ open class DeltakerProcessor(
 
 		meterRegistry.counter(
 			"amt.arena-acl.deltaker.status",
-			listOf(Tag.of("arena", deltaker.deltakerStatusKode), Tag.of("amt-tiltak", deltaker.deltakerStatusKode))
+			listOf(Tag.of("arena", deltaker.deltakerStatusKode.name), Tag.of("amt-tiltak", deltaker.deltakerStatusKode.name))
 		).increment()
 
 		val amtData = AmtKafkaMessageDto(
