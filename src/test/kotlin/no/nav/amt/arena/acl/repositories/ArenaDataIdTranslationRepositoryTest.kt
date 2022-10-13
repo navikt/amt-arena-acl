@@ -21,8 +21,7 @@ class ArenaDataIdTranslationRepositoryTest : FunSpec({
 	val testObject = ArenaDataIdTranslationDbo(
 		amtId = UUID.randomUUID(),
 		arenaTableName = "ARENA_TABLE_NAME",
-		arenaId = "ARENA_ID",
-		ignored = false
+		arenaId = "ARENA_ID"
 	)
 
 	beforeEach {

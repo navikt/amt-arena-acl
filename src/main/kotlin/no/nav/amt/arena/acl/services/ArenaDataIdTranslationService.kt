@@ -15,34 +15,40 @@ open class ArenaDataIdTranslationService(
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	fun upsertGjennomforingIdTranslation(gjennomforingArenaId: String, gjennomforingAmtId: UUID, ignored: Boolean) {
+	fun upsertGjennomforingIdTranslation(gjennomforingArenaId: String, gjennomforingAmtId: UUID) {
 		upsertTranslation(
 			arenaId = gjennomforingArenaId,
 			amtId = gjennomforingAmtId,
-			arenaTableName = ARENA_GJENNOMFORING_TABLE_NAME,
-			ignored = ignored
+			arenaTableName = ARENA_GJENNOMFORING_TABLE_NAME
 		)
 	}
 
-	fun upsertDeltakerIdTranslation(deltakerArenaId: String, deltakerAmtId: UUID, ignored: Boolean) {
+	fun upsertDeltakerIdTranslation(deltakerArenaId: String, deltakerAmtId: UUID) {
 		upsertTranslation(
 			arenaId = deltakerArenaId,
 			amtId = deltakerAmtId,
 			arenaTableName = ARENA_DELTAKER_TABLE_NAME,
-			ignored = ignored
 		)
 	}
 
 
-	fun findGjennomforingIdTranslation(gjennomforingArenaId: String): ArenaDataIdTranslationDbo?  {
+	fun findGjennomforingIdTranslation(gjennomforingArenaId: String): ArenaDataIdTranslationDbo? {
 		return arenaDataIdTranslationRepository.get(ARENA_GJENNOMFORING_TABLE_NAME, gjennomforingArenaId)
 	}
 
 	fun hentEllerOpprettNyGjennomforingId(gjennomforingArenaId: String): UUID {
-		val gjennomforingId = arenaDataIdTranslationRepository.get(ARENA_GJENNOMFORING_TABLE_NAME, gjennomforingArenaId)?.amtId
+		val gjennomforingId =
+			arenaDataIdTranslationRepository.get(ARENA_GJENNOMFORING_TABLE_NAME, gjennomforingArenaId)?.amtId
 
 		if (gjennomforingId == null) {
 			val nyGjennomforingId = UUID.randomUUID()
+			arenaDataIdTranslationRepository.insert(
+				ArenaDataIdTranslationDbo(
+					amtId = nyGjennomforingId,
+					arenaTableName = ARENA_GJENNOMFORING_TABLE_NAME,
+					arenaId = gjennomforingArenaId
+				)
+			)
 			log.info("Opprettet ny id for gjennomføring, id=$nyGjennomforingId arenaId=$gjennomforingArenaId")
 			return nyGjennomforingId
 		}
@@ -55,6 +61,14 @@ open class ArenaDataIdTranslationService(
 
 		if (deltakerId == null) {
 			val nyDeltakerIdId = UUID.randomUUID()
+			arenaDataIdTranslationRepository.insert(
+				ArenaDataIdTranslationDbo(
+					amtId = nyDeltakerIdId,
+					arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+					arenaId = deltakerArenaId
+				)
+			)
+
 			log.info("Opprettet ny id for deltaker, id=$nyDeltakerIdId arenaId=$deltakerArenaId")
 			return nyDeltakerIdId
 		}
@@ -62,12 +76,11 @@ open class ArenaDataIdTranslationService(
 		return deltakerId
 	}
 
-	private fun upsertTranslation(arenaId: String, arenaTableName: String, amtId: UUID, ignored: Boolean) {
+	private fun upsertTranslation(arenaId: String, arenaTableName: String, amtId: UUID) {
 		val translation = ArenaDataIdTranslationDbo(
 			amtId = amtId,
 			arenaTableName = arenaTableName,
 			arenaId = arenaId,
-			ignored = ignored,
 		)
 
 		arenaDataIdTranslationRepository.insert(translation)

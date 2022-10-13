@@ -12,9 +12,9 @@ import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.repositories.ArenaGjennomforingRepository
 import no.nav.amt.arena.acl.repositories.ArenaSakRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
+import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.services.TiltakService
 import org.slf4j.LoggerFactory
@@ -25,8 +25,8 @@ import java.util.*
 open class GjennomforingProcessor(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val arenaSakRepository: ArenaSakRepository,
-	private val arenaGjennomforingRepository: ArenaGjennomforingRepository,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
+	private val gjennomforingService: GjennomforingService,
 	private val tiltakService: TiltakService,
 	private val ordsClient: ArenaOrdsProxyClient,
 	private val kafkaProducerService: KafkaProducerService
@@ -35,14 +35,6 @@ open class GjennomforingProcessor(
 	private val log = LoggerFactory.getLogger(javaClass)
 	private val statusConverter = GjennomforingStatusConverter()
 
-	private val SUPPORTED_TILTAK = setOf(
-		"INDOPPFAG",
-	)
-
-	private fun isSupportedTiltak(tiltakskode: String): Boolean {
-		return SUPPORTED_TILTAK.contains(tiltakskode)
-	}
-
 	override fun handleArenaMessage(message: ArenaGjennomforingKafkaMessage) {
 		val arenaGjennomforing = message.getData()
 		val arenaGjennomforingTiltakskode = arenaGjennomforing.TILTAKSKODE
@@ -50,13 +42,8 @@ open class GjennomforingProcessor(
 
 		val gjennomforingId = arenaDataIdTranslationService.hentEllerOpprettNyGjennomforingId(arenaGjennomforingId)
 
-		if (!isSupportedTiltak(arenaGjennomforingTiltakskode)) {
-			arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
-				gjennomforingArenaId = arenaGjennomforingId,
-				gjennomforingAmtId = gjennomforingId,
-				ignored = true
-			)
-
+		if (!gjennomforingService.isSupportedTiltak(arenaGjennomforingTiltakskode)) {
+			gjennomforingService.ignore(gjennomforingId)
 			throw IgnoredException("$arenaGjennomforingTiltakskode er ikke et støttet tiltak")
 		}
 
@@ -68,12 +55,6 @@ open class GjennomforingProcessor(
 		val virksomhetsnummer = ordsClient.hentVirksomhetsnummer(gjennomforing.arbgivIdArrangor)
 		val sak = arenaSakRepository.hentSakMedArenaId(gjennomforing.sakId)
 
-		arenaDataIdTranslationService.upsertGjennomforingIdTranslation(
-			gjennomforingArenaId = gjennomforing.tiltakgjennomforingId,
-			gjennomforingAmtId = gjennomforingId,
-			ignored = false
-		)
-
 		val amtGjennomforing = gjennomforing.toAmtGjennomforing(
 			amtTiltak = tiltak,
 			amtGjennomforingId = gjennomforingId,
@@ -83,7 +64,7 @@ open class GjennomforingProcessor(
 			sakLopenr = sak?.lopenr,
 		)
 
-		arenaGjennomforingRepository.upsert(amtGjennomforing.toInsertDbo(gjennomforing.sakId))
+		gjennomforingService.upsert(amtGjennomforing.toInsertDbo(gjennomforing.sakId))
 
 		if (sak == null) throw DependencyNotIngestedException("Venter på at sak med id: ${gjennomforing.sakId} skal bli håndtert")
 

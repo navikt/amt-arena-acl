@@ -14,7 +14,9 @@ import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.repositories.ArenaGjennomforingDbo
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
+import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.utils.SecureLog.secureLog
 import org.slf4j.LoggerFactory
@@ -25,6 +27,7 @@ import java.util.*
 open class DeltakerProcessor(
 	val meterRegistry: MeterRegistry,
 	private val arenaDataRepository: ArenaDataRepository,
+	private val gjennomforingService: GjennomforingService,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val ordsClient: ArenaOrdsProxyClient,
 	private val metrics: DeltakerMetricHandler,
@@ -35,15 +38,7 @@ open class DeltakerProcessor(
 
 	override fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
 		val arenaDeltaker = message.getData()
-		val arenaGjennomforingId = arenaDeltaker.TILTAKGJENNOMFORING_ID.toString()
-		
-		val gjennomforingInfo =
-			arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaGjennomforingId)
-				?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
-
-		if (gjennomforingInfo.ignored) {
-			throw IgnoredException("Er deltaker på en gjennomførig som ikke er støttet")
-		}
+		val gjennomforing = getGjennomforing(arenaDeltaker.TILTAKGJENNOMFORING_ID.toString())
 
 		val deltaker = arenaDeltaker.mapTiltakDeltaker()
 
@@ -54,20 +49,14 @@ open class DeltakerProcessor(
 
 		val amtDeltaker = deltaker.toAmtDeltaker(
 			amtDeltakerId = deltakerAmtId,
-			gjennomforingId = gjennomforingInfo.amtId,
+			gjennomforingId = gjennomforing.id,
 			personIdent = personIdent
 		)
 
 		meterRegistry.counter(
-				"amt.arena-acl.deltaker.status",
-				listOf(Tag.of("arena", deltaker.deltakerStatusKode), Tag.of("amt-tiltak", deltaker.deltakerStatusKode))
-			).increment()
-
-		arenaDataIdTranslationService.upsertDeltakerIdTranslation(
-			deltakerArenaId = deltaker.tiltakdeltakerId,
-			deltakerAmtId = deltakerAmtId,
-			ignored = false
-		)
+			"amt.arena-acl.deltaker.status",
+			listOf(Tag.of("arena", deltaker.deltakerStatusKode), Tag.of("amt-tiltak", deltaker.deltakerStatusKode))
+		).increment()
 
 		val amtData = AmtKafkaMessageDto(
 			type = PayloadType.DELTAKER,
@@ -82,6 +71,20 @@ open class DeltakerProcessor(
 		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=${deltaker.tiltakdeltakerId} personId=${deltaker.personId} fnr=$personIdent er sendt")
 		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${deltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 		metrics.publishMetrics(message)
+	}
+
+	private fun getGjennomforing(arenaGjennomforingId: String): ArenaGjennomforingDbo {
+		val gjennomforingId = arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaGjennomforingId)?.amtId
+			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
+
+		if (gjennomforingService.isIgnored(gjennomforingId)) {
+			throw IgnoredException("Deltaker på en gjennomføring $gjennomforingId er ignorert")
+		}
+
+		val gjennomforingInfo = gjennomforingService.getGjennomforing(gjennomforingId)
+			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
+
+		return gjennomforingInfo
 	}
 
 	private fun TiltakDeltaker.toAmtDeltaker(
