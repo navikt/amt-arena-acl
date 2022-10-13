@@ -107,7 +107,6 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 
 		deltakerExecutor.execute(NyDeltakerCommand(input))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
-			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 	}
 
@@ -127,7 +126,6 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 
 		deltakerExecutor.execute(NyDeltakerCommand(input))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
-			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 	}
 
@@ -171,7 +169,6 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 		val firstResult = deltakerExecutor.execute(command)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
 			.arenaData { it.note shouldBe "Venter på at gjennomføring med id=$gjennomforingId skal bli håndtert" }
-			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 
 		ingestGjennomforingOgTiltak(gjennomforingId)
@@ -187,28 +184,30 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 
 	@Test
 	fun `ingest deltaker - tiltak er ikke støttet - får status IGNORED`() {
-		val gjennomforingId = Random().nextLong()
+		val arenaGjennomforingId = Random().nextLong()
+		var amtGjennomforingId: UUID? = null
 
 		gjennomforingExecutor.execute(
 			NyGjennomforingCommand(
 				GjennomforingInput(
 					tiltakKode = "IKKE_EKSISTERENDE",
-					gjennomforingId = gjennomforingId
+					gjennomforingId = arenaGjennomforingId
 				)
 			)
 		)
-			.translation { it.ignored shouldBe true }
+			.arenaData { it.ingestStatus shouldBe IngestStatus.IGNORED }
+			.translation { amtGjennomforingId = it.amtId }
 
 		deltakerExecutor.execute(
 			NyDeltakerCommand(
 				DeltakerInput(
 					tiltakDeltakerId = Random().nextLong(),
-					tiltakgjennomforingId = gjennomforingId
+					tiltakgjennomforingId = arenaGjennomforingId
 				)
 			)
 		)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.IGNORED }
-			.arenaData { it.note shouldBe "Er deltaker på en gjennomførig som ikke er støttet" }
+			.arenaData { it.note shouldBe "Deltaker på en gjennomføring $amtGjennomforingId er ignorert" }
 	}
 
 	@Test
@@ -227,7 +226,6 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 		)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.INVALID }
 			.arenaData { it.note shouldBe "TILTAKDELTAKER_ID er 0" }
-			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 	}
 
@@ -248,7 +246,6 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 		)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.INVALID }
 			.arenaData { it.note shouldBe "PERSON_ID er null" }
-			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 	}
 

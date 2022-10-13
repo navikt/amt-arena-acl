@@ -48,7 +48,6 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 		gjennomforingExecutor.execute(NyGjennomforingCommand(input))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.IGNORED }
-			.translation { it.ignored shouldBe true }
 			.result { _, _, output -> output shouldBe null }
 	}
 
@@ -65,15 +64,14 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 		)
 		val sakCmd = NySakCommand(SakInput(sakId = sakId), null)
 
+		sakExecutor.execute(sakCmd)
+			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED}
+
 		val firstResult = gjennomforingExecutor.execute(gjennomforingCmd)
 			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
 			.arenaData { it.ingestAttempts shouldBe 0 }
 			.arenaData { it.lastAttempted shouldBe null }
-			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
-
-		sakExecutor.execute(sakCmd)
-			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED}
 
 		tiltakExecutor.execute(NyttTiltakCommand(navn = tiltakNavn))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
@@ -101,7 +99,6 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 		gjennomforingExecutor.execute(NyGjennomforingCommand(input))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.RETRY }
-			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 
 	}
@@ -118,7 +115,6 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 		gjennomforingExecutor.execute(NyGjennomforingCommand(input))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.INVALID }
 			.arenaData { it.note shouldBe "ARBGIV_ID_ARRANGOR er null" }
-			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 	}
 
@@ -134,7 +130,6 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 		gjennomforingExecutor.execute(NyGjennomforingCommand(input))
 			.arenaData { it.ingestStatus shouldBe IngestStatus.INVALID }
 			.arenaData { it.note shouldBe "LOKALTNAVN er null" }
-			.result { _, translation, _ -> translation shouldBe null }
 			.result { _, _, output -> output shouldBe null }
 	}
 
