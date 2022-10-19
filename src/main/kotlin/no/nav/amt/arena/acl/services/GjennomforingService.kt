@@ -19,7 +19,6 @@ class GjennomforingService(
 		"AVKLARAG",
 		"VASV",
 		"ARBRRHDAG",
-		"GRUFAGYRKE",
 		"DIGIOPPARB"
 	)
 
