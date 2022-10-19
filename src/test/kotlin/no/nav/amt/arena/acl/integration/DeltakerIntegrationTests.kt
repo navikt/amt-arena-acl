@@ -299,6 +299,7 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 		tiltakExecutor.execute(NyttTiltakCommand())
 			.arenaData { it.ingestStatus shouldBe IngestStatus.HANDLED }
 
+
 		sakExecutor.execute(NySakCommand(sakInput, gjennomforingId))
 
 		return gjennomforingExecutor.execute(NyGjennomforingCommand(gjennomforingInput))
