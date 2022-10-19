@@ -4,15 +4,12 @@ import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
-import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
-import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.ArenaGjennomforingDbo
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
@@ -21,7 +18,6 @@ import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.utils.SecureLog.secureLog
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.*
 
 @Component
 open class DeltakerProcessor(
