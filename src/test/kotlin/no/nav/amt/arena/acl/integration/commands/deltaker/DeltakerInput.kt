@@ -9,9 +9,10 @@ data class DeltakerInput(
 	val personId: Long? = 0,
 	val datoFra: LocalDate = LocalDate.now().minusDays(2),
 	val datoTil: LocalDate = LocalDate.now().plusDays(2),
+	val statusAarsak: String? = null,
 	val deltakerStatusKode: String = "GJENN",
 	val datoStatusEndring: LocalDate = LocalDate.now().minusDays(2),
-	val registrertDato: LocalDateTime = LocalDateTime.now().minusDays(7),
+	val registrertDato: LocalDateTime = LocalDate.now().minusDays(7).atStartOfDay(),
 	val prosentDeltid: Float = 50.0f,
 	val antallDagerPerUke: Int = 5,
 	val innsokBegrunnelse: String? = null

@@ -11,6 +11,7 @@ data class AmtDeltaker(
 	val startDato: LocalDate?,
 	val sluttDato: LocalDate?,
 	val status: Status,
+	val statusAarsak: StatusAarsak?,
 	val dagerPerUke: Int?,
 	val prosentDeltid: Float?,
 	val registrertDato: LocalDateTime,
@@ -21,4 +22,24 @@ data class AmtDeltaker(
 	enum class Status {
 		VENTER_PA_OPPSTART, DELTAR, HAR_SLUTTET, IKKE_AKTUELL, FEILREGISTRERT, PABEGYNT
 	}
+
+	enum class StatusAarsak {
+		SYK,
+		FATT_JOBB,
+		TRENGER_ANNEN_STOTTE,
+		FIKK_IKKE_PLASS,
+		UTDANNING,
+		FERDIG,
+		AVLYST_KONTRAKT,
+		IKKE_MOTT,
+		ANNET
+	}
+}
+
+fun AmtDeltaker.Status.erAvsluttende() : Boolean{
+	return this in listOf(
+		AmtDeltaker.Status.IKKE_AKTUELL,
+		AmtDeltaker.Status.HAR_SLUTTET,
+		AmtDeltaker.Status.FEILREGISTRERT
+	)
 }
