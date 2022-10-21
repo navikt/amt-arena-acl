@@ -71,7 +71,6 @@ class TiltakGjennomforingProcessorTest {
 			GjennomforingService(
 				ArenaGjennomforingRepository(jdbcTemplate),
 				ignoredArenaDataRepository,
-				translationService
 			),
 			tiltakService,
 			ordsClient,

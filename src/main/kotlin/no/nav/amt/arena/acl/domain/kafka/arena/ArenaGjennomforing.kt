@@ -4,8 +4,6 @@ import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.utils.asValidatedLocalDate
 import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
 import no.nav.amt.arena.acl.utils.validatedLocalDateTime
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 // @SONAR_START@
 data class ArenaGjennomforing(
