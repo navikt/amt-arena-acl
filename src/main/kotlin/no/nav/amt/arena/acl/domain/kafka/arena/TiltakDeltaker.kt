@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.domain.kafka.arena
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerAarsakConverter
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
+import no.nav.amt.arena.acl.repositories.ArenaGjennomforingDbo
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -48,9 +49,9 @@ data class TiltakDeltaker(
 		FTOAT, // Fått tilbud om annet tiltak
 	}
 
-	fun toAmtDeltaker(
+	fun constructDeltaker(
 		amtDeltakerId: UUID,
-		gjennomforingId: UUID,
+		gjennomforing: ArenaGjennomforingDbo,
 		personIdent: String
 	): AmtDeltaker {
 		val statusConverter = ArenaDeltakerStatusConverter(
@@ -59,15 +60,18 @@ data class TiltakDeltaker(
 			sluttDato = datoTil,
 			deltakerStatusKode = deltakerStatusKode,
 			statusEndringTid = datoStatusendring,
+			gjennomforingStatus = gjennomforing.status
 		)
 		val aarsakConverter = ArenaDeltakerAarsakConverter(
 			deltakerStatusKode,
 			statusConverter.getStatus(),
-			statusAarsakKode)
+			statusAarsakKode,
+			gjennomforing.status
+		)
 
 		return AmtDeltaker(
 			id = amtDeltakerId,
-			gjennomforingId = gjennomforingId,
+			gjennomforingId = gjennomforing.id,
 			personIdent = personIdent,
 			startDato = datoFra,
 			sluttDato = datoTil,

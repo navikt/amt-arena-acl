@@ -1,6 +1,8 @@
 package no.nav.amt.arena.acl.processors.converters
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
+import no.nav.amt.arena.acl.domain.kafka.amt.erAvsluttende
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.processors.DeltakerStatusProvider
 import java.time.LocalDate
@@ -13,6 +15,8 @@ internal data class ArenaDeltakerStatusConverter(
 	private val startDato: LocalDate?,
 	private val sluttDato: LocalDate?,
 	private val statusEndringTid: LocalDateTime?,
+	private val gjennomforingStatus: AmtGjennomforing.Status
+
 ) : DeltakerStatusProvider {
 	private val statusEndringDato = statusEndringTid?.toLocalDate()
 	private fun statusEndretSammeDagSomRegistrering() = statusEndringTid != null && statusEndringDato == deltakerRegistrertDato.toLocalDate()
@@ -76,14 +80,20 @@ internal data class ArenaDeltakerStatusConverter(
 	}
 
 	private fun utledStatus (): Status {
-		if (deltakerStatusKode in avsluttendeStatuser) return avsluttendeStatus()
-		else if (deltakerStatusKode in gjennomforendeStatuser) return gjennomforendeStatus()
-		else if (deltakerStatusKode in utkastStatuser) return ventendeStatus()
+		val status: Status
+		if (deltakerStatusKode in avsluttendeStatuser) status = avsluttendeStatus()
+		else if (deltakerStatusKode in gjennomforendeStatuser) status =  gjennomforendeStatus()
+		else if (deltakerStatusKode in utkastStatuser) status = ventendeStatus()
 		else if (deltakerStatusKode in ikkeAktuelleStatuser) {
-			if (deltakerStatusKode == TiltakDeltaker.Status.IKKAKTUELL) return kanskjeFeilregistrert()
-			else return alltidIkkeAktuell()
+			status = if (deltakerStatusKode == TiltakDeltaker.Status.IKKAKTUELL) kanskjeFeilregistrert()
+			else alltidIkkeAktuell()
 		}
-		throw UnknownFormatConversionException("Kan ikke konvertere deltakerstatuskode: $deltakerStatusKode")
+		else throw UnknownFormatConversionException("Kan ikke konvertere deltakerstatuskode: $deltakerStatusKode")
+
+		if(gjennomforingStatus == AmtGjennomforing.Status.AVSLUTTET && !status.navn.erAvsluttende()) {
+			return Status(AmtDeltaker.Status.IKKE_AKTUELL, statusEndringTid)
+		}
+		return status
 	}
 
 	init {
