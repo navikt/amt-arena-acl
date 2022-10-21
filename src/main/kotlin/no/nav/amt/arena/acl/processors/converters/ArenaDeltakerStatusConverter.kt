@@ -12,15 +12,15 @@ internal data class ArenaDeltakerStatusConverter(
 	private val deltakerRegistrertDato: LocalDateTime,
 	private val startDato: LocalDate?,
 	private val sluttDato: LocalDate?,
-	private val datoStatusEndring: LocalDate?,
+	private val statusEndringTid: LocalDateTime?,
 ) : DeltakerStatusProvider {
-
-	private fun statusEndretSammeDagSomRegistrering() = datoStatusEndring != null && datoStatusEndring == deltakerRegistrertDato.toLocalDate()
+	private val statusEndringDato = statusEndringTid?.toLocalDate()
+	private fun statusEndretSammeDagSomRegistrering() = statusEndringTid != null && statusEndringDato == deltakerRegistrertDato.toLocalDate()
 	private fun starterIDag () = startDato?.equals(LocalDate.now()) == true
 	private fun startDatoPassert() = startDato?.isBefore(LocalDate.now()) ?: false
 	private fun sluttDatoPassert() = sluttDato?.isBefore(LocalDate.now()) ?: false
-	private fun endretEtterStartDato() = startDato != null && datoStatusEndring?.isAfter(startDato) ?: false
-	private fun sluttDatoHaddePassert() = datoStatusEndring != null && sluttDato?.isBefore(datoStatusEndring) ?: false
+	private fun endretEtterStartDato() = startDato != null && statusEndringDato?.isAfter(startDato) ?: false
+	private fun sluttDatoHaddePassert() = statusEndringTid != null && sluttDato?.isBefore(statusEndringDato) ?: false
 	private val status: Status
 
 	val avsluttendeStatuser = listOf(
@@ -45,34 +45,34 @@ internal data class ArenaDeltakerStatusConverter(
 
 	private val kanskjeFeilregistrert: () -> Status = {
 		if (statusEndretSammeDagSomRegistrering())
-			Status(AmtDeltaker.Status.FEILREGISTRERT, datoStatusEndring)
+			Status(AmtDeltaker.Status.FEILREGISTRERT, statusEndringTid)
 		else
-			Status(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
+			Status(AmtDeltaker.Status.IKKE_AKTUELL, statusEndringTid)
 	}
 
 	private val alltidIkkeAktuell: () -> Status = {
-		Status(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
+		Status(AmtDeltaker.Status.IKKE_AKTUELL, statusEndringTid)
 	}
 
 	private val gjennomforendeStatus: () -> Status = {
 		if (startDatoPassert() && sluttDatoPassert())
-			Status(AmtDeltaker.Status.HAR_SLUTTET, sluttDato)
+			Status(AmtDeltaker.Status.HAR_SLUTTET, sluttDato?.atStartOfDay())
 		else if (starterIDag() || startDatoPassert())
-			Status(AmtDeltaker.Status.DELTAR, startDato)
-		else Status(AmtDeltaker.Status.VENTER_PA_OPPSTART, datoStatusEndring)
+			Status(AmtDeltaker.Status.DELTAR, startDato?.atStartOfDay())
+		else Status(AmtDeltaker.Status.VENTER_PA_OPPSTART, statusEndringTid)
 	}
 
 	private val avsluttendeStatus:() -> Status = {
 		if (endretEtterStartDato() && sluttDatoHaddePassert())
-			Status(AmtDeltaker.Status.HAR_SLUTTET, sluttDato)
+			Status(AmtDeltaker.Status.HAR_SLUTTET, sluttDato?.atStartOfDay())
 		else if (endretEtterStartDato())
-			Status(AmtDeltaker.Status.HAR_SLUTTET, datoStatusEndring)
+			Status(AmtDeltaker.Status.HAR_SLUTTET, statusEndringTid)
 		else
-			Status(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
+			Status(AmtDeltaker.Status.IKKE_AKTUELL, statusEndringTid)
 	}
 
 	private val ventendeStatus: () -> Status = {
-		Status(AmtDeltaker.Status.PABEGYNT, datoStatusEndring)
+		Status(AmtDeltaker.Status.PABEGYNT, statusEndringTid)
 	}
 
 	private fun utledStatus (): Status {
@@ -95,7 +95,7 @@ internal data class ArenaDeltakerStatusConverter(
 	}
 
 	override fun getEndretDato () : LocalDateTime? {
-		return status.endretDato?.atStartOfDay()
+		return status.endretDato
 	}
 
 }
