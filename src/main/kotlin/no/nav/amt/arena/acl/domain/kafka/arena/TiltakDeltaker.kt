@@ -1,6 +1,5 @@
 package no.nav.amt.arena.acl.domain.kafka.arena
 
-
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerAarsakConverter
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
@@ -59,7 +58,7 @@ data class TiltakDeltaker(
 			startDato = datoFra,
 			sluttDato = datoTil,
 			deltakerStatusKode = deltakerStatusKode,
-			datoStatusEndring = datoStatusendring?.toLocalDate(),
+			statusEndringTid = datoStatusendring,
 		)
 		val aarsakConverter = ArenaDeltakerAarsakConverter(
 			deltakerStatusKode,
