@@ -1,13 +1,14 @@
 package no.nav.amt.arena.acl.processors.converters
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
+import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.processors.DeltakerStatusProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
-
+import java.util.*
 
 internal data class ArenaDeltakerStatusConverter(
-	private val deltakerStatusKode: String,
+	private val deltakerStatusKode: TiltakDeltaker.Status,
 	private val deltakerRegistrertDato: LocalDateTime,
 	private val startDato: LocalDate?,
 	private val sluttDato: LocalDate?,
@@ -19,9 +20,28 @@ internal data class ArenaDeltakerStatusConverter(
 	private fun startDatoPassert() = startDato?.isBefore(LocalDate.now()) ?: false
 	private fun sluttDatoPassert() = sluttDato?.isBefore(LocalDate.now()) ?: false
 	private fun endretEtterStartDato() = startDato != null && datoStatusEndring?.isAfter(startDato) ?: false
-	private fun sluttDatoHaddePassert() = datoStatusEndring != null && sluttDato?.isBefore(datoStatusEndring)?: false
+	private fun sluttDatoHaddePassert() = datoStatusEndring != null && sluttDato?.isBefore(datoStatusEndring) ?: false
 	private val status: Status
 
+	val avsluttendeStatuser = listOf(
+		TiltakDeltaker.Status.DELAVB,
+		TiltakDeltaker.Status.FULLF,
+		TiltakDeltaker.Status.GJENN_AVB,
+		TiltakDeltaker.Status.GJENN_AVL,
+		TiltakDeltaker.Status.IKKEM,
+	)
+	val ikkeAktuelleStatuser = listOf(
+		TiltakDeltaker.Status.IKKAKTUELL,
+		TiltakDeltaker.Status.AVSLAG,
+		TiltakDeltaker.Status.NEITAKK
+	)
+	val gjennomforendeStatuser = listOf(TiltakDeltaker.Status.GJENN, TiltakDeltaker.Status.TILBUD)
+	val utkastStatuser = listOf(
+		TiltakDeltaker.Status.VENTELISTE,
+		TiltakDeltaker.Status.AKTUELL,
+		TiltakDeltaker.Status.JATAKK,
+		TiltakDeltaker.Status.INFOMOETE
+	)
 
 	private val kanskjeFeilregistrert: () -> Status = {
 		if (statusEndretSammeDagSomRegistrering())
@@ -55,28 +75,19 @@ internal data class ArenaDeltakerStatusConverter(
 		Status(AmtDeltaker.Status.PABEGYNT, datoStatusEndring)
 	}
 
-	private val alleStatuser: Map<String, () -> Status> = mapOf(
-		"DELAVB" to avsluttendeStatus, // Deltakelse avbrutt
-		"FULLF" to avsluttendeStatus, // Fullført
-		"GJENN_AVB" to avsluttendeStatus, // Gjennomføring avbrutt
-		"GJENN_AVL" to avsluttendeStatus, // Gjennomføring avlyst
-		"IKKEM" to avsluttendeStatus, // Ikke møtt
-
-		"GJENN" to gjennomforendeStatus, // Gjennomføres
-		"TILBUD" to gjennomforendeStatus, // Godkjent tiltaksplass
-
-		"IKKAKTUELL" to kanskjeFeilregistrert, // Ikke aktuell
-		"AVSLAG" to alltidIkkeAktuell, // Fått avslag
-		"NEITAKK" to alltidIkkeAktuell, // Takket nei til tilbud
-
-		"VENTELISTE" to ventendeStatus,
-		"AKTUELL" to ventendeStatus,
-		"JATAKK" to ventendeStatus,
-		"INFOMOETE" to ventendeStatus
-	)
+	private fun utledStatus (): Status {
+		if (deltakerStatusKode in avsluttendeStatuser) return avsluttendeStatus()
+		else if (deltakerStatusKode in gjennomforendeStatuser) return gjennomforendeStatus()
+		else if (deltakerStatusKode in utkastStatuser) return ventendeStatus()
+		else if (deltakerStatusKode in ikkeAktuelleStatuser) {
+			if (deltakerStatusKode == TiltakDeltaker.Status.IKKAKTUELL) return kanskjeFeilregistrert()
+			else return alltidIkkeAktuell()
+		}
+		throw UnknownFormatConversionException("Kan ikke konvertere deltakerstatuskode: $deltakerStatusKode")
+	}
 
 	init {
-	    status = alleStatuser.getValue(deltakerStatusKode)()
+		status = utledStatus()
 	}
 
 	override fun getStatus () : AmtDeltaker.Status {
