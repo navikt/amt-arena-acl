@@ -10,7 +10,6 @@ import java.util.*
 class GjennomforingService(
 	private val arenaGjennomforingRepository: ArenaGjennomforingRepository,
 	private val ignoredRepository: IgnoredArenaDataRepository,
-	private val translationService: ArenaDataIdTranslationService
 ) {
 
 	private val SUPPORTED_TILTAK = setOf(

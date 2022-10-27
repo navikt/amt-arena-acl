@@ -33,25 +33,25 @@ open class DeltakerProcessor(
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	override fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
-		val arenaDeltaker = message.getData()
-		val gjennomforing = getGjennomforing(arenaDeltaker.TILTAKGJENNOMFORING_ID.toString())
+		val arenaDeltakerRaw = message.getData()
+		val gjennomforing = getGjennomforing(arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString())
 
-		val deltaker = arenaDeltaker.mapTiltakDeltaker()
+		val arenaDeltaker = arenaDeltakerRaw.mapTiltakDeltaker()
 
-		val personIdent = ordsClient.hentFnr(deltaker.personId)
-			?: throw IllegalStateException("Expected person with personId=${deltaker.personId} to exist")
+		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
+			?: throw IllegalStateException("Expected person with personId=${arenaDeltaker.personId} to exist")
 
-		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(deltaker.tiltakdeltakerId)
+		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId)
 
-		val amtDeltaker = deltaker.toAmtDeltaker(
+		val amtDeltaker = arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerAmtId,
-			gjennomforingId = gjennomforing.id,
+			gjennomforing = gjennomforing,
 			personIdent = personIdent
 		)
 
 		meterRegistry.counter(
 			"amt.arena-acl.deltaker.status",
-			listOf(Tag.of("arena", deltaker.deltakerStatusKode.name), Tag.of("amt-tiltak", deltaker.deltakerStatusKode.name))
+			listOf(Tag.of("arena", arenaDeltaker.deltakerStatusKode.name), Tag.of("amt-tiltak", arenaDeltaker.deltakerStatusKode.name))
 		).increment()
 
 		val amtData = AmtKafkaMessageDto(
@@ -62,10 +62,10 @@ open class DeltakerProcessor(
 
 		kafkaProducerService.sendTilAmtTiltak(amtDeltaker.id, amtData)
 
-		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(deltaker.tiltakdeltakerId))
+		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltaker.tiltakdeltakerId))
 
-		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=${deltaker.tiltakdeltakerId} personId=${deltaker.personId} fnr=$personIdent er sendt")
-		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${deltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
+		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} personId=${arenaDeltaker.personId} fnr=$personIdent er sendt")
+		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 		metrics.publishMetrics(message)
 	}
 
