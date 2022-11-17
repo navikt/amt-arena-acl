@@ -4,7 +4,8 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
@@ -12,6 +13,9 @@ import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
+import no.nav.amt.arena.acl.domain.db.IngestStatus
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.GjennomforingProcessor
@@ -20,9 +24,12 @@ import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
-class ArenaMessageProcessorServiceTest : StringSpec({
+class ArenaMessageProcessorServiceTest {
 
 	val mapper = ObjectMapperFactory.get()
 
@@ -40,7 +47,8 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 
 	lateinit var messageProcessor: ArenaMessageProcessorService
 
-	beforeEach {
+	@BeforeEach
+	internal fun setUp() {
 		val rootLogger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 		rootLogger.level = Level.WARN
 
@@ -62,7 +70,10 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		)
 	}
 
-	"should handle arena deltaker message" {
+	@Test
+	internal fun `Should handle arena deltaker message`() {
+		defaultMocks()
+
 		val tiltakdeltakereJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakdeltakerendret-v1.json").readText()
 		val tiltakdeltakere: List<JsonNode> = mapper.readValue(tiltakdeltakereJsonFileContent)
@@ -81,7 +92,10 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		}
 	}
 
-	"should handle arena gjennomforing message" {
+	@Test
+	internal fun `Should handle arena gjennomforing message`() {
+		defaultMocks()
+
 		val tiltakgjennomforingerJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakgjennomforingendret-v1.json").readText()
 		val tiltakgjennomforinger: List<JsonNode> = mapper.readValue(tiltakgjennomforingerJsonFileContent)
@@ -98,9 +112,13 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		verify(exactly = 1) {
 			gjennomforingProcessor.handleArenaMessage(any())
 		}
+
 	}
 
-	"should handle arena tiltak message" {
+	@Test
+	internal fun `Should handle arena tiltak message`() {
+		defaultMocks()
+
 		val tiltakJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakendret-v1.json").readText()
 		val tiltakList: List<JsonNode> = mapper.readValue(tiltakJsonFileContent)
@@ -119,7 +137,10 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		}
 	}
 
-	"should handle message with unicode NULL" {
+	@Test
+	internal fun `Should handle message with unicode NULL`() {
+		defaultMocks()
+
 		val tiltakgjennomforingerJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakgjennomforingendret-v1-bad-unicode.json")
 				.readText()
@@ -143,9 +164,13 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		val capturedData = capturingSlot.captured
 
 		capturedData.after?.VURDERING_GJENNOMFORING shouldBe "Vurdering"
+
 	}
 
-	"should handle arena sak message" {
+	@Test
+	internal fun `Should handle arena sak message`() {
+		defaultMocks()
+
 		val tiltakJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-sakendret-v1.json").readText()
 		val sakList: List<JsonNode> = mapper.readValue(tiltakJsonFileContent)
@@ -162,6 +187,55 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		verify(exactly = 1) {
 			sakProcessor.handleArenaMessage(any())
 		}
+
+	}
+	@Test
+	internal fun `Set older unhandled messages to NEWER_MESSAGE_RECEIVED`() {
+		val messages = listOf(
+			arenaDataDbo(id = 1, ingestStatus = IngestStatus.RETRY),
+			arenaDataDbo(id = 2, ingestStatus = IngestStatus.NEW),
+			arenaDataDbo(id = 3, ingestStatus = IngestStatus.FAILED),
+			arenaDataDbo(id = 4, ingestStatus = IngestStatus.IGNORED),
+			arenaDataDbo(id = 5, ingestStatus = IngestStatus.HANDLED),
+			arenaDataDbo(id = 6, ingestStatus = IngestStatus.INVALID),
+		)
+
+		every { arenaDataRepository.getByArenaId(any(), any()) } returns messages
+		every { arenaDataRepository.updateIngestStatus(ids = any(), ingestStatus = any()) } returns Unit
+
+		messageProcessor.setOlderUnhandledMessagesToNewerMessageReceived("Table", "ARENA_ID", LocalDateTime.now())
+
+		val capturingSlot = CapturingSlot<Set<Int>>()
+
+		verify (exactly = 1){
+			arenaDataRepository.updateIngestStatus(ids = capture(capturingSlot), ingestStatus = any())
+		}
+
+		capturingSlot.captured shouldContainExactly setOf(1, 2, 3)
 	}
 
-})
+	private fun defaultMocks() {
+		every { arenaDataRepository.getByArenaId(any(), any()) } returns listOf()
+		every { arenaDataRepository.updateIngestStatus(ids = any(), ingestStatus = any()) } returns Unit
+	}
+
+	private fun arenaDataDbo(
+		id: Int = 0,
+		ingestStatus: IngestStatus = IngestStatus.NEW
+	): ArenaDataDbo = ArenaDataDbo(
+		id = id,
+		arenaTableName = "Table",
+		arenaId = "ARENA_ID",
+		operation = AmtOperation.CREATED,
+		operationPosition = "0",
+		operationTimestamp = LocalDateTime.now(),
+		ingestStatus = ingestStatus,
+		ingestedTimestamp = null,
+		ingestAttempts = 0,
+		lastAttempted = null,
+		before = null,
+		after = null,
+		note = null
+	)
+
+}

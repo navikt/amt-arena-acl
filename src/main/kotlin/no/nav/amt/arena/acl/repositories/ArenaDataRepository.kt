@@ -84,6 +84,22 @@ open class ArenaDataRepository(
 		)
 	}
 
+	fun updateIngestStatus(ids: Set<Int>, ingestStatus: IngestStatus) {
+		val sql = """
+			UPDATE arena_data
+			SET ingest_status = :ingestStatus
+			WHERE id in (:ids)
+		""".trimIndent()
+
+		template.update(
+			sql,
+			sqlParameters(
+				"ids" to ids,
+				"ingestStatus" to ingestStatus
+			)
+		)
+	}
+
 	fun updateIngestAttempts(id: Int, ingestAttempts: Int, note: String?) {
 		val sql = """
 			UPDATE arena_data SET
@@ -121,6 +137,25 @@ open class ArenaDataRepository(
 		return template.query(sql, parameters, rowMapper).firstOrNull()
 			?: throw NoSuchElementException("Element from table $tableName, operation: $operation, position: $position does not exist")
 	}
+
+	fun getByArenaId(tableName: String, arenaId: String): List<ArenaDataDbo> {
+		val sql = """
+			SELECT *
+			FROM arena_data
+			WHERE arena_table_name = :tableName
+			AND arena_id = :arenaId
+		""".trimIndent()
+
+		return template.query(
+			sql,
+			sqlParameters(
+				"tableName" to tableName,
+				"arenaId" to arenaId
+			),
+			rowMapper
+		)
+	}
+
 
 	fun getByIngestStatus(
 		tableName: String,

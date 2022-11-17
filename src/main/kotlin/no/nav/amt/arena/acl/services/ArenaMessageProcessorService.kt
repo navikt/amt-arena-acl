@@ -2,6 +2,7 @@ package no.nav.amt.arena.acl.services
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
+import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInput
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
@@ -18,6 +19,7 @@ import no.nav.amt.arena.acl.utils.DateUtils.parseArenaDateTime
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 open class ArenaMessageProcessorService(
@@ -64,6 +66,7 @@ open class ArenaMessageProcessorService(
 		val arenaTableName = msg.arenaTableName
 
 		try {
+			setOlderUnhandledMessagesToNewerMessageReceived(arenaId, arenaId, msg.operationTimestamp)
 			processor.handleArenaMessage(msg)
 		} catch (e: Exception) {
 			when (e) {
@@ -89,6 +92,21 @@ open class ArenaMessageProcessorService(
 				}
 			}
 		}
+	}
+	fun setOlderUnhandledMessagesToNewerMessageReceived(tableName: String, arenaId: String, timestamp: LocalDateTime) {
+		val messages: List<ArenaDataDbo> = arenaDataRepository.getByArenaId(
+			tableName = tableName,
+			arenaId = arenaId
+		)
+
+		val olderUnhandledMessages = messages
+			.filter { listOf(IngestStatus.NEW, IngestStatus.FAILED, IngestStatus.RETRY).contains(it.ingestStatus) }
+			.filter { it.operationTimestamp.isBefore(timestamp) }
+
+		arenaDataRepository.updateIngestStatus(
+			olderUnhandledMessages.map { it.id }.toSet(),
+			IngestStatus.NEWER_MESSAGE_RECEIVED
+		)
 	}
 
 	private inline fun <reified D> toArenaKafkaMessage(messageDto: ArenaKafkaMessageDto): ArenaKafkaMessage<D> {
