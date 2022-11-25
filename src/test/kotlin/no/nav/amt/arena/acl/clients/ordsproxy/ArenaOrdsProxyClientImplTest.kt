@@ -9,21 +9,18 @@ import org.junit.jupiter.api.Test
 
 @WireMockTest
 class ArenaOrdsProxyClientImplTest {
-	var proxyToken = "PROXY_TOKEN"
-	var ordsProxyToken = "ORDS_PROXY_TOKEN"
+	var token = "TOKEN"
 
 	@Test
 	fun `hentFnr() skal lage riktig request og parse respons`(wmRuntimeInfo: WireMockRuntimeInfo) {
 		val client = ArenaOrdsProxyClientImpl(
 			arenaOrdsProxyUrl = wmRuntimeInfo.httpBaseUrl,
-			proxyTokenProvider = { proxyToken },
-			ordsProxyTokenProvider = { ordsProxyToken },
+			tokenProvider = { token },
 		)
 
 		givenThat(
 			get(urlEqualTo("/api/ords/fnr?personId=987654"))
-				.withHeader("Downstream-Authorization", equalTo("Bearer $ordsProxyToken"))
-				.withHeader("Authorization", equalTo("Bearer $proxyToken"))
+				.withHeader("Authorization", equalTo("Bearer $token"))
 				.willReturn(
 					aResponse()
 						.withStatus(200)
@@ -45,8 +42,7 @@ class ArenaOrdsProxyClientImplTest {
 	fun `hentFnr() skal null hvis stauts er 404`(wmRuntimeInfo: WireMockRuntimeInfo) {
 		val client = ArenaOrdsProxyClientImpl(
 			arenaOrdsProxyUrl = wmRuntimeInfo.httpBaseUrl,
-			proxyTokenProvider = { proxyToken },
-			ordsProxyTokenProvider = { ordsProxyToken },
+			tokenProvider = { token },
 		)
 
 		givenThat(
@@ -61,14 +57,12 @@ class ArenaOrdsProxyClientImplTest {
 	fun `hentArbeidsgiver() skal lage riktig request og parse respons`(wmRuntimeInfo: WireMockRuntimeInfo) {
 		val client = ArenaOrdsProxyClientImpl(
 			arenaOrdsProxyUrl = wmRuntimeInfo.httpBaseUrl,
-			proxyTokenProvider = { proxyToken },
-			ordsProxyTokenProvider = { ordsProxyToken },
+			tokenProvider = { token },
 		)
 
 		givenThat(
 			get(urlEqualTo("/api/ords/arbeidsgiver?arbeidsgiverId=1234567"))
-				.withHeader("Downstream-Authorization", equalTo("Bearer $ordsProxyToken"))
-				.withHeader("Authorization", equalTo("Bearer $proxyToken"))
+				.withHeader("Authorization", equalTo("Bearer $token"))
 				.willReturn(
 					aResponse()
 						.withStatus(200)
@@ -96,8 +90,7 @@ class ArenaOrdsProxyClientImplTest {
 	fun `hentArbeidsgiver() skal returnere null hvis status er 404`(wmRuntimeInfo: WireMockRuntimeInfo) {
 		val client = ArenaOrdsProxyClientImpl(
 			arenaOrdsProxyUrl = wmRuntimeInfo.httpBaseUrl,
-			proxyTokenProvider = { proxyToken },
-			ordsProxyTokenProvider = { ordsProxyToken },
+			tokenProvider = { token },
 		)
 
 		givenThat(
