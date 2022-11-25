@@ -39,7 +39,7 @@ spec:
     - name: AMT_ARENA_ORDS_PROXY_SCOPE
       value: api://prod-fss.amt.amt-arena-ords-proxy/.default
     - name: AMT_ARENA_ORDS_PROXY_URL
-      value: https://amt-arena-ords-proxy.pub-fss-pub.nais.io
+      value: https://amt-arena-ords-proxy.prod-fss-pub.nais.io
     # Kafka topics
     - name: AMT_TOPIC
       value: amt.amt-tiltak-v1
