@@ -10,7 +10,7 @@ enum class IngestStatus {
 	FAILED,
 	IGNORED,
 	INVALID,
-	NEWER_MESSAGE_RECEIVED
+	QUEUED
 }
 
 data class ArenaDataDbo(

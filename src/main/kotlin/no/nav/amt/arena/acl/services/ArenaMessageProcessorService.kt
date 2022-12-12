@@ -48,7 +48,11 @@ open class ArenaMessageProcessorService(
 		withTimer(processorName) {
 			when (messageDto.table) {
 				ARENA_TILTAK_TABLE_NAME -> process(messageDto, tiltakProcessor) { it.TILTAKSKODE }
-				ARENA_GJENNOMFORING_TABLE_NAME -> process(messageDto, gjennomforingProcessor) { it.TILTAKGJENNOMFORING_ID.toString() }
+				ARENA_GJENNOMFORING_TABLE_NAME -> process(
+					messageDto,
+					gjennomforingProcessor
+				) { it.TILTAKGJENNOMFORING_ID.toString() }
+
 				ARENA_DELTAKER_TABLE_NAME -> process(messageDto, deltakerProcessor) { it.TILTAKDELTAKER_ID.toString() }
 				ARENA_SAK_TABLE_NAME -> process(messageDto, sakProcessor) { it.SAK_ID.toString() }
 				else -> throw IllegalArgumentException("Kan ikke håndtere melding fra ukjent arena tabell: ${messageDto.table}")
@@ -66,33 +70,73 @@ open class ArenaMessageProcessorService(
 		val arenaTableName = msg.arenaTableName
 
 		try {
-			setOlderUnhandledMessagesToNewerMessageReceived(arenaId, arenaId, msg.operationTimestamp)
+			setOlderUnhandledMessagesToNewerMessageReceived(
+				tableName = arenaTableName,
+				arenaId = arenaId,
+				timestamp = msg.operationTimestamp
+			)
+
 			processor.handleArenaMessage(msg)
 		} catch (e: Exception) {
 			when (e) {
 				is DependencyNotIngestedException -> {
 					log.info("Dependency for $arenaId in table $arenaTableName is not ingested: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.RETRY, note = e.message))
+					arenaDataRepository.upsert(
+						msg.toUpsertInput(
+							arenaId,
+							ingestStatus = IngestStatus.RETRY,
+							note = e.message
+						)
+					)
 				}
+
 				is ValidationException -> {
 					log.info("$arenaId in table $arenaTableName is not valid: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.INVALID, note = e.message))
+					arenaDataRepository.upsert(
+						msg.toUpsertInput(
+							arenaId,
+							ingestStatus = IngestStatus.INVALID,
+							note = e.message
+						)
+					)
 				}
+
 				is IgnoredException -> {
 					log.info("$arenaId in table $arenaTableName: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.IGNORED, note = e.message))
+					arenaDataRepository.upsert(
+						msg.toUpsertInput(
+							arenaId,
+							ingestStatus = IngestStatus.IGNORED,
+							note = e.message
+						)
+					)
 				}
+
 				is OperationNotImplementedException -> {
 					log.info("Operation not supported for $arenaId in table $arenaTableName: '${e.message}'")
-					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.FAILED, note = e.message))
+					arenaDataRepository.upsert(
+						msg.toUpsertInput(
+							arenaId,
+							ingestStatus = IngestStatus.FAILED,
+							note = e.message
+						)
+					)
 				}
+
 				else -> {
 					log.error("$arenaId in table $arenaTableName: ${e.message}", e)
-					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.RETRY, note = e.message))
+					arenaDataRepository.upsert(
+						msg.toUpsertInput(
+							arenaId,
+							ingestStatus = IngestStatus.RETRY,
+							note = e.message
+						)
+					)
 				}
 			}
 		}
 	}
+
 	fun setOlderUnhandledMessagesToNewerMessageReceived(tableName: String, arenaId: String, timestamp: LocalDateTime) {
 		val messages: List<ArenaDataDbo> = arenaDataRepository.getByArenaId(
 			tableName = tableName,
@@ -103,10 +147,12 @@ open class ArenaMessageProcessorService(
 			.filter { listOf(IngestStatus.NEW, IngestStatus.FAILED, IngestStatus.RETRY).contains(it.ingestStatus) }
 			.filter { it.operationTimestamp.isBefore(timestamp) }
 
-		arenaDataRepository.updateIngestStatus(
-			olderUnhandledMessages.map { it.id }.toSet(),
-			IngestStatus.NEWER_MESSAGE_RECEIVED
-		)
+		if(olderUnhandledMessages.isNotEmpty()) {
+			arenaDataRepository.updateIngestStatus(
+				olderUnhandledMessages.map { it.id }.toSet(),
+				IngestStatus.QUEUED
+			)
+		}
 	}
 
 	private inline fun <reified D> toArenaKafkaMessage(messageDto: ArenaKafkaMessageDto): ArenaKafkaMessage<D> {
@@ -116,12 +162,12 @@ open class ArenaMessageProcessorService(
 			operationTimestamp = parseArenaDateTime(messageDto.opTs),
 			operationPosition = messageDto.pos,
 			before = messageDto.before?.let { mapper.treeToValue(it, D::class.java) },
-			after =  messageDto.after?.let { mapper.treeToValue(it, D::class.java) }
+			after = messageDto.after?.let { mapper.treeToValue(it, D::class.java) }
 		)
 	}
 
 	private fun findProcessorName(arenaTableName: String): String {
-		return when(arenaTableName) {
+		return when (arenaTableName) {
 			ARENA_TILTAK_TABLE_NAME -> "tiltak"
 			ARENA_GJENNOMFORING_TABLE_NAME -> "gjennomforing"
 			ARENA_DELTAKER_TABLE_NAME -> "deltaker"

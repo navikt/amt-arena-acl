@@ -4,5 +4,5 @@ ALTER TABLE arena_data
 ALTER TABLE arena_data
     ADD CONSTRAINT arena_data_ingest_status_check
         CHECK ( ingest_status IN
-                ('NEW', 'HANDLED', 'RETRY', 'FAILED', 'IGNORED', 'INVALID', 'NEWER_MESSAGE_RECEIVED')
+                ('NEW', 'HANDLED', 'RETRY', 'FAILED', 'IGNORED', 'INVALID', 'QUEUED')
             );

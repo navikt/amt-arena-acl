@@ -95,7 +95,7 @@ open class ArenaDataRepository(
 			sql,
 			sqlParameters(
 				"ids" to ids,
-				"ingestStatus" to ingestStatus
+				"ingestStatus" to ingestStatus.name
 			)
 		)
 	}

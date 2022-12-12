@@ -190,7 +190,7 @@ class ArenaMessageProcessorServiceTest {
 
 	}
 	@Test
-	internal fun `Set older unhandled messages to NEWER_MESSAGE_RECEIVED`() {
+	internal fun `Set older unhandled messages to QUEUED`() {
 		val messages = listOf(
 			arenaDataDbo(id = 1, ingestStatus = IngestStatus.RETRY),
 			arenaDataDbo(id = 2, ingestStatus = IngestStatus.NEW),
