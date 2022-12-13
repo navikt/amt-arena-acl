@@ -37,7 +37,7 @@ spec:
       prependText: '<!here> | '
   alerts:
     - alert: antall meldinger i arena-acl med status FAILED > 0
-      expr: amt_arena_acl_ingest_status{app="amt-arena-acl", status="FAILED"} >= 0
+      expr: amt_arena_acl_ingest_status{app="amt-arena-acl", status="FAILED"} > 0
       action: "Sjekk `arena_data` tabellen: `select * from arena_data where ingest_status = 'FAILED';`"
       for: 1m
   route:
