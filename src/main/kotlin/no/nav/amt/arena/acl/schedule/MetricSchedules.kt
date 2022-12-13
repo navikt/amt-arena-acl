@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tags
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.utils.FIVE_MINUTES
 import no.nav.amt.arena.acl.utils.ONE_MINUTE
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -26,7 +27,7 @@ open class MetricSchedules(
 		it.name to createGauge(it.name)!!
 	}
 
-	@Scheduled(fixedDelay = ONE_MINUTE, initialDelay = ONE_MINUTE)
+	@Scheduled(fixedDelay = FIVE_MINUTES, initialDelay = ONE_MINUTE)
 	fun logIngestStatus() {
 		log.debug("Collecting metrics for ingest status")
 
