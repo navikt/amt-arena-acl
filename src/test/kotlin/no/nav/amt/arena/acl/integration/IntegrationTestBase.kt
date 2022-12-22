@@ -9,6 +9,8 @@ import no.nav.amt.arena.acl.integration.executors.TiltakTestExecutor
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.integration.kafka.SingletonKafkaProvider
 import no.nav.amt.arena.acl.kafka.KafkaProperties
+import no.nav.amt.arena.acl.mocks.MockMachineToMachineHttpServer
+import no.nav.amt.arena.acl.mocks.MockMrArenaAdapterServer
 import no.nav.amt.arena.acl.mocks.OrdsClientMock
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
@@ -27,6 +29,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Profile
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import javax.sql.DataSource
 
 @SpringBootTest
@@ -66,6 +70,23 @@ abstract class IntegrationTestBase {
 		tiltakService.invalidateTiltakByKodeCache()
 		OrdsClientMock.fnrHandlers.clear()
 		OrdsClientMock.virksomhetsHandler.clear()
+	}
+	companion object {
+		val mockMachineToMachineHttpServer = MockMachineToMachineHttpServer()
+		val mockMrArenaAdapterServer = MockMrArenaAdapterServer()
+
+		@JvmStatic
+		@DynamicPropertySource
+		fun startEnvironment(registry: DynamicPropertyRegistry) {
+			mockMrArenaAdapterServer.start()
+			registry.add("mr-arena-adapter.url") { mockMrArenaAdapterServer.serverUrl() }
+			registry.add("mr-arena-adapter.scope") { "test.mr-arena-adapter" }
+
+			mockMachineToMachineHttpServer.start()
+			registry.add("nais.env.azureOpenIdConfigTokenEndpoint") {
+				mockMachineToMachineHttpServer.serverUrl() + MockMachineToMachineHttpServer.tokenPath
+			}
+		}
 	}
 
 	fun processMessages(batchSize: Int = 500) {

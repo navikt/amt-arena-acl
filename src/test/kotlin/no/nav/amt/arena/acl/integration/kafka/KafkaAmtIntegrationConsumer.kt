@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.JsonNode
 import no.nav.amt.arena.acl.domain.kafka.amt.*
 import no.nav.amt.arena.acl.kafka.KafkaProperties
-import no.nav.amt.arena.acl.utils.ObjectMapperFactory
+import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonNode
+import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.common.kafka.consumer.KafkaConsumerClient
 import no.nav.common.kafka.consumer.util.KafkaConsumerClientBuilder
 import no.nav.common.kafka.consumer.util.deserializer.Deserializers.stringDeserializer
@@ -64,23 +65,22 @@ class KafkaAmtIntegrationConsumer(
 	}
 
 	private fun handle(record: ConsumerRecord<String, String>) {
-		val unknownMessageWrapper = fromJson(record.value(), UnknownMessageWrapper::class.java)
+		val unknownMessageWrapper = fromJsonString<UnknownMessageWrapper>(record.value())
 
 		when (unknownMessageWrapper.type) {
 			PayloadType.DELTAKER -> {
 				val deltakerPayload =
-					ObjectMapperFactory.get().treeToValue(unknownMessageWrapper.payload, AmtDeltaker::class.java)
+					fromJsonNode<AmtDeltaker>(unknownMessageWrapper.payload)
 				val message = toKnownMessageWrapper(deltakerPayload, unknownMessageWrapper)
 				deltakerSubsctiptions.values.forEach { it.invoke(message) }
 
 			}
 			PayloadType.GJENNOMFORING -> {
 				val gjennomforingPayload =
-					ObjectMapperFactory.get().treeToValue(unknownMessageWrapper.payload, AmtGjennomforing::class.java)
+					fromJsonNode<AmtGjennomforing>(unknownMessageWrapper.payload)
 				val message = toKnownMessageWrapper(gjennomforingPayload, unknownMessageWrapper)
 				gjennomforingSubscriptions.values.forEach { it.invoke(message) }
 			}
-			else -> throw IllegalStateException("${unknownMessageWrapper.type} does not have a handler.")
 		}
 	}
 
@@ -92,10 +92,6 @@ class KafkaAmtIntegrationConsumer(
 			operation = unknownMessageWrapper.operation,
 			payload = payload
 		)
-	}
-
-	fun <T> fromJson(jsonStr: String, clazz: Class<T>): T {
-		return ObjectMapperFactory.get().readValue(jsonStr, clazz)
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)

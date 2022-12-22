@@ -1,8 +1,7 @@
 package no.nav.amt.arena.acl.clients.ordsproxy
 
 import ArenaOrdsProxyClient
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.common.rest.client.RestClient.baseClient
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -18,7 +17,6 @@ open class ArenaOrdsProxyClientImpl(
 	private val arenaOrdsProxyUrl: String,
 	private val tokenProvider: Supplier<String>,
 	private val httpClient: OkHttpClient = baseClient(),
-	private val objectMapper: ObjectMapper = ObjectMapper().registerKotlinModule(),
 ) : ArenaOrdsProxyClient {
 
 	override fun hentFnr(arenaPersonId: String): String? {
@@ -39,7 +37,7 @@ open class ArenaOrdsProxyClientImpl(
 
 			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
 
-			return objectMapper.readValue(body, HentFnrResponse::class.java).fnr
+			return fromJsonString<HentFnrResponse>(body).fnr
 		}
 	}
 
@@ -61,7 +59,7 @@ open class ArenaOrdsProxyClientImpl(
 
 			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
 
-			val arbeidsgiverResponse = objectMapper.readValue(body, ArbeidsgiverResponse::class.java)
+			val arbeidsgiverResponse = fromJsonString<ArbeidsgiverResponse>(body)
 
 			return Arbeidsgiver(
 				virksomhetsnummer = arbeidsgiverResponse.virksomhetsnummer,

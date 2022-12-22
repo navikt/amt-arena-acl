@@ -10,6 +10,7 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import java.util.*
 
@@ -39,7 +40,7 @@ class DeltakerTestExecutor(
 	}
 
 	private fun sendAndCheck(wrapper: ArenaKafkaMessageDto): DeltakerResult {
-		sendKafkaMessage(topic, objectMapper.writeValueAsString(wrapper))
+		sendKafkaMessage(topic, toJsonString(wrapper))
 		return getResults(wrapper)
 	}
 

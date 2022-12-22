@@ -40,6 +40,10 @@ spec:
       value: api://prod-fss.amt.amt-arena-ords-proxy/.default
     - name: AMT_ARENA_ORDS_PROXY_URL
       value: https://amt-arena-ords-proxy.prod-fss-pub.nais.io
+    - name: MR_ARENA_ADAPTER_SCOPE
+      value: api://prod-gcp.team-mulighetsrommet.mulighetsrommet-arena-adapter/.default
+    - name: MR_ARENA_ADAPTER_URL
+      value: http://mulighetsrommet-arena-adapter.team-mulighetsrommet.svc.cluster.local
     # Kafka topics
     - name: AMT_TOPIC
       value: amt.amt-tiltak-v1

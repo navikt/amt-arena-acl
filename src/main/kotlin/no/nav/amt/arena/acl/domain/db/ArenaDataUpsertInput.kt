@@ -2,7 +2,8 @@ package no.nav.amt.arena.acl.domain.db
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
-import no.nav.amt.arena.acl.utils.ObjectMapperFactory
+import no.nav.amt.arena.acl.utils.JsonUtils
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import java.time.LocalDateTime
 
 data class ArenaDataUpsertInput(
@@ -18,8 +19,6 @@ data class ArenaDataUpsertInput(
 	val note: String? = null
 )
 
-private val objectMapper = ObjectMapperFactory.get()
-
 fun ArenaKafkaMessage<*>.toUpsertInput(arenaId: String, ingestStatus: IngestStatus, note: String? = null): ArenaDataUpsertInput {
 	return ArenaDataUpsertInput(
 		arenaTableName = this.arenaTableName,
@@ -29,8 +28,8 @@ fun ArenaKafkaMessage<*>.toUpsertInput(arenaId: String, ingestStatus: IngestStat
 		operationTimestamp = this.operationTimestamp,
 		ingestStatus = ingestStatus,
 		ingestedTimestamp = LocalDateTime.now(),
-		before = this.before?.let { objectMapper.writeValueAsString(it) },
-		after = this.after?.let { objectMapper.writeValueAsString(it) },
+		before = this.before?.let { toJsonString(it) },
+		after = this.after?.let { toJsonString(it) },
 		note = note
 	)
 }

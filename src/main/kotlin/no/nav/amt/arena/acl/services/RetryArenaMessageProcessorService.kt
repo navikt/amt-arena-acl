@@ -10,6 +10,7 @@ import no.nav.amt.arena.acl.processors.SakProcessor
 import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.*
+import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -25,8 +26,6 @@ open class RetryArenaMessageProcessorService(
 ) {
 
 	private val log = LoggerFactory.getLogger(javaClass)
-
-	private val mapper = ObjectMapperFactory.get()
 
 	companion object {
 		private const val MAX_INGEST_ATTEMPTS = 10
@@ -101,8 +100,8 @@ open class RetryArenaMessageProcessorService(
 			operationType = arenaDataDbo.operation,
 			operationTimestamp = arenaDataDbo.operationTimestamp,
 			operationPosition = arenaDataDbo.operationPosition,
-			before = arenaDataDbo.before?.let { mapper.readValue(it, D::class.java) },
-			after = arenaDataDbo.after?.let { mapper.readValue(it, D::class.java) }
+			before = arenaDataDbo.before?.let { fromJsonString<D>(it) },
+			after = arenaDataDbo.after?.let { fromJsonString<D>(it) }
 		)
 	}
 
