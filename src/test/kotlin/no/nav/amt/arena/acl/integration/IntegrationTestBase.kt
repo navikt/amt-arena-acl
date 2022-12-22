@@ -78,6 +78,10 @@ abstract class IntegrationTestBase {
 		@JvmStatic
 		@DynamicPropertySource
 		fun startEnvironment(registry: DynamicPropertyRegistry) {
+            setupEnvironment(registry)
+		}
+
+		fun setupEnvironment(registry: DynamicPropertyRegistry) {
 			mockMrArenaAdapterServer.start()
 			registry.add("mr-arena-adapter.url") { mockMrArenaAdapterServer.serverUrl() }
 			registry.add("mr-arena-adapter.scope") { "test.mr-arena-adapter" }

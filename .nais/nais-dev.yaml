@@ -31,6 +31,11 @@ spec:
   azure:
     application:
       enabled: true
+  accessPolicy:
+    outbound:
+      rules:
+        - application: mulighetsrommet-arena-adapter
+          namespace: team-mulighetsrommet
   kafka:
     pool: nav-dev
   secureLogs:
@@ -44,6 +49,8 @@ spec:
       value: api://dev-gcp.team-mulighetsrommet.mulighetsrommet-arena-adapter/.default
     - name: MR_ARENA_ADAPTER_URL
       value: http://mulighetsrommet-arena-adapter.team-mulighetsrommet.svc.cluster.local
+    - name: TOGGLE_HENT_GJENNOMFORING_FRA_MULIGHETSROMMET
+      value: false
 
     # Kafka topics
     - name: AMT_TOPIC
