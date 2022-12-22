@@ -34,11 +34,53 @@ open class RetryArenaMessageProcessorService(
 
 	fun processMessages(batchSize: Int = 500) {
 		processMessagesWithStatus(IngestStatus.RETRY, batchSize)
+		retryQueuedMessages()
 	}
 
 	fun processFailedMessages(batchSize: Int = 500) {
 		processMessagesWithStatus(IngestStatus.FAILED, batchSize)
 	}
+
+	private fun retryQueuedMessages() {
+		val tables = listOf(
+			ARENA_TILTAK_TABLE_NAME,
+			ARENA_SAK_TABLE_NAME,
+			ARENA_GJENNOMFORING_TABLE_NAME,
+			ARENA_DELTAKER_TABLE_NAME
+		)
+
+		tables.forEach { table ->
+			var fromId = 0
+			var batch: List<ArenaDataDbo>
+
+			do {
+				batch = arenaDataRepository.getByIngestStatus(table, IngestStatus.QUEUED, fromId)
+
+				batch.forEach { entry ->
+					if (olderUnhandledMessages(table, entry).isEmpty()) {
+						process(entry)
+					} else {
+						log.info("Waiting for older messages to be handled for arena data entry with id ${entry.id} in $table")
+					}
+				}
+
+				fromId = batch.maxOfOrNull { it.id.plus(1) } ?: Int.MAX_VALUE
+
+			} while (batch.isNotEmpty())
+		}
+	}
+
+	private fun olderUnhandledMessages(tableName: String, entry: ArenaDataDbo): List<ArenaDataDbo> =
+		arenaDataRepository.getByArenaId(tableName = tableName, arenaId = entry.arenaId)
+			.filter {
+				listOf(
+					IngestStatus.NEW,
+					IngestStatus.FAILED,
+					IngestStatus.RETRY
+				).contains(it.ingestStatus)
+			}
+			.filter { it.operationTimestamp.isBefore(entry.operationTimestamp) }
+
 
 	private fun processMessagesWithStatus(status: IngestStatus, batchSize: Int) {
 		processMessages(ARENA_TILTAK_TABLE_NAME, status, batchSize)
@@ -76,6 +118,7 @@ open class RetryArenaMessageProcessorService(
 						arenaDataDbo
 					)
 				)
+
 				ARENA_DELTAKER_TABLE_NAME -> deltakerProcessor.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
 				ARENA_SAK_TABLE_NAME -> sakProcessor.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
 			}
@@ -89,8 +132,6 @@ open class RetryArenaMessageProcessorService(
 			} else if (arenaDataDbo.ingestStatus == IngestStatus.RETRY && hasReachedMaxRetries) {
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.FAILED)
 			}
-
-
 			arenaDataRepository.updateIngestAttempts(arenaDataDbo.id, currentIngestAttempts, e.message)
 		}
 	}

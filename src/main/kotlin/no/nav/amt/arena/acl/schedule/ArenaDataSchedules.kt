@@ -2,10 +2,7 @@ package no.nav.amt.arena.acl.schedule
 
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
-import no.nav.amt.arena.acl.utils.AT_MIDNIGHT
-import no.nav.amt.arena.acl.utils.ONE_HOUR
-import no.nav.amt.arena.acl.utils.ONE_MINUTE
-import no.nav.amt.arena.acl.utils.TEN_MINUTES
+import no.nav.amt.arena.acl.utils.*
 import no.nav.common.job.JobRunner
 import no.nav.common.job.leader_election.LeaderElectionClient
 import org.slf4j.LoggerFactory

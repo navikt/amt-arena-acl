@@ -85,6 +85,8 @@ open class ArenaDataRepository(
 	}
 
 	fun updateIngestStatus(ids: Set<Int>, ingestStatus: IngestStatus) {
+		if (ids.isEmpty()) return
+
 		val sql = """
 			UPDATE arena_data
 			SET ingest_status = :ingestStatus
