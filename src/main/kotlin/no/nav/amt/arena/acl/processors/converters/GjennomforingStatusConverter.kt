@@ -3,11 +3,11 @@ package no.nav.amt.arena.acl.processors.converters
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import org.springframework.dao.DataIntegrityViolationException
 
-class GjennomforingStatusConverter {
+object GjennomforingStatusConverter {
 
-	val avsluttendeStatuser = listOf("AVLYST", "AVBRUTT", "AVSLUTT")
-	val ikkeStartetStatuser = listOf("PLANLAGT")
-	val gjennomforesStatuser = listOf("GJENNOMFOR")
+	private val avsluttendeStatuser = listOf("AVLYST", "AVBRUTT", "AVSLUTT")
+	private val ikkeStartetStatuser = listOf("PLANLAGT")
+	private val gjennomforesStatuser = listOf("GJENNOMFOR")
 
 	fun convert (arenaStatus: String) : AmtGjennomforing.Status {
 		return when (arenaStatus) {

@@ -5,16 +5,16 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.amt.erAvsluttende
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 
-data class ArenaDeltakerAarsakConverter (
-	private val arenaStatus: TiltakDeltaker.Status,
-	private val status: AmtDeltaker.Status,
-	private val statusAarsakKode: TiltakDeltaker.StatusAarsak?,
-	private val gjennomforingStatus: AmtGjennomforing.Status
-){
-	fun convert(): AmtDeltaker.StatusAarsak? {
-		val aarsakFraAarsak = utledMedArenaAarsak()
-		val aarsakFraStatus = utledMedArenaStatus()
-		val aarsakFraGjennomforing = utledMedGjennomforing()
+ object ArenaDeltakerAarsakConverter {
+	fun convert(
+		arenaStatus: TiltakDeltaker.Status,
+		status: AmtDeltaker.Status,
+		statusAarsakKode: TiltakDeltaker.StatusAarsak?,
+		gjennomforingStatus: AmtGjennomforing.Status
+	): AmtDeltaker.StatusAarsak? {
+		val aarsakFraAarsak = utledMedArenaAarsak(statusAarsakKode)
+		val aarsakFraStatus = utledMedArenaStatus(arenaStatus)
+		val aarsakFraGjennomforing = utledMedGjennomforing(gjennomforingStatus, arenaStatus)
 
 		if (!status.erAvsluttende()) return null
 
@@ -23,7 +23,7 @@ data class ArenaDeltakerAarsakConverter (
 		else return aarsakFraAarsak
 	}
 
-	private fun utledMedGjennomforing(): AmtDeltaker.StatusAarsak? {
+	private fun utledMedGjennomforing(gjennomforingStatus: AmtGjennomforing.Status, arenaStatus: TiltakDeltaker.Status): AmtDeltaker.StatusAarsak? {
 		if(gjennomforingStatus != AmtGjennomforing.Status.AVSLUTTET) return null
 		return when (arenaStatus) {
 			TiltakDeltaker.Status.AKTUELL -> AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
@@ -33,7 +33,7 @@ data class ArenaDeltakerAarsakConverter (
 		}
 	}
 
-	private fun utledMedArenaStatus(): AmtDeltaker.StatusAarsak {
+	private fun utledMedArenaStatus(arenaStatus: TiltakDeltaker.Status): AmtDeltaker.StatusAarsak {
 		return when (arenaStatus) {
 			TiltakDeltaker.Status.IKKEM -> AmtDeltaker.StatusAarsak.IKKE_MOTT
 			TiltakDeltaker.Status.GJENN_AVB -> AmtDeltaker.StatusAarsak.AVLYST_KONTRAKT
@@ -43,7 +43,7 @@ data class ArenaDeltakerAarsakConverter (
 		}
 	}
 
-	private fun utledMedArenaAarsak(): AmtDeltaker.StatusAarsak? {
+	private fun utledMedArenaAarsak(statusAarsakKode: TiltakDeltaker.StatusAarsak?): AmtDeltaker.StatusAarsak? {
 		return when (statusAarsakKode) {
 			TiltakDeltaker.StatusAarsak.SYK -> AmtDeltaker.StatusAarsak.SYK
 			TiltakDeltaker.StatusAarsak.BEGA -> AmtDeltaker.StatusAarsak.FATT_JOBB

@@ -45,7 +45,8 @@ open class DeltakerProcessor(
 
 		val amtDeltaker = arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerAmtId,
-			gjennomforing = gjennomforing,
+			gjennomforingId = gjennomforing.id,
+			gjennomforingStatus = gjennomforing.status,
 			personIdent = personIdent
 		)
 
