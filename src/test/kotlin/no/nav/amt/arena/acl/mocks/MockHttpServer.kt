@@ -7,7 +7,9 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
-open class MockHttpServer {
+open class MockHttpServer(
+	startImmediately: Boolean = false,
+) {
 
 	private val server = MockWebServer()
 
@@ -16,6 +18,12 @@ open class MockHttpServer {
 	private var lastRequestCount = 0
 
 	private val responseHandlers = mutableMapOf<(request: RecordedRequest) -> Boolean, MockResponse>()
+
+	init {
+	    if (startImmediately) {
+			start()
+		}
+	}
 
 	fun start() {
 		try {
@@ -26,7 +34,7 @@ open class MockHttpServer {
 		}
 	}
 
-	fun reset() {
+	open fun reset() {
 		lastRequestCount = server.requestCount
 		responseHandlers.clear()
 		flushRequests()
@@ -42,6 +50,7 @@ open class MockHttpServer {
 
 	fun handleRequest(
 		matchPath: String? = null,
+		matchRegexPath: Regex? = null,
 		matchMethod: String? = null,
 		matchHeaders: Map<String, String>? = null,
 		matchBodyContains: String? = null,
@@ -49,6 +58,9 @@ open class MockHttpServer {
 	) {
 		val requestMatcher = matcher@{ req: RecordedRequest ->
 			if (matchPath != null && req.path != matchPath)
+				return@matcher false
+
+			if (matchRegexPath != null && !req.path!!.matches(matchRegexPath))
 				return@matcher false
 
 			if (matchMethod != null && req.method != matchMethod)

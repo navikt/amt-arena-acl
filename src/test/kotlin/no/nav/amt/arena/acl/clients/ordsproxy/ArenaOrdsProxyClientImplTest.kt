@@ -54,24 +54,25 @@ class ArenaOrdsProxyClientImplTest {
 	}
 
 	@Test
-	fun `hentArbeidsgiver() skal lage riktig request og parse respons`() {
+	fun `hentVirksomhetsnummer() skal lage riktig request og parse respons`() {
 		val client = ArenaOrdsProxyClientImpl(
 			arenaOrdsProxyUrl = serverUrl,
 			tokenProvider = { token },
 		)
 
+		val virksomhetsnummerBody = "6834920"
 		server.enqueue(
 			MockResponse().setBody(
 				"""
 					{
-						"virksomhetsnummer": "6834920",
+						"virksomhetsnummer": "$virksomhetsnummerBody",
 						"organisasjonsnummerMorselskap": "74894532"
 					}
 				""".trimIndent()
 			)
 		)
 
-		val arbeidsgiver = client.hentArbeidsgiver("1234567")
+		val virksomhetsnummer = client.hentVirksomhetsnummer("1234567")
 
 		val request = server.takeRequest()
 
@@ -79,23 +80,7 @@ class ArenaOrdsProxyClientImplTest {
 		request.method shouldBe "GET"
 		request.getHeader("Authorization") shouldBe "Bearer $token"
 
-		val expectedArbeidsgiver = Arbeidsgiver(
-			virksomhetsnummer = "6834920",
-			organisasjonsnummerMorselskap = "74894532"
-		)
 
-		arbeidsgiver shouldBe expectedArbeidsgiver
-	}
-
-	@Test
-	fun `hentArbeidsgiver() skal returnere null hvis status er 404`() {
-		val client = ArenaOrdsProxyClientImpl(
-			arenaOrdsProxyUrl = serverUrl,
-			tokenProvider = { token },
-		)
-
-		server.enqueue(MockResponse().setResponseCode(404))
-
-		client.hentArbeidsgiver("1234567") shouldBe null
+		virksomhetsnummer shouldBe virksomhetsnummerBody
 	}
 }

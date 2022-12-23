@@ -6,12 +6,14 @@ import no.nav.common.kafka.consumer.KafkaConsumerClient
 import no.nav.common.kafka.consumer.KafkaConsumerClientConfig
 import no.nav.common.kafka.consumer.util.KafkaConsumerClientBuilder
 import no.nav.common.kafka.consumer.util.deserializer.Deserializers
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.stereotype.Component
+import java.util.*
 
 @Component
 class KafkaMessageConsumer(
-	kafkaTopicProperties: KafkaTopicProperties,
+	private val kafkaTopicProperties: KafkaTopicProperties,
 	kafkaProperties: KafkaProperties,
 ) {
 
@@ -20,23 +22,37 @@ class KafkaMessageConsumer(
 	private val client: KafkaConsumerClient
 
 	init {
+		val properties = Properties()
+		kafkaProperties.consumer().forEach{ properties[it.key] = it.value }
+		properties[ConsumerConfig.GROUP_ID_CONFIG] = javaClass.canonicalName
+
+
 		val configs = listOf(
 			kafkaTopicProperties.arenaSakTopic,
 			kafkaTopicProperties.arenaTiltakTopic,
 			kafkaTopicProperties.arenaTiltakDeltakerTopic,
-			kafkaTopicProperties.arenaTiltakGjennomforingTopic
+			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
+			kafkaTopicProperties.amtTopic,
 		).map(::createTopicConfig)
 
 		client = KafkaConsumerClientBuilder.builder()
-			.withProperties(kafkaProperties.consumer())
+			.withProperties(properties)
 			.withTopicConfigs(configs)
 			.build()
 
 		client.start()
 	}
 
-	fun getRecords(topic: String): List<ConsumerRecord<String, String>> {
-		return records.filter { it.topic == topic }
+	fun getRecords(topic: Topic): List<ConsumerRecord<String, String>> {
+		return records.filter { it.topic() == mapKafkaTopic(topic) }
+	}
+
+	fun getLatestRecord(topic: Topic):  ConsumerRecord<String, String>? {
+		return records.filter { it.topic() == mapKafkaTopic(topic) }.maxByOrNull { it.offset() }
+	}
+
+	fun reset() {
+		records.clear()
 	}
 
 	private fun createTopicConfig(topic: String): KafkaConsumerClientBuilder.TopicConfig<String, String> {
@@ -52,10 +68,24 @@ class KafkaMessageConsumer(
 	private fun handleRecord(record: ConsumerRecord<String, String>) {
 		records.add(record)
 	}
+
+	private fun mapKafkaTopic(topic: Topic): String {
+		return when(topic) {
+			Topic.ARENA_SAK -> kafkaTopicProperties.arenaSakTopic
+			Topic.ARENA_TILTAK -> kafkaTopicProperties.arenaTiltakTopic
+			Topic.ARENA_TILTAK_DELTAKER -> kafkaTopicProperties.arenaTiltakDeltakerTopic
+			Topic.ARENA_TILTAK_GJENNOMFORING -> kafkaTopicProperties.arenaTiltakGjennomforingTopic
+			Topic.AMT_TILTAK -> kafkaTopicProperties.amtTopic
+		}
+	}
+
+	enum class Topic {
+		ARENA_SAK,
+		ARENA_TILTAK,
+		ARENA_TILTAK_DELTAKER,
+		ARENA_TILTAK_GJENNOMFORING,
+		AMT_TILTAK,
+	}
+
 }
 
-data class KafkaMessage(
-	val topic: String,
-	val key: String,
-	val value: String
-)

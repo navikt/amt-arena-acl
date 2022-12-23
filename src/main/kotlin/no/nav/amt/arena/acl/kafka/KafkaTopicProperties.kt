@@ -8,4 +8,5 @@ data class KafkaTopicProperties(
 	var arenaTiltakGjennomforingTopic: String = "",
 	var arenaTiltakDeltakerTopic: String = "",
 	var arenaSakTopic: String = "",
+	var amtTopic: String = "",
 )

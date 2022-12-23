@@ -12,10 +12,17 @@ import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCo
 import no.nav.amt.arena.acl.integration.commands.sak.NySakCommand
 import no.nav.amt.arena.acl.integration.commands.sak.SakInput
 import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.*
 
 class ReingestionIntegrationTests : IntegrationTestBase() {
+
+	@BeforeEach
+	fun setup() {
+		mockArenaOrdsProxyHttpServer.mockHentVirksomhetsnummer("0", "12345")
+		mockArenaOrdsProxyHttpServer.mockHentFnr("12345")
+	}
 
 	/**
 	 * Testen tester at man kan ha x antall deltakere på en gjennomføring som ikke

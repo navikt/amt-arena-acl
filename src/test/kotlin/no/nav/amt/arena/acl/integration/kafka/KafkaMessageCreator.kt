@@ -1,12 +1,13 @@
 package no.nav.amt.arena.acl.integration.kafka
 
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
-import no.nav.amt.arena.acl.integration.commands.Command
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonNode
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -22,26 +23,41 @@ object KafkaMessageCreator {
 
 	private var pos = 0
 
+	fun opprettArenaDeltaker(
+		arenaDeltaker: ArenaDeltaker,
+		opType: String = "I",
+	): ArenaKafkaMessageDto {
+		return arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_DELTAKER_TABLE_NAME)
+	}
+
 	fun opprettArenaGjennomforing(
 		arenaGjennomforing: ArenaGjennomforing,
 		opType: String = "I",
 	): ArenaKafkaMessageDto {
+		return arenaKafkaMessageDto(opType, arenaGjennomforing, ARENA_GJENNOMFORING_TABLE_NAME)
+	}
+
+	private fun <T> arenaKafkaMessageDto(
+		opType: String,
+		arenaData: T,
+		arenaTableName: String,
+	): ArenaKafkaMessageDto {
 		val before = when (opType) {
 			"I" -> null
-			"U" -> arenaGjennomforing
-			"D" -> arenaGjennomforing
+			"U" -> arenaData
+			"D" -> arenaData
 			else -> throw IllegalArgumentException("Ugyldig op_type $opType")
 		}
 
 		val after = when (opType) {
-			"I" -> arenaGjennomforing
-			"U" -> arenaGjennomforing
+			"I" -> arenaData
+			"U" -> arenaData
 			"D" -> null
 			else -> throw IllegalArgumentException("Ugyldig op_type $opType")
 		}
 
 		return ArenaKafkaMessageDto(
-			table = ARENA_GJENNOMFORING_TABLE_NAME,
+			table = arenaTableName,
 			opType = opType,
 			opTs = opTsFormatter.format(LocalDateTime.now()),
 			pos = (pos++).toString(),
@@ -100,6 +116,52 @@ object KafkaMessageCreator {
 			DATO_OPPFOLGING_OK = GENERIC_STRING,
 			PARTISJON = GENERIC_LONG,
 			MAALFORM_KRAVBREV = GENERIC_STRING
+		)
+	}
+
+	fun baseDeltaker(
+		arenaDeltakerId: Long,
+		personId: Long,
+		tiltakGjennomforingId: Long,
+		deltakerStatusKode: String = "GJENN",
+		statusAarsak: String? = null,
+		startDato: LocalDate? = null,
+		sluttDato: LocalDate? = null,
+		datoStatusEndring: LocalDateTime? = null,
+		registrertDato: LocalDateTime = LocalDateTime.now(),
+	): ArenaDeltaker {
+		return ArenaDeltaker(
+			TILTAKDELTAKER_ID = arenaDeltakerId,
+			PERSON_ID = personId,
+			TILTAKGJENNOMFORING_ID = tiltakGjennomforingId,
+			DELTAKERSTATUSKODE = deltakerStatusKode,
+			DELTAKERTYPEKODE = GENERIC_STRING,
+			AARSAKVERDIKODE_STATUS = statusAarsak,
+			OPPMOTETYPEKODE = GENERIC_STRING,
+			PRIORITET = GENERIC_INT,
+			BEGRUNNELSE_INNSOKT = GENERIC_STRING,
+			BEGRUNNELSE_PRIORITERING = GENERIC_STRING,
+			REG_DATO = dateFormatter.format(registrertDato),
+			REG_USER = GENERIC_STRING,
+			MOD_DATO = GENERIC_STRING,
+			MOD_USER = GENERIC_STRING,
+			DATO_SVARFRIST = GENERIC_STRING,
+			DATO_FRA = startDato?.let { dateFormatter.format(it.atStartOfDay()) },
+			DATO_TIL = sluttDato?.let { dateFormatter.format(it.atStartOfDay()) },
+			BEGRUNNELSE_STATUS = GENERIC_STRING,
+			PROSENT_DELTID = GENERIC_FLOAT,
+			BRUKERID_STATUSENDRING = GENERIC_STRING,
+			DATO_STATUSENDRING = datoStatusEndring?.let { dateFormatter.format(it) },
+			AKTIVITET_ID = GENERIC_LONG,
+			BRUKERID_ENDRING_PRIORITERING = GENERIC_STRING,
+			DATO_ENDRING_PRIORITERING = GENERIC_STRING,
+			DOKUMENTKODE_SISTE_BREV = GENERIC_STRING,
+			STATUS_INNSOK_PAKKE = GENERIC_STRING,
+			STATUS_OPPTAK_PAKKE = GENERIC_STRING,
+			OPPLYSNINGER_INNSOK = GENERIC_STRING,
+			PARTISJON = GENERIC_INT,
+			BEGRUNNELSE_BESTILLING = GENERIC_STRING,
+			ANTALL_DAGER_PR_UKE = GENERIC_INT,
 		)
 	}
 

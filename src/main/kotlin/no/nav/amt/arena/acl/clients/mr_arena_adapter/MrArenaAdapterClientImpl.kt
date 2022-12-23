@@ -69,7 +69,7 @@ class MrArenaAdapterClientImpl(
 
 	override fun hentGjennomforingArenaData(id: UUID): GjennomforingArenaData {
 		val request = Request.Builder()
-			.url("$baseUrl/TODO/$id")
+			.url("$baseUrl/TODO-3/$id")
 			.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
 			.get()
 			.build()
@@ -102,8 +102,6 @@ class MrArenaAdapterClientImpl(
 			val status: String,
 		)
 	}
-
-
 
 	object HentGjennomforingId{
 		data class Response(

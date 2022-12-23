@@ -41,7 +41,7 @@ open class ArenaOrdsProxyClientImpl(
 		}
 	}
 
-	override fun hentArbeidsgiver(arenaArbeidsgiverId: String): Arbeidsgiver? {
+	override fun hentVirksomhetsnummer(arenaArbeidsgiverId: String): String {
 		val request = Request.Builder()
 			.url("$arenaOrdsProxyUrl/api/ords/arbeidsgiver?arbeidsgiverId=$arenaArbeidsgiverId")
 			.header("Authorization", "Bearer ${tokenProvider.get()}")
@@ -50,7 +50,7 @@ open class ArenaOrdsProxyClientImpl(
 
 		httpClient.newCall(request).execute().use { response ->
 			if (response.code == HttpStatus.NOT_FOUND.value()) {
-				return null
+				throw NoSuchElementException("Fant ikke arbeidsgiver for id $arenaArbeidsgiverId")
 			}
 
 			if (!response.isSuccessful) {
@@ -61,16 +61,8 @@ open class ArenaOrdsProxyClientImpl(
 
 			val arbeidsgiverResponse = fromJsonString<ArbeidsgiverResponse>(body)
 
-			return Arbeidsgiver(
-				virksomhetsnummer = arbeidsgiverResponse.virksomhetsnummer,
-				organisasjonsnummerMorselskap = arbeidsgiverResponse.organisasjonsnummerMorselskap
-			)
+			return arbeidsgiverResponse.virksomhetsnummer
 		}
-	}
-
-	override fun hentVirksomhetsnummer(arenaArbeidsgiverId: String): String {
-		return hentArbeidsgiver(arenaArbeidsgiverId)?.virksomhetsnummer
-			?: throw UnsupportedOperationException("Kan ikke hente virksomhetsnummer på en arbeidsgiver som ikke eksisterer. arenaArbeidsgiverId=$arenaArbeidsgiverId")
 	}
 
 	private data class HentFnrResponse(

@@ -14,4 +14,8 @@ class KafkaMessageSender(
 		kafkaProducer.sendSync(ProducerRecord(kafkaTopicProperties.arenaTiltakGjennomforingTopic, arenaGjennomforingId, jsonMessage))
 	}
 
+	fun publiserArenaDeltaker(arenaDeltakerId: String, jsonMessage: String) {
+		kafkaProducer.sendSync(ProducerRecord(kafkaTopicProperties.arenaTiltakDeltakerTopic, arenaDeltakerId, jsonMessage))
+	}
+
 }

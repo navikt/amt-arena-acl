@@ -25,7 +25,7 @@
 
         <common.version>2.2022.10.20_07.46-64a2e6bdf2d0</common.version>
         <kotest.version>5.0.0.M2</kotest.version>
-        <testcontainers.version>1.16.0</testcontainers.version>
+        <testcontainers.version>1.17.6</testcontainers.version>
         <okhttp.version>4.9.3</okhttp.version>
         <nimbus.version>9.43.1</nimbus.version>
         <token-support.version>2.1.4</token-support.version>
@@ -212,6 +212,12 @@
         <dependency>
             <groupId>io.kotest</groupId>
             <artifactId>kotest-assertions-json-jvm</artifactId>
+            <version>${kotest.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-framework-concurrency-jvm</artifactId>
             <version>${kotest.version}</version>
             <scope>test</scope>
         </dependency>

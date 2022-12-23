@@ -13,15 +13,21 @@ object SingletonPostgresContainer {
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	private const val postgresDockerImageName = "postgres:14-alpine"
+	private val postgresDockerImageName = getPostgresImage()
 
 	private var postgresContainer: PostgreSQLContainer<Nothing>? = null
 
+	private var containerDataSource: DataSource? = null
+
 	fun getDataSource(): DataSource {
-		return createDataSource(getContainer())
+		if (containerDataSource == null) {
+			containerDataSource = createDataSource(getContainer())
+		}
+
+		return containerDataSource!!
 	}
 
-	private fun getContainer(): PostgreSQLContainer<Nothing> {
+	fun getContainer(): PostgreSQLContainer<Nothing> {
 		if (postgresContainer == null) {
 			log.info("Starting new postgres database...")
 
@@ -31,7 +37,7 @@ object SingletonPostgresContainer {
 			container.start()
 
 			log.info("Applying database migrations...")
-			applyMigrations(createDataSource(container))
+			applyMigrations(getDataSource())
 
 			setupShutdownHook()
 		}
@@ -50,8 +56,9 @@ object SingletonPostgresContainer {
 	}
 
 	private fun createContainer(): PostgreSQLContainer<Nothing> {
-		return PostgreSQLContainer<Nothing>(DockerImageName.parse(postgresDockerImageName))
-			.waitingFor(HostPortWaitStrategy())
+		val container = PostgreSQLContainer<Nothing>(DockerImageName.parse(postgresDockerImageName).asCompatibleSubstituteFor("postgres"))
+		container.addEnv("TZ", "Europe/Oslo")
+		return container.waitingFor(HostPortWaitStrategy())
 	}
 
 	private fun createDataSource(container: PostgreSQLContainer<Nothing>): DataSource {
@@ -72,5 +79,14 @@ object SingletonPostgresContainer {
 			postgresContainer?.stop()
 		})
 	}
+
+	private fun getPostgresImage(): String {
+		val digest = when (System.getProperty("os.arch")) {
+			"aarch64" -> "@sha256:58ddae4817fc2b7ed43ac43c91f3cf146290379b7b615210c33fa62a03645e70"
+			else -> ""
+		}
+		return "postgres:14-alpine$digest"
+	}
+
 
 }
