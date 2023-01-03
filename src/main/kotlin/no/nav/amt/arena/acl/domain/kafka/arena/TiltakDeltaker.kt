@@ -4,7 +4,6 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerAarsakConverter
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
-import no.nav.amt.arena.acl.repositories.ArenaGjennomforingDbo
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*

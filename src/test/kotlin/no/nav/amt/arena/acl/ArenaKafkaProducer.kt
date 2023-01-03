@@ -1,8 +1,6 @@
 package no.nav.amt.arena.acl
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.readValue
-import no.nav.amt.arena.acl.utils.JsonUtils
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import no.nav.common.kafka.util.KafkaPropertiesBuilder

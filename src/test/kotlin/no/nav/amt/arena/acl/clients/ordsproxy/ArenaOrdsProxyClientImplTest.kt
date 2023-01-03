@@ -3,8 +3,6 @@ package no.nav.amt.arena.acl.clients.ordsproxy
 import io.kotest.matchers.shouldBe
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class ArenaOrdsProxyClientImplTest {

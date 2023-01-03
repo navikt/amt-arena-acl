@@ -5,16 +5,10 @@ import no.nav.common.kafka.consumer.KafkaConsumerClient
 import no.nav.common.kafka.consumer.util.KafkaConsumerClientBuilder
 import no.nav.common.kafka.consumer.util.deserializer.Deserializers.stringDeserializer
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.DisposableBean
-import org.springframework.context.event.ApplicationContextEvent
 import org.springframework.context.event.ContextClosedEvent
 import org.springframework.context.event.ContextRefreshedEvent
-import org.springframework.context.event.ContextStartedEvent
-import org.springframework.context.event.ContextStoppedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import javax.annotation.PostConstruct
-import javax.annotation.PreDestroy
 
 @Component
 open class KafkaConsumer(

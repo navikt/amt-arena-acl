@@ -1,6 +1,5 @@
 package no.nav.amt.arena.acl.integration.commands
 
-import no.nav.amt.arena.acl.utils.JsonUtils
 import java.time.format.DateTimeFormatter
 
 abstract class Command {

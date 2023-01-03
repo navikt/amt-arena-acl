@@ -2,7 +2,6 @@ package no.nav.amt.arena.acl.mocks
 
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import java.lang.UnsupportedOperationException
 
 class MockMachineToMachineHttpServer : MockHttpServer() {
 

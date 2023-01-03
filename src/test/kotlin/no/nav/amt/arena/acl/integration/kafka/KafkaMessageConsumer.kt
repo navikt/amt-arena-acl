@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.integration.kafka
 import no.nav.amt.arena.acl.kafka.KafkaProperties
 import no.nav.amt.arena.acl.kafka.KafkaTopicProperties
 import no.nav.common.kafka.consumer.KafkaConsumerClient
-import no.nav.common.kafka.consumer.KafkaConsumerClientConfig
 import no.nav.common.kafka.consumer.util.KafkaConsumerClientBuilder
 import no.nav.common.kafka.consumer.util.deserializer.Deserializers
 import org.apache.kafka.clients.consumer.ConsumerConfig

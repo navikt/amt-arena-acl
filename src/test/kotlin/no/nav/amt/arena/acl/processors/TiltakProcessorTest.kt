@@ -18,7 +18,6 @@ import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.services.TiltakService
 import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
-import no.nav.amt.arena.acl.utils.JsonUtils
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate

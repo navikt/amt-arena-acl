@@ -2,7 +2,6 @@ package no.nav.amt.arena.acl.domain.db
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
-import no.nav.amt.arena.acl.utils.JsonUtils
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import java.time.LocalDateTime
 

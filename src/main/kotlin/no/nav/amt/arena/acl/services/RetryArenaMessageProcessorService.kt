@@ -9,7 +9,10 @@ import no.nav.amt.arena.acl.processors.GjennomforingProcessor
 import no.nav.amt.arena.acl.processors.SakProcessor
 import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.utils.*
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_SAK_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service

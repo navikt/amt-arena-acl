@@ -21,7 +21,7 @@ import no.nav.amt.arena.acl.services.ToggleService
 import no.nav.amt.arena.acl.utils.SecureLog.secureLog
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.UUID
+import java.util.*
 
 @Component
 open class DeltakerProcessor(
