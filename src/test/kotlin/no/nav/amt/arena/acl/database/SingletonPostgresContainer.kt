@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
+import java.sql.SQLException
 import javax.sql.DataSource
 
 object SingletonPostgresContainer {
@@ -20,12 +21,9 @@ object SingletonPostgresContainer {
 	private var containerDataSource: DataSource? = null
 
 	fun getDataSource(): DataSource {
-		if (containerDataSource == null) {
-			containerDataSource = createDataSource(getContainer())
-		}
-
-		return containerDataSource!!
+		return getDataSource(getContainer())
 	}
+
 
 	fun getContainer(): PostgreSQLContainer<Nothing> {
 		if (postgresContainer == null) {
@@ -37,12 +35,20 @@ object SingletonPostgresContainer {
 			container.start()
 
 			log.info("Applying database migrations...")
-			applyMigrations(getDataSource())
+			applyMigrations(getDataSource(container))
 
 			setupShutdownHook()
 		}
 
 		return postgresContainer as PostgreSQLContainer<Nothing>
+	}
+
+	private fun getDataSource(container: PostgreSQLContainer<Nothing>): DataSource {
+		if (!isValidDataSource(containerDataSource)) {
+			containerDataSource = createDataSource(container)
+		}
+
+		return containerDataSource!!
 	}
 
 	private fun applyMigrations(dataSource: DataSource) {
@@ -67,8 +73,6 @@ object SingletonPostgresContainer {
 		config.jdbcUrl = container.jdbcUrl
 		config.username = container.username
 		config.password = container.password
-		config.maximumPoolSize = 3
-		config.minimumIdle = 1
 
 		return HikariDataSource(config)
 	}
@@ -86,6 +90,15 @@ object SingletonPostgresContainer {
 			else -> ""
 		}
 		return "postgres:14-alpine$digest"
+	}
+	private fun isValidDataSource(dataSource: DataSource?): Boolean {
+		if (dataSource == null) return false
+
+		return try {
+			!dataSource.connection.isClosed
+		} catch (e: SQLException) {
+			false
+		}
 	}
 
 

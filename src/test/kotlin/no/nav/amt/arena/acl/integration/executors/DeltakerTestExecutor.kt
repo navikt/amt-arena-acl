@@ -12,8 +12,10 @@ import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
+import org.springframework.stereotype.Component
 import java.util.*
 
+@Component
 class DeltakerTestExecutor(
 	kafkaProducer: KafkaProducerClientImpl<String, String>,
 	arenaDataRepository: ArenaDataRepository,

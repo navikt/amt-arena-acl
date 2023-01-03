@@ -121,7 +121,7 @@ class DeltakerIntegrationTestDeprecated : IntegrationTestBase() {
 		val personId = 123456789L
 		ingestGjennomforingOgTiltak(gjennomforingId)
 
-		mockArenaOrdsProxyHttpServer.mockHentFnr(personId.toString(), null)
+		mockArenaOrdsProxyHttpServer.mockFailure(404)
 
 		val input = DeltakerInput(
 			tiltakDeltakerId = Random().nextLong(),

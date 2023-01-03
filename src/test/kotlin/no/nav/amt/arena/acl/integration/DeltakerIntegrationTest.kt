@@ -15,27 +15,31 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.integration.utils.AsyncUtils
 import no.nav.amt.arena.acl.integration.utils.DateUtils
 import no.nav.amt.arena.acl.services.ToggleService
+import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionListener
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.env.Environment
 import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.TestExecutionListeners
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
+@TestExecutionListeners(
+	listeners = [DirtyContextBeforeAndAfterClassTestExecutionListener::class],
+	mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
+)
 class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Autowired
 	lateinit var kafkaMessageSender: KafkaMessageSender
-
-	@Autowired
-	lateinit var kafkaMessageConsumer: KafkaMessageConsumer
-
 
 	companion object {
 		@JvmStatic

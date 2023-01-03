@@ -40,7 +40,14 @@ class KafkaMessageConsumer(
 			.withTopicConfigs(configs)
 			.build()
 
+	}
+
+	fun start() {
 		client.start()
+	}
+
+	fun stop() {
+		client.stop()
 	}
 
 	fun getRecords(topic: Topic): List<ConsumerRecord<String, String>> {
