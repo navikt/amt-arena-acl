@@ -16,7 +16,7 @@ class MulighetsrommetApiClientImpl(
 
 	override fun hentGjennomforing(id: UUID): Gjennomforing {
 		val request = Request.Builder()
-			.url("$baseUrl/TODO/$id")
+			.url("$baseUrl/api/v1/tiltaksgjennomforinger/$id")
 			.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
 			.get()
 			.build()
@@ -32,7 +32,7 @@ class MulighetsrommetApiClientImpl(
 
 			return Gjennomforing(
 				id = responseBody.id,
-				tiltak = responseBody.tiltak.let { Tiltakstype(
+				tiltak = responseBody.tiltakstype.let { Tiltakstype(
 					id = it.id,
 					navn = it.navn,
 					arenaKode = it.arenaKode,
@@ -46,7 +46,7 @@ class MulighetsrommetApiClientImpl(
 
 	override fun hentGjennomforingId(arenaId: String): UUID? {
 		val request = Request.Builder()
-			.url("$baseUrl/TODO-2/$arenaId")
+			.url("$baseUrl/api/v1/tiltaksgjennomforinger/id/$arenaId")
 			.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
 			.get()
 			.build()
@@ -69,7 +69,7 @@ class MulighetsrommetApiClientImpl(
 
 	override fun hentGjennomforingArenaData(id: UUID): GjennomforingArenaData {
 		val request = Request.Builder()
-			.url("$baseUrl/TODO-3/$id")
+			.url("$baseUrl/api/v1/tiltaksgjennomforinger/arenadata/$id")
 			.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
 			.get()
 			.build()
@@ -97,9 +97,9 @@ class MulighetsrommetApiClientImpl(
 		data class Response(
 			val opprettetAar: Int,
 			val lopenr: Int,
-			val virksomhetsnummer: String,
+			val virksomhetsnummer: String?,
 			val ansvarligNavEnhetId: String,
-			val status: String,
+			val status: String
 		)
 	}
 
@@ -112,18 +112,17 @@ class MulighetsrommetApiClientImpl(
 	object HentGjennomforing{
 		data class Response(
 			val id: UUID,
-			val tiltak: Tiltakstype,
-			val navn: String,
-			val startDato: LocalDate?,
-			val sluttDato: LocalDate?,
+			val tiltakstype: TiltakstypeDto,
+			val navn: String?,
+			val startDato: LocalDate? = null,
+			val sluttDato: LocalDate? = null,
 		)
 
-		data class Tiltakstype(
+		data class TiltakstypeDto(
 			val id: UUID,
 			val navn: String,
-			val arenaKode: String,
+			val arenaKode: String
 		)
-
 	}
 
 

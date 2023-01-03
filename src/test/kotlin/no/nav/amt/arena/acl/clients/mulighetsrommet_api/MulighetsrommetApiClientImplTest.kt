@@ -35,7 +35,7 @@ class MulighetsrommetApiClientImplTest : FunSpec({
 				"""
 					{
 						"id": "$id",
-						"tiltak": {
+						"tiltakstype": {
 							"id": "$tiltakId",
 							"navn": "$tiltakNavn",
 							"arenaKode": "$tiltakArenaKode"
@@ -62,7 +62,7 @@ class MulighetsrommetApiClientImplTest : FunSpec({
 		gjennomforing.tiltak.arenaKode shouldBe tiltakArenaKode
 
 
-		request.path shouldBe "/TODO/$id"
+		request.path shouldBe "/api/v1/tiltaksgjennomforinger/$id"
 		request.method shouldBe "GET"
 		request.getHeader("Authorization") shouldBe "Bearer TOKEN"
 	}
@@ -85,7 +85,7 @@ class MulighetsrommetApiClientImplTest : FunSpec({
 
 		returnedId shouldBe id
 
-		request.path shouldBe "/TODO-2/$arenaId"
+		request.path shouldBe "/api/v1/tiltaksgjennomforinger/id/$arenaId"
 		request.method shouldBe "GET"
 		request.getHeader("Authorization") shouldBe "Bearer TOKEN"
 	}
@@ -123,7 +123,7 @@ class MulighetsrommetApiClientImplTest : FunSpec({
 		gjennomforingArenaData.ansvarligNavEnhetId shouldBe "1234"
 		gjennomforingArenaData.status shouldBe "GJENNOMFORES"
 
-		request.path shouldBe "/TODO-3/$id"
+		request.path shouldBe "/api/v1/tiltaksgjennomforinger/arenadata/$id"
 		request.method shouldBe "GET"
 		request.getHeader("Authorization") shouldBe "Bearer TOKEN"
 	}

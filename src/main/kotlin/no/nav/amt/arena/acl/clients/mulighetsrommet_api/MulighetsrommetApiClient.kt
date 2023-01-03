@@ -16,7 +16,7 @@ interface MrArenaAdapterClient {
 data class GjennomforingArenaData(
 	val opprettetAar: Int,
 	val lopenr: Int,
-	val virksomhetsnummer: String,
+	val virksomhetsnummer: String?,
 	val ansvarligNavEnhetId: String,
 	val status: String,
 )
@@ -24,7 +24,7 @@ data class GjennomforingArenaData(
 data class Gjennomforing(
 	val id: UUID,
 	val tiltak: Tiltakstype,
-	val navn: String,
+	val navn: String?,
 	val startDato: LocalDate?,
 	val sluttDato: LocalDate?,
 )

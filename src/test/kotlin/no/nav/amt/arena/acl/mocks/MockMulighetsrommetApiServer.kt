@@ -11,7 +11,7 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 		val body = """
 			{
 				"id": "${gjennomforing.id}",
-				"tiltak": {
+				"tiltakstype": {
 					"id": "${gjennomforing.tiltak.id}",
 					"navn": "${gjennomforing.tiltak.navn}",
 					"arenaKode": "${gjennomforing.tiltak.arenaKode}"
@@ -23,7 +23,7 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 		""".trimIndent()
 
 		val response = MockResponse().setResponseCode(200).setBody(body)
-		handleRequest(matchPath = "/TODO/${id}", response = response)
+		handleRequest(matchPath = "/api/v1/tiltaksgjennomforinger/${id}", response = response)
 	}
 
 	fun mockHentGjennomforingId(arenaId: String, gjennomforingId: UUID) {
@@ -34,7 +34,7 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 		""".trimIndent()
 
 		val response = MockResponse().setResponseCode(200).setBody(body)
-		handleRequest(matchPath = "/TODO-2/${arenaId}", response = response)
+		handleRequest(matchPath = "/api/v1/tiltaksgjennomforinger/id/${arenaId}", response = response)
 	}
 
 	fun mockHentGjennomforingArenaData(id: UUID, gjennomforingArenaData: GjennomforingArenaData) {
@@ -49,7 +49,7 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 		""".trimIndent()
 
 		val response = MockResponse().setResponseCode(200).setBody(body)
-		handleRequest(matchPath = "/TODO-3/${id}", response = response)
+		handleRequest(matchPath = "/api/v1/tiltaksgjennomforinger/arenadata/${id}", response = response)
 	}
 
 }
