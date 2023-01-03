@@ -1,11 +1,11 @@
 package no.nav.amt.arena.acl.mocks
 
-import no.nav.amt.arena.acl.clients.mr_arena_adapter.Gjennomforing
-import no.nav.amt.arena.acl.clients.mr_arena_adapter.GjennomforingArenaData
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.GjennomforingArenaData
 import okhttp3.mockwebserver.MockResponse
 import java.util.*
 
-class MockMrArenaAdapterServer : MockHttpServer() {
+class MockMulighetsrommetApiServer : MockHttpServer() {
 
 	fun mockHentGjennomforing(id: UUID, gjennomforing: Gjennomforing) {
 		val body = """

@@ -2,9 +2,9 @@ package no.nav.amt.arena.acl.integration
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.amt.arena.acl.clients.mr_arena_adapter.Gjennomforing
-import no.nav.amt.arena.acl.clients.mr_arena_adapter.GjennomforingArenaData
-import no.nav.amt.arena.acl.clients.mr_arena_adapter.Tiltakstype
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.GjennomforingArenaData
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Tiltakstype
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
@@ -84,9 +84,9 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 		val fnr = "123456789"
 
-		mockMrArenaAdapterServer.mockHentGjennomforingId("123", gjennomforingId)
-		mockMrArenaAdapterServer.mockHentGjennomforing(gjennomforingId, gjennomforing)
-		mockMrArenaAdapterServer.mockHentGjennomforingArenaData(gjennomforingId, gjennomforingArenaData)
+		mockMulighetsrommetApiServer.mockHentGjennomforingId("123", gjennomforingId)
+		mockMulighetsrommetApiServer.mockHentGjennomforing(gjennomforingId, gjennomforing)
+		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingId, gjennomforingArenaData)
 
 		mockArenaOrdsProxyHttpServer.mockHentFnr("456", fnr)
 

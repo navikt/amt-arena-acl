@@ -47,22 +47,18 @@ open class KafkaConsumer(
 	}
 
 	@EventListener
-	open fun onApplicationEvent(_event: ContextRefreshedEvent) {
+	open fun onContextRefreshed(_event: ContextRefreshedEvent) = start()
+
+	@EventListener
+	open fun onContextClosed(_event: ContextClosedEvent) = stop()
+
+	fun start() {
 		log.info("Starting kafka consumer...")
 		client.start()
 	}
 
-	@EventListener
-	open fun onApplicationStopEvent(_event: ContextClosedEvent) {
-		client.stop()
-	}
-
 	fun stop() {
+		log.info("Stopping kafka consumer...")
 		client.stop()
 	}
-
-	fun start() {
-		client.start()
-	}
-
 }

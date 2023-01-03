@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.clients.mr_arena_adapter
+package no.nav.amt.arena.acl.clients.mulighetsrommet_api
 
 import java.time.LocalDate
 import java.util.*

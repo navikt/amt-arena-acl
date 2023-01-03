@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.clients.mr_arena_adapter
+package no.nav.amt.arena.acl.clients.mulighetsrommet_api
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -7,11 +7,11 @@ import okhttp3.mockwebserver.MockResponse
 import java.time.LocalDate
 import java.util.*
 
-class MulighetsrommetArenaClientImplTest : FunSpec({
+class MulighetsrommetApiClientImplTest : FunSpec({
 
 	val server = MockHttpServer(true)
 
-	val client = MrArenaAdapterClientImpl(
+	val client = MulighetsrommetApiClientImpl(
 		baseUrl = server.serverUrl(),
 		tokenProvider = { "TOKEN" },
 	)

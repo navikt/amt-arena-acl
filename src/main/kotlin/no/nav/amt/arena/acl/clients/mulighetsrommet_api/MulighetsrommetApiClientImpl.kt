@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.clients.mr_arena_adapter
+package no.nav.amt.arena.acl.clients.mulighetsrommet_api
 
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.common.rest.client.RestClient.baseClient
@@ -8,7 +8,7 @@ import java.time.LocalDate
 import java.util.*
 import java.util.function.Supplier
 
-class MrArenaAdapterClientImpl(
+class MulighetsrommetApiClientImpl(
     private val baseUrl: String,
     private val tokenProvider: Supplier<String>,
     private val httpClient: OkHttpClient = baseClient(),

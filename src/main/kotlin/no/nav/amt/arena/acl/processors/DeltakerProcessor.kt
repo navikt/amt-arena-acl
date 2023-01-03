@@ -3,7 +3,7 @@ package no.nav.amt.arena.acl.processors
 import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
-import no.nav.amt.arena.acl.clients.mr_arena_adapter.MrArenaAdapterClient
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MrArenaAdapterClient
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto

@@ -13,7 +13,7 @@ import no.nav.amt.arena.acl.kafka.KafkaConsumer
 import no.nav.amt.arena.acl.kafka.KafkaProperties
 import no.nav.amt.arena.acl.mocks.MockArenaOrdsProxyHttpServer
 import no.nav.amt.arena.acl.mocks.MockMachineToMachineHttpServer
-import no.nav.amt.arena.acl.mocks.MockMrArenaAdapterServer
+import no.nav.amt.arena.acl.mocks.MockMulighetsrommetApiServer
 import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
 import no.nav.amt.arena.acl.services.TiltakService
 import org.junit.jupiter.api.AfterEach
@@ -74,7 +74,7 @@ abstract class IntegrationTestBase {
 	fun cleanup() {
 		tiltakService.invalidateTiltakByKodeCache()
 		mockArenaOrdsProxyHttpServer.reset()
-		mockMrArenaAdapterServer.reset()
+		mockMulighetsrommetApiServer.reset()
 		kafkaMessageConsumer.stop()
 		kafkaMessageConsumer.reset()
 		kafkaConsumer.stop()
@@ -82,7 +82,7 @@ abstract class IntegrationTestBase {
 
 	companion object {
 		val mockMachineToMachineHttpServer = MockMachineToMachineHttpServer()
-		val mockMrArenaAdapterServer = MockMrArenaAdapterServer()
+		val mockMulighetsrommetApiServer = MockMulighetsrommetApiServer()
 		val mockArenaOrdsProxyHttpServer = MockArenaOrdsProxyHttpServer()
 
 		@JvmStatic
@@ -92,9 +92,9 @@ abstract class IntegrationTestBase {
 		}
 
 		fun setupEnvironment(registry: DynamicPropertyRegistry) {
-			mockMrArenaAdapterServer.start()
-			registry.add("mr-arena-adapter.url") { mockMrArenaAdapterServer.serverUrl() }
-			registry.add("mr-arena-adapter.scope") { "test.mr-arena-adapter" }
+			mockMulighetsrommetApiServer.start()
+			registry.add("mulighetsrommet-api.url") { mockMulighetsrommetApiServer.serverUrl() }
+			registry.add("mulighetsrommet-api.scope") { "test.mulighetsrommet-api" }
 
 
 			mockArenaOrdsProxyHttpServer.start()
