@@ -10,11 +10,16 @@ import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCo
 import no.nav.amt.arena.acl.integration.commands.sak.NySakCommand
 import no.nav.amt.arena.acl.integration.commands.sak.SakInput
 import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
-import no.nav.amt.arena.acl.mocks.OrdsClientMock
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.*
 
 class GjennomforingIntegrationTests : IntegrationTestBase() {
+
+	@BeforeEach
+	fun setup() {
+		mockArenaOrdsProxyHttpServer.mockHentVirksomhetsnummer("0", "12345")
+	}
 
 	@Test
 	fun `Konsumer gjennomføring - gyldig gjennomføring - ingestes uten feil`() {
@@ -90,7 +95,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 		tiltakExecutor.execute(NyttTiltakCommand())
 
-		OrdsClientMock.virksomhetsHandler["$virksomhetsId"] = { throw RuntimeException() }
+		mockArenaOrdsProxyHttpServer.mockFailure()
 
 		val input = GjennomforingInput(
 			gjennomforingId = Random().nextLong(),

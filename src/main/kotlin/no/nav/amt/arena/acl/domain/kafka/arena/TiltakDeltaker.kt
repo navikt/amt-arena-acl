@@ -1,9 +1,9 @@
 package no.nav.amt.arena.acl.domain.kafka.arena
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerAarsakConverter
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
-import no.nav.amt.arena.acl.repositories.ArenaGjennomforingDbo
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -51,36 +51,37 @@ data class TiltakDeltaker(
 
 	fun constructDeltaker(
 		amtDeltakerId: UUID,
-		gjennomforing: ArenaGjennomforingDbo,
+		gjennomforingId: UUID,
+		gjennomforingStatus: AmtGjennomforing.Status,
 		personIdent: String
 	): AmtDeltaker {
-		val statusConverter = ArenaDeltakerStatusConverter(
+		val deltakerStatus = ArenaDeltakerStatusConverter.convert(
 			deltakerRegistrertDato = regDato,
 			startDato = datoFra,
 			sluttDato = datoTil,
 			deltakerStatusKode = deltakerStatusKode,
 			statusEndringTid = datoStatusendring,
-			gjennomforingStatus = gjennomforing.status
+			gjennomforingStatus = gjennomforingStatus
 		)
-		val aarsakConverter = ArenaDeltakerAarsakConverter(
+		val statusAarsak = ArenaDeltakerAarsakConverter.convert(
 			deltakerStatusKode,
-			statusConverter.getStatus(),
+			deltakerStatus.navn,
 			statusAarsakKode,
-			gjennomforing.status
+			gjennomforingStatus
 		)
 
 		return AmtDeltaker(
 			id = amtDeltakerId,
-			gjennomforingId = gjennomforing.id,
+			gjennomforingId = gjennomforingId,
 			personIdent = personIdent,
 			startDato = datoFra,
 			sluttDato = datoTil,
-			statusAarsak = aarsakConverter.convert(),
+			statusAarsak = statusAarsak,
 			dagerPerUke = dagerPerUke,
 			prosentDeltid = prosentDeltid,
 			registrertDato = regDato,
-			status = statusConverter.getStatus(),
-			statusEndretDato = statusConverter.getEndretDato(),
+			status = deltakerStatus.navn,
+			statusEndretDato = deltakerStatus.endretDato,
 			innsokBegrunnelse = innsokBegrunnelse
 		)
 	}

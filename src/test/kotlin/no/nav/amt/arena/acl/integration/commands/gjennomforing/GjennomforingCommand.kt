@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.integration.commands.Command
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonNode
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 
 abstract class GjennomforingCommand : Command() {
 
@@ -55,7 +57,6 @@ abstract class GjennomforingCommand : Command() {
 			PARTISJON = GENERIC_LONG,
 			MAALFORM_KRAVBREV = GENERIC_STRING
 		)
-
-		return objectMapper.readTree(objectMapper.writeValueAsString(data))
+		return toJsonNode(toJsonString(data))
 	}
 }

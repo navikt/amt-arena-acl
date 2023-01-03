@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.services
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micrometer.core.instrument.MeterRegistry
@@ -18,13 +17,11 @@ import no.nav.amt.arena.acl.processors.GjennomforingProcessor
 import no.nav.amt.arena.acl.processors.SakProcessor
 import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.utils.ObjectMapperFactory
+import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 
 class ArenaMessageProcessorServiceTest : StringSpec({
-
-	val mapper = ObjectMapperFactory.get()
 
 	lateinit var arenaDataRepository: ArenaDataRepository
 
@@ -65,7 +62,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 	"should handle arena deltaker message" {
 		val tiltakdeltakereJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakdeltakerendret-v1.json").readText()
-		val tiltakdeltakere: List<JsonNode> = mapper.readValue(tiltakdeltakereJsonFileContent)
+		val tiltakdeltakere: List<JsonNode> = fromJsonString(tiltakdeltakereJsonFileContent)
 		val deltakerJson = tiltakdeltakere.toList()[0].toString()
 
 		every {
@@ -84,7 +81,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 	"should handle arena gjennomforing message" {
 		val tiltakgjennomforingerJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakgjennomforingendret-v1.json").readText()
-		val tiltakgjennomforinger: List<JsonNode> = mapper.readValue(tiltakgjennomforingerJsonFileContent)
+		val tiltakgjennomforinger: List<JsonNode> = fromJsonString(tiltakgjennomforingerJsonFileContent)
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
 		every {
@@ -103,7 +100,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 	"should handle arena tiltak message" {
 		val tiltakJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakendret-v1.json").readText()
-		val tiltakList: List<JsonNode> = mapper.readValue(tiltakJsonFileContent)
+		val tiltakList: List<JsonNode> = fromJsonString(tiltakJsonFileContent)
 		val tiltakJson = tiltakList.toList()[0].toString()
 
 		every {
@@ -123,7 +120,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		val tiltakgjennomforingerJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-tiltakgjennomforingendret-v1-bad-unicode.json")
 				.readText()
-		val tiltakgjennomforinger: List<JsonNode> = mapper.readValue(tiltakgjennomforingerJsonFileContent)
+		val tiltakgjennomforinger: List<JsonNode> = fromJsonString(tiltakgjennomforingerJsonFileContent)
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
 		every {
@@ -148,7 +145,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 	"should handle arena sak message" {
 		val tiltakJsonFileContent =
 			javaClass.classLoader.getResource("data/arena-sakendret-v1.json").readText()
-		val sakList: List<JsonNode> = mapper.readValue(tiltakJsonFileContent)
+		val sakList: List<JsonNode> = fromJsonString(tiltakJsonFileContent)
 		val sakJson = sakList.toList()[0].toString()
 
 		every {

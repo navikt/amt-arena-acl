@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.integration.commands.Command
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonNode
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 
 abstract class DeltakerCommand : Command() {
 
@@ -46,7 +48,7 @@ abstract class DeltakerCommand : Command() {
 			BEGRUNNELSE_BESTILLING = input.innsokBegrunnelse,
 			ANTALL_DAGER_PR_UKE = input.antallDagerPerUke
 		)
-		return objectMapper.readTree(objectMapper.writeValueAsString(data))
+		return toJsonNode(toJsonString(data))
 	}
 
 }

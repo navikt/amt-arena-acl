@@ -15,13 +15,18 @@ import no.nav.amt.arena.acl.integration.commands.gjennomforing.NyGjennomforingCo
 import no.nav.amt.arena.acl.integration.commands.sak.NySakCommand
 import no.nav.amt.arena.acl.integration.commands.sak.SakInput
 import no.nav.amt.arena.acl.integration.commands.tiltak.NyttTiltakCommand
-import no.nav.amt.arena.acl.mocks.OrdsClientMock
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.net.SocketTimeoutException
 import java.time.LocalDate
 import java.util.*
 
-class DeltakerIntegrationTests : IntegrationTestBase() {
+class DeltakerIntegrationTestDeprecated : IntegrationTestBase() {
+
+	@BeforeEach
+	fun setup() {
+		mockArenaOrdsProxyHttpServer.mockHentVirksomhetsnummer("0", "12345")
+		mockArenaOrdsProxyHttpServer.mockHentFnr("0", "12345")
+	}
 
 	@Test
 	fun `ingest deltaker`() {
@@ -97,7 +102,7 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 		val personId = 123456789L
 		ingestGjennomforingOgTiltak(gjennomforingId)
 
-		OrdsClientMock.fnrHandlers["$personId"] = { throw SocketTimeoutException() }
+		mockArenaOrdsProxyHttpServer.mockFailure()
 
 		val input = DeltakerInput(
 			tiltakDeltakerId = Random().nextLong(),
@@ -116,7 +121,7 @@ class DeltakerIntegrationTests : IntegrationTestBase() {
 		val personId = 123456789L
 		ingestGjennomforingOgTiltak(gjennomforingId)
 
-		OrdsClientMock.fnrHandlers["$personId"] = { null }
+		mockArenaOrdsProxyHttpServer.mockFailure(404)
 
 		val input = DeltakerInput(
 			tiltakDeltakerId = Random().nextLong(),

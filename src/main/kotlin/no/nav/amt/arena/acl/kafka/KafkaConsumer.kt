@@ -5,6 +5,7 @@ import no.nav.common.kafka.consumer.KafkaConsumerClient
 import no.nav.common.kafka.consumer.util.KafkaConsumerClientBuilder
 import no.nav.common.kafka.consumer.util.deserializer.Deserializers.stringDeserializer
 import org.slf4j.LoggerFactory
+import org.springframework.context.event.ContextClosedEvent
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
@@ -46,9 +47,18 @@ open class KafkaConsumer(
 	}
 
 	@EventListener
-	open fun onApplicationEvent(_event: ContextRefreshedEvent?) {
+	open fun onContextRefreshed(_event: ContextRefreshedEvent) = start()
+
+	@EventListener
+	open fun onContextClosed(_event: ContextClosedEvent) = stop()
+
+	fun start() {
 		log.info("Starting kafka consumer...")
 		client.start()
 	}
 
+	fun stop() {
+		log.info("Stopping kafka consumer...")
+		client.stop()
+	}
 }

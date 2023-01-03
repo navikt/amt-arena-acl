@@ -13,7 +13,6 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaSak
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaSakKafkaMessage
 import no.nav.amt.arena.acl.exceptions.IgnoredException
-import no.nav.amt.arena.acl.integration.commands.Command.Companion.objectMapper
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.ArenaGjennomforingRepository
 import no.nav.amt.arena.acl.repositories.ArenaSakRepository
@@ -90,8 +89,6 @@ class SakProcessorTest : FunSpec({
 			operationPosition = "12345",
 			arenaSak = createArenaSak(sakId, 2020, 32, "1234", "ARBEID")
 		)
-
-		println(objectMapper.writeValueAsString(data))
 
 		shouldThrowExactly<IgnoredException> {
 			sakProcessor.handleArenaMessage(data)

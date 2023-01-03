@@ -18,7 +18,7 @@ import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.services.TiltakService
 import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
-import no.nav.amt.arena.acl.utils.ObjectMapperFactory
+import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.time.LocalDateTime
@@ -27,8 +27,6 @@ import java.util.*
 class TiltakProcessorTest : FunSpec({
 
 	val dataSource = SingletonPostgresContainer.getDataSource()
-
-	val mapper = ObjectMapperFactory.get()
 
 	lateinit var arenaDataRepository: ArenaDataRepository
 	lateinit var tiltakRepository: TiltakRepository
@@ -65,7 +63,7 @@ class TiltakProcessorTest : FunSpec({
 		}
 
 		arenaDataRepositoryEntry.before shouldBe null
-		mapper.readValue(arenaDataRepositoryEntry.after, ArenaTiltak::class.java) shouldBe data.after
+		fromJsonString<ArenaTiltak>(arenaDataRepositoryEntry.after!!) shouldBe data.after
 		arenaDataRepositoryEntry.operation shouldBe AmtOperation.CREATED
 		arenaDataRepositoryEntry.id shouldNotBe -1
 

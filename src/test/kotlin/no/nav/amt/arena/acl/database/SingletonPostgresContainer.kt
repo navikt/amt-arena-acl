@@ -7,21 +7,25 @@ import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
+import java.sql.SQLException
 import javax.sql.DataSource
 
 object SingletonPostgresContainer {
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	private const val postgresDockerImageName = "postgres:14-alpine"
+	private val postgresDockerImageName = getPostgresImage()
 
 	private var postgresContainer: PostgreSQLContainer<Nothing>? = null
 
+	private var containerDataSource: DataSource? = null
+
 	fun getDataSource(): DataSource {
-		return createDataSource(getContainer())
+		return getDataSource(getContainer())
 	}
 
-	private fun getContainer(): PostgreSQLContainer<Nothing> {
+
+	fun getContainer(): PostgreSQLContainer<Nothing> {
 		if (postgresContainer == null) {
 			log.info("Starting new postgres database...")
 
@@ -31,12 +35,20 @@ object SingletonPostgresContainer {
 			container.start()
 
 			log.info("Applying database migrations...")
-			applyMigrations(createDataSource(container))
+			applyMigrations(getDataSource(container))
 
 			setupShutdownHook()
 		}
 
 		return postgresContainer as PostgreSQLContainer<Nothing>
+	}
+
+	private fun getDataSource(container: PostgreSQLContainer<Nothing>): DataSource {
+		if (!isValidDataSource(containerDataSource)) {
+			containerDataSource = createDataSource(container)
+		}
+
+		return containerDataSource!!
 	}
 
 	private fun applyMigrations(dataSource: DataSource) {
@@ -50,8 +62,9 @@ object SingletonPostgresContainer {
 	}
 
 	private fun createContainer(): PostgreSQLContainer<Nothing> {
-		return PostgreSQLContainer<Nothing>(DockerImageName.parse(postgresDockerImageName))
-			.waitingFor(HostPortWaitStrategy())
+		val container = PostgreSQLContainer<Nothing>(DockerImageName.parse(postgresDockerImageName).asCompatibleSubstituteFor("postgres"))
+		container.addEnv("TZ", "Europe/Oslo")
+		return container.waitingFor(HostPortWaitStrategy())
 	}
 
 	private fun createDataSource(container: PostgreSQLContainer<Nothing>): DataSource {
@@ -60,8 +73,6 @@ object SingletonPostgresContainer {
 		config.jdbcUrl = container.jdbcUrl
 		config.username = container.username
 		config.password = container.password
-		config.maximumPoolSize = 3
-		config.minimumIdle = 1
 
 		return HikariDataSource(config)
 	}
@@ -72,5 +83,23 @@ object SingletonPostgresContainer {
 			postgresContainer?.stop()
 		})
 	}
+
+	private fun getPostgresImage(): String {
+		val digest = when (System.getProperty("os.arch")) {
+			"aarch64" -> "@sha256:58ddae4817fc2b7ed43ac43c91f3cf146290379b7b615210c33fa62a03645e70"
+			else -> ""
+		}
+		return "postgres:14-alpine$digest"
+	}
+	private fun isValidDataSource(dataSource: DataSource?): Boolean {
+		if (dataSource == null) return false
+
+		return try {
+			!dataSource.connection.isClosed
+		} catch (e: SQLException) {
+			false
+		}
+	}
+
 
 }

@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MrArenaAdapterClient
 import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
@@ -17,6 +18,7 @@ import no.nav.amt.arena.acl.repositories.ArenaGjennomforingDbo
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
+import no.nav.amt.arena.acl.services.ToggleService
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -38,6 +40,8 @@ class DeltakerProcessorTest {
 	private lateinit var kafkaProducerService: KafkaProducerService
 	private lateinit var deltakerProcessor: DeltakerProcessor
 	private lateinit var gjennomforingService: GjennomforingService
+	private lateinit var mrArenaAdapterClient: MrArenaAdapterClient
+	private lateinit var toggleService: ToggleService
 	val gjennomforingId = UUID.randomUUID()
 
 	@Captor
@@ -55,13 +59,19 @@ class DeltakerProcessorTest {
 		metrics = mock(DeltakerMetricHandler::class.java)
 		kafkaProducerService = mock(KafkaProducerService::class.java)
 		gjennomforingService = mock(GjennomforingService::class.java)
+		mrArenaAdapterClient = mock(MrArenaAdapterClient::class.java)
+		toggleService = mock(ToggleService::class.java)
+
 		deltakerProcessor = DeltakerProcessor(
-			meterRegistry, arenaDataRepository, gjennomforingService, arenaDataIdTranslationService, ordsClient, metrics, kafkaProducerService
+			meterRegistry, arenaDataRepository, gjennomforingService, arenaDataIdTranslationService, ordsClient, metrics, kafkaProducerService, mrArenaAdapterClient, toggleService
 		)
 
 		kafkaMessageCaptor2 = ArgumentCaptor.forClass(AmtKafkaMessageDto::class.java)
 		deltakerIdCaptor = ArgumentCaptor.forClass(UUID::class.java)
+
+		`when`(toggleService.hentGjennomforingFraMulighetsrommetEnabled()).thenReturn(false)
 	}
+
 
 	@Test
 	fun `handleArenaMessage() - Skal konvertere deltakerobjekt med korrekte verdier`() {

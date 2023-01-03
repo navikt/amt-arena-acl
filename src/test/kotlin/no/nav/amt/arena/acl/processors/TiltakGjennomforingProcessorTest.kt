@@ -20,7 +20,7 @@ import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.services.TiltakService
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
-import no.nav.amt.arena.acl.utils.ObjectMapperFactory
+import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -44,7 +44,6 @@ class TiltakGjennomforingProcessorTest {
 	private lateinit var gjennomforingProcessor: GjennomforingProcessor
 	private lateinit var ignoredArenaDataRepository: IgnoredArenaDataRepository
 
-	var mapper = ObjectMapperFactory.get()
 	val dataSource = SingletonPostgresContainer.getDataSource()
 	var tiltakKode = "INDOPPFAG"
 	var ukjentTiltakType = "UKJENTTILTAK"
@@ -105,7 +104,7 @@ class TiltakGjennomforingProcessorTest {
 	fun `handleEntry() - Gyldig gjennomføring - inserter i korrekte tabeller`() {
 		val opPos = "1"
 
-		val arenaGjennomforing = mapper.readValue(arenaGjennomforingJson, ArenaGjennomforing::class.java)
+		val arenaGjennomforing = fromJsonString<ArenaGjennomforing>(arenaGjennomforingJson)
 
 		val kafkaMessage = createArenaGjennomforingKafkaMessage(
 			operationPosition = opPos,
@@ -129,7 +128,7 @@ class TiltakGjennomforingProcessorTest {
 	fun `handleEntry() - ugyldig gjennomføring - skal kaste ValidationException`() {
 		val opPos = "2"
 
-		val arenaGjennomforing = mapper.readValue(arenaGjennomforingUgyldigJson, ArenaGjennomforing::class.java)
+		val arenaGjennomforing = fromJsonString<ArenaGjennomforing>(arenaGjennomforingUgyldigJson)
 
 		val kafkaMessage = createArenaGjennomforingKafkaMessage(
 			operationPosition = opPos,
@@ -145,7 +144,7 @@ class TiltakGjennomforingProcessorTest {
 	fun `handleEntry() - tiltaktype er ikke oppfølging - skal kaste IgnoredException`() {
 		val opPos = "2"
 
-		val arenaGjennomforing = mapper.readValue(arenaGjennomforingUkjentTypeJson, ArenaGjennomforing::class.java)
+		val arenaGjennomforing = fromJsonString<ArenaGjennomforing>(arenaGjennomforingUkjentTypeJson)
 
 		val kafkaMessage = createArenaGjennomforingKafkaMessage(
 			operationPosition = opPos,
@@ -169,7 +168,7 @@ class TiltakGjennomforingProcessorTest {
 	fun `handleEntry() - operation type delete - skal sendes videre`() {
 		val opPos = "11223344"
 
-		val arenaGjennomforing = mapper.readValue(arenaGjennomforingJson, ArenaGjennomforing::class.java)
+		val arenaGjennomforing = fromJsonString<ArenaGjennomforing>(arenaGjennomforingJson)
 
 		val kafkaMessage = createArenaGjennomforingKafkaMessage(
 			operationPosition = opPos,

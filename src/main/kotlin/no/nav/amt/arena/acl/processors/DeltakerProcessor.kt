@@ -3,21 +3,25 @@ package no.nav.amt.arena.acl.processors
 import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MrArenaAdapterClient
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
+import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.repositories.ArenaGjennomforingDbo
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
+import no.nav.amt.arena.acl.services.ToggleService
 import no.nav.amt.arena.acl.utils.SecureLog.secureLog
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.util.*
 
 @Component
 open class DeltakerProcessor(
@@ -27,14 +31,22 @@ open class DeltakerProcessor(
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val ordsClient: ArenaOrdsProxyClient,
 	private val metrics: DeltakerMetricHandler,
-	private val kafkaProducerService: KafkaProducerService
+	private val kafkaProducerService: KafkaProducerService,
+	private val mrArenaAdapterClient: MrArenaAdapterClient,
+	private val toggleService: ToggleService,
 ) : ArenaMessageProcessor<ArenaDeltakerKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	override fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
 		val arenaDeltakerRaw = message.getData()
-		val gjennomforing = getGjennomforing(arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString())
+		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
+
+		val gjennomforing = if (toggleService.hentGjennomforingFraMulighetsrommetEnabled()) {
+			getGjennomforingFraMulighetsrommet(arenaGjennomforingId)
+		} else {
+			getGjennomforing(arenaGjennomforingId)
+		}
 
 		val arenaDeltaker = arenaDeltakerRaw.mapTiltakDeltaker()
 
@@ -45,7 +57,8 @@ open class DeltakerProcessor(
 
 		val amtDeltaker = arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerAmtId,
-			gjennomforing = gjennomforing,
+			gjennomforingId = gjennomforing.id,
+			gjennomforingStatus = gjennomforing.status,
 			personIdent = personIdent
 		)
 
@@ -69,7 +82,7 @@ open class DeltakerProcessor(
 		metrics.publishMetrics(message)
 	}
 
-	private fun getGjennomforing(arenaGjennomforingId: String): ArenaGjennomforingDbo {
+	private fun getGjennomforing(arenaGjennomforingId: String): GjennomforingInfo {
 		val gjennomforingId = arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaGjennomforingId)?.amtId
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
@@ -80,7 +93,28 @@ open class DeltakerProcessor(
 		val gjennomforingInfo = gjennomforingService.getGjennomforing(gjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
-		return gjennomforingInfo
+		return GjennomforingInfo(gjennomforingInfo.id, gjennomforingInfo.status)
 	}
+
+	private fun getGjennomforingFraMulighetsrommet(arenaGjennomforingId: String): GjennomforingInfo {
+		val gjennomforingId = mrArenaAdapterClient.hentGjennomforingId(arenaGjennomforingId)
+			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert av Mulighetsrommet")
+
+		val gjennomforing = mrArenaAdapterClient.hentGjennomforing(gjennomforingId)
+
+		if (gjennomforingService.isSupportedTiltak(gjennomforing.tiltak.arenaKode)) {
+			throw IgnoredException("Deltaker på gjennomføring $gjennomforingId er ikke støttet")
+		}
+
+		val gjennomforingArenaData = mrArenaAdapterClient.hentGjennomforingArenaData(gjennomforingId)
+		val status = GjennomforingStatusConverter.convert(gjennomforingArenaData.status)
+
+		return GjennomforingInfo(gjennomforing.id, status)
+	}
+
+	data class GjennomforingInfo(
+		val id: UUID,
+		val status: AmtGjennomforing.Status,
+	)
 
 }

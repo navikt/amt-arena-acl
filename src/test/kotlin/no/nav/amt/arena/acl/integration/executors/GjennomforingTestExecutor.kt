@@ -10,9 +10,12 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
+import org.springframework.stereotype.Component
 import java.util.*
 
+@Component
 class GjennomforingTestExecutor(
 	kafkaProducer: KafkaProducerClientImpl<String, String>,
 	arenaDataRepository: ArenaDataRepository,
@@ -40,7 +43,7 @@ class GjennomforingTestExecutor(
 	}
 
 	private fun sendAndCheck(arenaWrapper: ArenaKafkaMessageDto): GjennomforingResult {
-		sendKafkaMessage(topic, objectMapper.writeValueAsString(arenaWrapper))
+		sendKafkaMessage(topic, toJsonString(arenaWrapper))
 		return getResults(arenaWrapper)
 	}
 

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaTiltak
 import no.nav.amt.arena.acl.integration.commands.Command
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonNode
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 
 abstract class TiltakCommand : Command() {
 
@@ -50,7 +52,7 @@ abstract class TiltakCommand : Command() {
 			STATUS_KOPIBREV = GENERIC_STRING
 		)
 
-		return objectMapper.readTree(objectMapper.writeValueAsString(data))
+		return toJsonNode(toJsonString(data))
 	}
 
 }

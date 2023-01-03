@@ -15,6 +15,8 @@ import no.nav.amt.arena.acl.processors.*
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.*
 import no.nav.amt.arena.acl.utils.DateUtils.parseArenaDateTime
+import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonNode
+import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -31,11 +33,9 @@ open class ArenaMessageProcessorService(
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	private val mapper = ObjectMapperFactory.get()
-
 	fun handleArenaGoldenGateRecord(record: ConsumerRecord<String, String>) {
 		val recordValue = record.value().removeNullCharacters()
-		val messageDto = mapper.readValue(recordValue, ArenaKafkaMessageDto::class.java)
+		val messageDto = fromJsonString<ArenaKafkaMessageDto>(recordValue)
 
 		processArenaKafkaMessage(messageDto)
 	}
@@ -97,8 +97,8 @@ open class ArenaMessageProcessorService(
 			operationType = AmtOperation.fromArenaOperationString(messageDto.opType),
 			operationTimestamp = parseArenaDateTime(messageDto.opTs),
 			operationPosition = messageDto.pos,
-			before = messageDto.before?.let { mapper.treeToValue(it, D::class.java) },
-			after =  messageDto.after?.let { mapper.treeToValue(it, D::class.java) }
+			before = messageDto.before?.let { fromJsonNode<D>(it) },
+			after =  messageDto.after?.let { fromJsonNode<D>(it) }
 		)
 	}
 

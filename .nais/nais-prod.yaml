@@ -31,6 +31,11 @@ spec:
   azure:
     application:
       enabled: true
+  accessPolicy:
+    outbound:
+      rules:
+        - application: mulighetsrommet-api
+          namespace: team-mulighetsrommet
   kafka:
     pool: nav-prod
   secureLogs:
@@ -40,6 +45,12 @@ spec:
       value: api://prod-fss.amt.amt-arena-ords-proxy/.default
     - name: AMT_ARENA_ORDS_PROXY_URL
       value: https://amt-arena-ords-proxy.prod-fss-pub.nais.io
+    - name: MULIGHETSROMMET_API_SCOPE
+      value: api://prod-gcp.team-mulighetsrommet.mulighetsrommet-api/.default
+    - name: MULIGHETSROMMET_API_URL
+      value: http://mulighetsrommet-api.team-mulighetsrommet.svc.cluster.local
+    - name: TOGGLE_HENT_GJENNOMFORING_FRA_MULIGHETSROMMET
+      value: false
     # Kafka topics
     - name: AMT_TOPIC
       value: amt.amt-tiltak-v1

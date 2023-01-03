@@ -33,7 +33,6 @@ open class GjennomforingProcessor(
 ) : ArenaMessageProcessor<ArenaGjennomforingKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
-	private val statusConverter = GjennomforingStatusConverter()
 
 	override fun handleArenaMessage(message: ArenaGjennomforingKafkaMessage) {
 		val arenaGjennomforing = message.getData()
@@ -97,7 +96,7 @@ open class GjennomforingProcessor(
 			sluttDato = datoTil,
 			registrertDato = regDato,
 			fremmoteDato = datoFremmote,
-			status = statusConverter.convert(tiltakstatusKode),
+			status = GjennomforingStatusConverter.convert(tiltakstatusKode),
 			ansvarligNavEnhetId = ansvarligNavEnhetId,
 			opprettetAar = sakAar,
 			lopenr = sakLopenr,

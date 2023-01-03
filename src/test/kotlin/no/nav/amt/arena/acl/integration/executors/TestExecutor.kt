@@ -7,7 +7,6 @@ import no.nav.amt.arena.acl.integration.utils.asyncRetryHandler
 import no.nav.amt.arena.acl.integration.utils.nullableAsyncRetryHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.utils.ObjectMapperFactory
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -20,8 +19,6 @@ abstract class TestExecutor(
 	companion object {
 		var position = 0
 	}
-
-	val objectMapper = ObjectMapperFactory.get()
 
 	fun incrementAndGetPosition(): String {
 		return "${position++}"

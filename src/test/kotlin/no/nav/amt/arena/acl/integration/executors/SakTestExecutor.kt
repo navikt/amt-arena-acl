@@ -12,10 +12,13 @@ import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.ArenaSakRepository
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_SAK_TABLE_NAME
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.junit.jupiter.api.fail
+import org.springframework.stereotype.Component
 import java.util.*
 
+@Component
 class SakTestExecutor (
 	kafkaProducer: KafkaProducerClientImpl<String, String>,
 	arenaDataRepository: ArenaDataRepository,
@@ -39,7 +42,7 @@ class SakTestExecutor (
 	}
 
 	private fun sendAndCheck(arenaWrapper: ArenaKafkaMessageDto, gjennomforingId: Long?): SakResult {
-		sendKafkaMessage(topic, objectMapper.writeValueAsString(arenaWrapper))
+		sendKafkaMessage(topic, toJsonString(arenaWrapper))
 		return getResults(arenaWrapper, gjennomforingId)
 	}
 

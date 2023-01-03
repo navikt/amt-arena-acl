@@ -25,12 +25,11 @@
 
         <common.version>2.2022.10.20_07.46-64a2e6bdf2d0</common.version>
         <kotest.version>5.0.0.M2</kotest.version>
-        <testcontainers.version>1.16.0</testcontainers.version>
+        <testcontainers.version>1.17.6</testcontainers.version>
         <okhttp.version>4.9.3</okhttp.version>
         <nimbus.version>9.43.1</nimbus.version>
         <token-support.version>2.1.4</token-support.version>
         <mockito-kotlin.version>3.2.0</mockito-kotlin.version>
-        <wiremock.version>2.31.0</wiremock.version>
         <schedlock.version>4.42.0</schedlock.version>
     </properties>
 
@@ -166,6 +165,11 @@
             <version>${common.version}</version>
         </dependency>
         <dependency>
+            <groupId>no.nav.common</groupId>
+            <artifactId>token-client</artifactId>
+            <version>${common.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
@@ -212,6 +216,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-framework-concurrency-jvm</artifactId>
+            <version>${kotest.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
             <version>${testcontainers.version}</version>
@@ -235,12 +245,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock-jre8</artifactId>
-            <version>${wiremock.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
@@ -253,6 +257,12 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver</artifactId>
+            <version>${okhttp.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -1,15 +1,13 @@
 package no.nav.amt.arena.acl.clients.ordsproxy
 
 import ArenaOrdsProxyClient
-import no.nav.amt.arena.acl.utils.token_provider.ScopedTokenProvider
+import no.nav.common.token_client.client.MachineToMachineTokenClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Profile
 
-@Profile("default")
 @Configuration
-open class ArenaOrdsProxyClientConfiguration {
+open class ArenaOrdsProxyClientConfig {
 
 	@Value("\${amt-arena-ords-proxy.url}")
 	lateinit var url: String
@@ -19,11 +17,11 @@ open class ArenaOrdsProxyClientConfiguration {
 
 	@Bean
 	open fun arenaOrdsProxyConnector(
-		scopedTokenProvider: ScopedTokenProvider
+		machineToMachineTokenClient: MachineToMachineTokenClient
 	): ArenaOrdsProxyClient {
 		return ArenaOrdsProxyClientImpl(
 			arenaOrdsProxyUrl = url,
-			tokenProvider = { scopedTokenProvider.getToken(scope) },
+			tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },
 		)
 	}
 

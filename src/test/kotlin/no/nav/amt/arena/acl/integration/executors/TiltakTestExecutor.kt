@@ -9,9 +9,12 @@ import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.TiltakRepository
 import no.nav.amt.arena.acl.utils.ARENA_TILTAK_TABLE_NAME
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import org.junit.jupiter.api.fail
+import org.springframework.stereotype.Component
 
+@Component
 class TiltakTestExecutor(
 	kafkaProducer: KafkaProducerClientImpl<String, String>,
 	arenaDataRepository: ArenaDataRepository,
@@ -30,7 +33,7 @@ class TiltakTestExecutor(
 	}
 
 	private fun executor(arenaWrapper: ArenaKafkaMessageDto, kode: String): TiltakResult {
-		sendKafkaMessage(topic, objectMapper.writeValueAsString(arenaWrapper))
+		sendKafkaMessage(topic, toJsonString(arenaWrapper))
 
 		val data = getArenaData(
 			ARENA_TILTAK_TABLE_NAME,
