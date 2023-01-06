@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.GjennomforingArenaData
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Tiltakstype
+import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
@@ -14,6 +15,8 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.integration.utils.AsyncUtils
 import no.nav.amt.arena.acl.integration.utils.DateUtils
+import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionListener
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
@@ -36,6 +39,9 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 	@Autowired
 	lateinit var kafkaMessageSender: KafkaMessageSender
 
+	@Autowired
+	lateinit var arenaDataRepository: ArenaDataRepository
+
 	companion object {
 		@JvmStatic
 		@DynamicPropertySource
@@ -45,45 +51,45 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
+	val deltakerRegistertDato = LocalDateTime.now()
+	val deltakerStatusEndretDato = LocalDateTime.now()
+	val deltakerStartDato = LocalDate.now().plusDays(1)
+	val deltakerSluttDato = LocalDate.now().plusMonths(6)
+
+	val baseDeltaker = KafkaMessageCreator.baseDeltaker(
+		arenaDeltakerId = 789,
+		personId = 456,
+		tiltakGjennomforingId = 123,
+		registrertDato = deltakerRegistertDato,
+		startDato = deltakerStartDato,
+		sluttDato = deltakerSluttDato,
+		datoStatusEndring = deltakerStatusEndretDato,
+	)
+
+	val gjennomforingId = UUID.randomUUID()
+	val gjennomforing = Gjennomforing(
+		id = gjennomforingId,
+		tiltak = Tiltakstype(
+			id = UUID.randomUUID(),
+			navn = "Oppfolging",
+			arenaKode = "INDOPPFAG",
+		),
+		navn = "Navn",
+		startDato = LocalDate.now(),
+		sluttDato = LocalDate.now().plusMonths(6),
+	)
+	val gjennomforingArenaData = GjennomforingArenaData(
+		opprettetAar = 2022,
+		lopenr = 123,
+		virksomhetsnummer = "999888777",
+		ansvarligNavEnhetId = "1234",
+		status = "GJENNOMFOR",
+	)
+
+	val fnr = "123456789"
+
 	@Test
 	fun `ingest deltaker`() {
-		val deltakerRegistertDato = LocalDateTime.now()
-		val deltakerStatusEndretDato = LocalDateTime.now()
-		val deltakerStartDato = LocalDate.now().plusDays(1)
-		val deltakerSluttDato = LocalDate.now().plusMonths(6)
-
-		val baseDeltaker = KafkaMessageCreator.baseDeltaker(
-				arenaDeltakerId = 789,
-				personId = 456,
-				tiltakGjennomforingId = 123,
-				registrertDato = deltakerRegistertDato,
-				startDato = deltakerStartDato,
-				sluttDato = deltakerSluttDato,
-				datoStatusEndring = deltakerStatusEndretDato,
-			)
-
-		val gjennomforingId = UUID.randomUUID()
-		val gjennomforing = Gjennomforing(
-			id = gjennomforingId,
-			tiltak = Tiltakstype(
-				id = UUID.randomUUID(),
-				navn = "Oppfolging",
-				arenaKode = "INDOPFAG",
-			),
-			navn = "Navn",
-			startDato = LocalDate.now(),
-			sluttDato = LocalDate.now().plusMonths(6),
-		)
-		val gjennomforingArenaData = GjennomforingArenaData(
-			opprettetAar = 2022,
-			lopenr = 123,
-			virksomhetsnummer = "999888777",
-			ansvarligNavEnhetId = "1234",
-			status = "GJENNOMFOR",
-		)
-
-		val fnr = "123456789"
-
 		mockMulighetsrommetApiServer.mockHentGjennomforingId("123", gjennomforingId)
 		mockMulighetsrommetApiServer.mockHentGjennomforing(gjennomforingId, gjennomforing)
 		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingId, gjennomforingArenaData)
@@ -112,6 +118,23 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 			payload.statusAarsak shouldBe null
 			DateUtils.isEqual(payload.registrertDato, deltakerRegistertDato) shouldBe true
 			DateUtils.isEqual(payload.statusEndretDato!!, deltakerStatusEndretDato) shouldBe true
+		}
+	}
+
+	@Test
+	fun `skal ignorere deltaker på ikke støttet gjennomføring`() {
+
+		mockMulighetsrommetApiServer.mockHentGjennomforingId("123", gjennomforingId)
+		mockMulighetsrommetApiServer.mockHentGjennomforing(gjennomforingId, gjennomforing.copy(tiltak = gjennomforing.tiltak.copy(arenaKode = "IKKESTOTTET")))
+		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingId, gjennomforingArenaData)
+
+		mockArenaOrdsProxyHttpServer.mockHentFnr("456", fnr)
+		val pos = "42"
+		kafkaMessageSender.publiserArenaDeltaker("789", toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)))
+
+		AsyncUtils.eventually {
+			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
+			arenaData.ingestStatus shouldBe IngestStatus.IGNORED
 		}
 	}
 
