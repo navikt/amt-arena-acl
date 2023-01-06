@@ -26,8 +26,9 @@ object KafkaMessageCreator {
 	fun opprettArenaDeltaker(
 		arenaDeltaker: ArenaDeltaker,
 		opType: String = "I",
+		opPos: String? = null
 	): ArenaKafkaMessageDto {
-		return arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_DELTAKER_TABLE_NAME)
+		return arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_DELTAKER_TABLE_NAME, opPos)
 	}
 
 	fun opprettArenaGjennomforing(
@@ -41,6 +42,7 @@ object KafkaMessageCreator {
 		opType: String,
 		arenaData: T,
 		arenaTableName: String,
+		opPos: String? = null
 	): ArenaKafkaMessageDto {
 		val before = when (opType) {
 			"I" -> null
@@ -60,7 +62,7 @@ object KafkaMessageCreator {
 			table = arenaTableName,
 			opType = opType,
 			opTs = opTsFormatter.format(LocalDateTime.now()),
-			pos = (pos++).toString(),
+			pos = opPos ?: (pos++).toString(),
 			before = before?.let { toJsonNode(toJsonString(it)) },
 			after = after?.let { toJsonNode(toJsonString(it)) },
 		)

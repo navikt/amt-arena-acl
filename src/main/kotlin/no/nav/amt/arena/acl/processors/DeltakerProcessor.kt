@@ -102,7 +102,7 @@ open class DeltakerProcessor(
 
 		val gjennomforing = mrArenaAdapterClient.hentGjennomforing(gjennomforingId)
 
-		if (gjennomforingService.isSupportedTiltak(gjennomforing.tiltak.arenaKode)) {
+		if (!gjennomforingService.isSupportedTiltak(gjennomforing.tiltak.arenaKode)) {
 			throw IgnoredException("Deltaker på gjennomføring $gjennomforingId med arenakode ${gjennomforing.tiltak.arenaKode} er ikke støttet")
 		}
 
