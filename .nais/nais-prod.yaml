@@ -50,7 +50,7 @@ spec:
     - name: MULIGHETSROMMET_API_URL
       value: http://mulighetsrommet-api.team-mulighetsrommet.svc.cluster.local
     - name: TOGGLE_HENT_GJENNOMFORING_FRA_MULIGHETSROMMET
-      value: "false"
+      value: "true"
     # Kafka topics
     - name: AMT_TOPIC
       value: amt.amt-tiltak-v1
