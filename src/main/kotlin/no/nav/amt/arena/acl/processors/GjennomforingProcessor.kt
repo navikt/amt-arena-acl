@@ -13,10 +13,7 @@ import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.ArenaSakRepository
-import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
-import no.nav.amt.arena.acl.services.GjennomforingService
-import no.nav.amt.arena.acl.services.KafkaProducerService
-import no.nav.amt.arena.acl.services.TiltakService
+import no.nav.amt.arena.acl.services.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.*
@@ -29,7 +26,8 @@ open class GjennomforingProcessor(
 	private val gjennomforingService: GjennomforingService,
 	private val tiltakService: TiltakService,
 	private val ordsClient: ArenaOrdsProxyClient,
-	private val kafkaProducerService: KafkaProducerService
+	private val kafkaProducerService: KafkaProducerService,
+	private val toggleService: ToggleService,
 ) : ArenaMessageProcessor<ArenaGjennomforingKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -38,6 +36,13 @@ open class GjennomforingProcessor(
 		val arenaGjennomforing = message.getData()
 		val arenaGjennomforingTiltakskode = arenaGjennomforing.TILTAKSKODE
 		val arenaGjennomforingId = arenaGjennomforing.TILTAKGJENNOMFORING_ID.toString()
+
+		if (toggleService.hentGjennomforingFraMulighetsrommetEnabled()) {
+			val note = "Hoppet over gjennomføring $arenaGjennomforingId fordi MR-toggle er enabled"
+			log.info(note)
+			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaGjennomforingId, note))
+			return
+		}
 
 		val gjennomforingId = arenaDataIdTranslationService.hentEllerOpprettNyGjennomforingId(arenaGjennomforingId)
 

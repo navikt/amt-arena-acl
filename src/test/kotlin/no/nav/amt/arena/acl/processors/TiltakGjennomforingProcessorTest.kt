@@ -15,10 +15,7 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.repositories.*
-import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
-import no.nav.amt.arena.acl.services.GjennomforingService
-import no.nav.amt.arena.acl.services.KafkaProducerService
-import no.nav.amt.arena.acl.services.TiltakService
+import no.nav.amt.arena.acl.services.*
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.junit.jupiter.api.BeforeAll
@@ -43,6 +40,7 @@ class TiltakGjennomforingProcessorTest {
 	private lateinit var kafkaProducerService: KafkaProducerService
 	private lateinit var gjennomforingProcessor: GjennomforingProcessor
 	private lateinit var ignoredArenaDataRepository: IgnoredArenaDataRepository
+	private lateinit var toggleService: ToggleService
 
 	val dataSource = SingletonPostgresContainer.getDataSource()
 	var tiltakKode = "INDOPPFAG"
@@ -60,6 +58,7 @@ class TiltakGjennomforingProcessorTest {
 		ordsClient = mock(ArenaOrdsProxyClient::class.java)
 		kafkaProducerService = mock(KafkaProducerService::class.java)
 		ignoredArenaDataRepository = mock(IgnoredArenaDataRepository::class.java)
+		toggleService = mock(ToggleService::class.java)
 
 		val translationService = ArenaDataIdTranslationService(translationRepository)
 
@@ -73,7 +72,8 @@ class TiltakGjennomforingProcessorTest {
 			),
 			tiltakService,
 			ordsClient,
-			kafkaProducerService
+			kafkaProducerService,
+			toggleService,
 		)
 		`when`(sakRepository.hentSakMedArenaId(sakId)).thenReturn(
 			ArenaSakDbo(
