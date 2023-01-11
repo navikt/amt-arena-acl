@@ -37,18 +37,18 @@ open class GjennomforingProcessor(
 		val arenaGjennomforingTiltakskode = arenaGjennomforing.TILTAKSKODE
 		val arenaGjennomforingId = arenaGjennomforing.TILTAKGJENNOMFORING_ID.toString()
 
-		if (toggleService.hentGjennomforingFraMulighetsrommetEnabled()) {
-			val note = "Hoppet over gjennomføring $arenaGjennomforingId fordi MR-toggle er enabled"
-			log.info(note)
-			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaGjennomforingId, note))
-			return
-		}
-
 		val gjennomforingId = arenaDataIdTranslationService.hentEllerOpprettNyGjennomforingId(arenaGjennomforingId)
 
 		if (!gjennomforingService.isSupportedTiltak(arenaGjennomforingTiltakskode)) {
 			gjennomforingService.ignore(gjennomforingId)
 			throw IgnoredException("$arenaGjennomforingTiltakskode er ikke et støttet tiltak")
+		}
+
+		if (toggleService.hentGjennomforingFraMulighetsrommetEnabled()) {
+			val note = "Hoppet over gjennomføring $arenaGjennomforingId fordi MR-toggle er enabled"
+			log.info(note)
+			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaGjennomforingId, note))
+			return
 		}
 
 		val gjennomforing = arenaGjennomforing.mapTiltakGjennomforing()

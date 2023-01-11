@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.GjennomforingArenaData
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Tiltakstype
+import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
@@ -15,8 +16,11 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.integration.utils.AsyncUtils
 import no.nav.amt.arena.acl.integration.utils.DateUtils
+import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.repositories.IgnoredArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionListener
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
@@ -41,6 +45,13 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Autowired
 	lateinit var arenaDataRepository: ArenaDataRepository
+
+	@Autowired
+	lateinit var arenaDataIdTranslationRepository: ArenaDataIdTranslationRepository
+
+	@Autowired
+	lateinit var ignoredArenaDataRepository: IgnoredArenaDataRepository
+
 
 	companion object {
 		@JvmStatic
@@ -90,6 +101,13 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Test
 	fun `ingest deltaker`() {
+
+		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(
+			UUID.randomUUID(),
+			ARENA_GJENNOMFORING_TABLE_NAME,
+			"123",
+		))
+
 		mockMulighetsrommetApiServer.mockHentGjennomforingId("123", gjennomforingId)
 		mockMulighetsrommetApiServer.mockHentGjennomforing(gjennomforingId, gjennomforing)
 		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingId, gjennomforingArenaData)
@@ -123,6 +141,15 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Test
 	fun `skal ignorere deltaker på ikke støttet gjennomføring`() {
+		val amtGjennomforingId = UUID.randomUUID()
+
+		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(
+			amtGjennomforingId,
+			ARENA_GJENNOMFORING_TABLE_NAME,
+			"123",
+		))
+
+		ignoredArenaDataRepository.ignore(amtGjennomforingId)
 
 		mockMulighetsrommetApiServer.mockHentGjennomforingId("123", gjennomforingId)
 		mockMulighetsrommetApiServer.mockHentGjennomforing(gjennomforingId, gjennomforing.copy(tiltak = gjennomforing.tiltak.copy(arenaKode = "IKKESTOTTET")))
