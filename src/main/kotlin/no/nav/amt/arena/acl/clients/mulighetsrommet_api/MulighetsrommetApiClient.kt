@@ -3,7 +3,7 @@ package no.nav.amt.arena.acl.clients.mulighetsrommet_api
 import java.time.LocalDate
 import java.util.*
 
-interface MrArenaAdapterClient {
+interface MulighetsrommetApiClient {
 
 	fun hentGjennomforing(id: UUID): Gjennomforing
 
