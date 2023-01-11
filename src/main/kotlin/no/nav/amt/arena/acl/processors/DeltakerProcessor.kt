@@ -11,6 +11,7 @@ import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
+import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
@@ -114,6 +115,9 @@ open class DeltakerProcessor(
 		}
 
 		val gjennomforingArenaData = mrArenaAdapterClient.hentGjennomforingArenaData(gjennomforingId)
+
+		if (gjennomforingArenaData.virksomhetsnummer == null) throw ValidationException("Deltaker på gjennomføring med arenaId=$arenaGjennomforingId og id=$gjennomforingId mangler virksomhetsnummer")
+
 		val status = GjennomforingStatusConverter.convert(gjennomforingArenaData.status)
 
 		return GjennomforingInfo(gjennomforing.id, status)
