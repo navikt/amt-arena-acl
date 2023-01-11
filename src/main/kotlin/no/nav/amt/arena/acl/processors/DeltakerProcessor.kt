@@ -97,6 +97,13 @@ open class DeltakerProcessor(
 	}
 
 	private fun getGjennomforingFraMulighetsrommet(arenaGjennomforingId: String): GjennomforingInfo {
+		val amtGjennomforingId = arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaGjennomforingId)?.amtId
+			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
+
+		if (gjennomforingService.isIgnored(amtGjennomforingId)) {
+			throw IgnoredException("Deltaker på en gjennomføring med id $arenaGjennomforingId er ignorert")
+		}
+
 		val gjennomforingId = mrArenaAdapterClient.hentGjennomforingId(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert av Mulighetsrommet")
 
