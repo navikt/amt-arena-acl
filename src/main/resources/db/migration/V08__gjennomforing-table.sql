@@ -1,0 +1,8 @@
+
+CREATE TABLE gjennomforing
+(
+    arena_id    VARCHAR PRIMARY KEY NOT NULL,
+    tiltak_kode VARCHAR NOT NULL,
+    is_valid    BOOLEAN NOT NULL,
+    created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+)

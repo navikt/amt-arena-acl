@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.services
 import no.nav.amt.arena.acl.repositories.ArenaGjennomforingDbo
 import no.nav.amt.arena.acl.repositories.ArenaGjennomforingRepository
 import no.nav.amt.arena.acl.repositories.IgnoredArenaDataRepository
+import no.nav.amt.arena.acl.repositories.GjennomforingRepository
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -10,6 +11,7 @@ import java.util.*
 class GjennomforingService(
 	private val arenaGjennomforingRepository: ArenaGjennomforingRepository,
 	private val ignoredRepository: IgnoredArenaDataRepository,
+	private val gjennomforingRepository: GjennomforingRepository
 ) {
 
 	private val SUPPORTED_TILTAK = setOf(
@@ -23,6 +25,10 @@ class GjennomforingService(
 
 	fun ignore(id: UUID) {
 		ignoredRepository.ignore(id)
+	}
+
+	fun upsert(arenaId: String, tiltakKode: String, isValid: Boolean) {
+		gjennomforingRepository.upsert(arenaId, tiltakKode, isValid)
 	}
 
 	fun isIgnored(id: UUID): Boolean {
