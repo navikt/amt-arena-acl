@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MrArenaAdapterClient
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
@@ -40,7 +40,7 @@ class DeltakerProcessorTest {
 	private lateinit var kafkaProducerService: KafkaProducerService
 	private lateinit var deltakerProcessor: DeltakerProcessor
 	private lateinit var gjennomforingService: GjennomforingService
-	private lateinit var mrArenaAdapterClient: MrArenaAdapterClient
+	private lateinit var mulighetsrommetApiClient: MulighetsrommetApiClient
 	private lateinit var toggleService: ToggleService
 	val gjennomforingId = UUID.randomUUID()
 
@@ -59,11 +59,11 @@ class DeltakerProcessorTest {
 		metrics = mock(DeltakerMetricHandler::class.java)
 		kafkaProducerService = mock(KafkaProducerService::class.java)
 		gjennomforingService = mock(GjennomforingService::class.java)
-		mrArenaAdapterClient = mock(MrArenaAdapterClient::class.java)
+		mulighetsrommetApiClient = mock(MulighetsrommetApiClient::class.java)
 		toggleService = mock(ToggleService::class.java)
 
 		deltakerProcessor = DeltakerProcessor(
-			meterRegistry, arenaDataRepository, gjennomforingService, arenaDataIdTranslationService, ordsClient, metrics, kafkaProducerService, mrArenaAdapterClient, toggleService
+			meterRegistry, arenaDataRepository, gjennomforingService, arenaDataIdTranslationService, ordsClient, metrics, kafkaProducerService, mulighetsrommetApiClient, toggleService
 		)
 
 		kafkaMessageCaptor2 = ArgumentCaptor.forClass(AmtKafkaMessageDto::class.java)

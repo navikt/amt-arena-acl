@@ -12,7 +12,7 @@ class MulighetsrommetApiClientImpl(
     private val baseUrl: String,
     private val tokenProvider: Supplier<String>,
     private val httpClient: OkHttpClient = baseClient(),
-) : MrArenaAdapterClient {
+) : MulighetsrommetApiClient {
 
 	override fun hentGjennomforing(id: UUID): Gjennomforing {
 		val request = Request.Builder()

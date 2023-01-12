@@ -38,11 +38,12 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 	}
 
 	fun mockHentGjennomforingArenaData(id: UUID, gjennomforingArenaData: GjennomforingArenaData) {
+		val virksomhetsnummer = if (gjennomforingArenaData.virksomhetsnummer == null) "null" else "\"${gjennomforingArenaData.virksomhetsnummer}\""
 		val body = """
 			{
 				"opprettetAar": "${gjennomforingArenaData.opprettetAar}",
 				"lopenr": ${gjennomforingArenaData.lopenr},
-				"virksomhetsnummer": "${gjennomforingArenaData.virksomhetsnummer}",
+				"virksomhetsnummer": $virksomhetsnummer,
 				"ansvarligNavEnhetId": "${gjennomforingArenaData.ansvarligNavEnhetId}",
 				"status": "${gjennomforingArenaData.status}"
 			}

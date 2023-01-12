@@ -15,7 +15,7 @@ open class MulighetsrommetApiClientConfig {
 	lateinit var scope: String
 
 	@Bean
-	open fun mrArenaAdapterClient(machineToMachineTokenClient: MachineToMachineTokenClient): MrArenaAdapterClient {
+	open fun mulighetsrommetApiClient(machineToMachineTokenClient: MachineToMachineTokenClient): MulighetsrommetApiClient {
 		return MulighetsrommetApiClientImpl(
 			baseUrl = url,
 			tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },

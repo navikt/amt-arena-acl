@@ -24,6 +24,7 @@ import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionListener
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -99,16 +100,24 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	val fnr = "123456789"
 
-	@Test
-	fun `ingest deltaker`() {
+	val amtGjennomforingId = UUID.randomUUID()
+	val arenaGjennomforingId = "123"
 
+
+	@BeforeEach
+	fun setup() {
 		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(
-			UUID.randomUUID(),
+			amtGjennomforingId,
 			ARENA_GJENNOMFORING_TABLE_NAME,
-			"123",
+			arenaGjennomforingId,
 		))
 
-		mockMulighetsrommetApiServer.mockHentGjennomforingId("123", gjennomforingId)
+	}
+
+
+	@Test
+	fun `ingest deltaker`() {
+		mockMulighetsrommetApiServer.mockHentGjennomforingId(arenaGjennomforingId, gjennomforingId)
 		mockMulighetsrommetApiServer.mockHentGjennomforing(gjennomforingId, gjennomforing)
 		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingId, gjennomforingArenaData)
 
@@ -141,17 +150,7 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Test
 	fun `skal ignorere deltaker på ikke støttet gjennomføring`() {
-		val amtGjennomforingId = UUID.randomUUID()
-
-		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(
-			amtGjennomforingId,
-			ARENA_GJENNOMFORING_TABLE_NAME,
-			"123",
-		))
-
-		ignoredArenaDataRepository.ignore(amtGjennomforingId)
-
-		mockMulighetsrommetApiServer.mockHentGjennomforingId("123", gjennomforingId)
+		mockMulighetsrommetApiServer.mockHentGjennomforingId(arenaGjennomforingId, gjennomforingId)
 		mockMulighetsrommetApiServer.mockHentGjennomforing(gjennomforingId, gjennomforing.copy(tiltak = gjennomforing.tiltak.copy(arenaKode = "IKKESTOTTET")))
 		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingId, gjennomforingArenaData)
 
@@ -162,6 +161,49 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 		AsyncUtils.eventually {
 			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
 			arenaData.ingestStatus shouldBe IngestStatus.IGNORED
+		}
+	}
+
+	@Test
+	fun `skal ignorere deltaker på ikke en allerede ignorert gjennomføring`() {
+		ignoredArenaDataRepository.ignore(amtGjennomforingId)
+
+		mockMulighetsrommetApiServer.mockHentGjennomforingId(arenaGjennomforingId, gjennomforingId)
+		mockMulighetsrommetApiServer.mockHentGjennomforing(gjennomforingId, gjennomforing.copy(tiltak = gjennomforing.tiltak.copy(arenaKode = "IKKESTOTTET")))
+		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingId, gjennomforingArenaData)
+
+		mockArenaOrdsProxyHttpServer.mockHentFnr("456", fnr)
+		val pos = "42"
+		kafkaMessageSender.publiserArenaDeltaker("789", toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)))
+
+		AsyncUtils.eventually {
+			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
+			arenaData.ingestStatus shouldBe IngestStatus.IGNORED
+		}
+	}
+
+	@Test
+	fun `skal invalidere deltaker på gjennomføring uten virksomhetsnummer`() {
+		mockMulighetsrommetApiServer.mockHentGjennomforingId(arenaGjennomforingId, gjennomforingId)
+		mockMulighetsrommetApiServer.mockHentGjennomforing(
+			gjennomforingId,
+			gjennomforing.copy(tiltak = gjennomforing.tiltak.copy(arenaKode = "INDOPPFAG"))
+		)
+		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(
+			gjennomforingId,
+			gjennomforingArenaData.copy(virksomhetsnummer = null)
+		)
+
+		mockArenaOrdsProxyHttpServer.mockHentFnr("456", fnr)
+		val pos = "77"
+		kafkaMessageSender.publiserArenaDeltaker(
+			"789",
+			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = baseDeltaker, opPos = pos))
+		)
+
+		AsyncUtils.eventually {
+			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
+			arenaData.ingestStatus shouldBe IngestStatus.INVALID
 		}
 	}
 

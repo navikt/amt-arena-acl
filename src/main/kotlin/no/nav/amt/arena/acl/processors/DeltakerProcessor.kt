@@ -3,7 +3,7 @@ package no.nav.amt.arena.acl.processors
 import ArenaOrdsProxyClient
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MrArenaAdapterClient
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
@@ -11,6 +11,7 @@ import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
+import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
@@ -32,7 +33,7 @@ open class DeltakerProcessor(
 	private val ordsClient: ArenaOrdsProxyClient,
 	private val metrics: DeltakerMetricHandler,
 	private val kafkaProducerService: KafkaProducerService,
-	private val mrArenaAdapterClient: MrArenaAdapterClient,
+	private val mulighetsrommetApiClient: MulighetsrommetApiClient,
 	private val toggleService: ToggleService,
 ) : ArenaMessageProcessor<ArenaDeltakerKafkaMessage> {
 
@@ -104,16 +105,19 @@ open class DeltakerProcessor(
 			throw IgnoredException("Deltaker på en gjennomføring med id $arenaGjennomforingId er ignorert")
 		}
 
-		val gjennomforingId = mrArenaAdapterClient.hentGjennomforingId(arenaGjennomforingId)
+		val gjennomforingId = mulighetsrommetApiClient.hentGjennomforingId(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert av Mulighetsrommet")
 
-		val gjennomforing = mrArenaAdapterClient.hentGjennomforing(gjennomforingId)
+		val gjennomforing = mulighetsrommetApiClient.hentGjennomforing(gjennomforingId)
 
 		if (!gjennomforingService.isSupportedTiltak(gjennomforing.tiltak.arenaKode)) {
 			throw IgnoredException("Deltaker på gjennomføring $gjennomforingId med arenakode ${gjennomforing.tiltak.arenaKode} er ikke støttet")
 		}
 
-		val gjennomforingArenaData = mrArenaAdapterClient.hentGjennomforingArenaData(gjennomforingId)
+		val gjennomforingArenaData = mulighetsrommetApiClient.hentGjennomforingArenaData(gjennomforingId)
+
+		if (gjennomforingArenaData.virksomhetsnummer == null) throw ValidationException("Deltaker på gjennomføring med arenaId=$arenaGjennomforingId og id=$gjennomforingId mangler virksomhetsnummer")
+
 		val status = GjennomforingStatusConverter.convert(gjennomforingArenaData.status)
 
 		return GjennomforingInfo(gjennomforing.id, status)
