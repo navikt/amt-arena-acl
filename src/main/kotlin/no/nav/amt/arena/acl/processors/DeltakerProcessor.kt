@@ -43,6 +43,16 @@ open class DeltakerProcessor(
 		val arenaDeltakerRaw = message.getData()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
 
+		val gjennomforingInfo = gjennomforingService.get(arenaGjennomforingId)
+			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
+
+		if (!gjennomforingInfo.isSupported) {
+			throw IgnoredException("Deltaker på en gjennomføring arenaId <$arenaGjennomforingId> er ignorert")
+		}
+		else if (!gjennomforingInfo.isValid) {
+			throw DependencyNotIngestedException("Deltaker på ugyldig gjennomføring <$arenaGjennomforingId>")
+		}
+
 		val gjennomforing = if (toggleService.hentGjennomforingFraMulighetsrommetEnabled()) {
 			getGjennomforingFraMulighetsrommet(arenaGjennomforingId)
 		} else {
@@ -98,13 +108,6 @@ open class DeltakerProcessor(
 	}
 
 	private fun getGjennomforingFraMulighetsrommet(arenaGjennomforingId: String): GjennomforingInfo {
-		val amtGjennomforingId = arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaGjennomforingId)?.amtId
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
-
-		if (gjennomforingService.isIgnored(amtGjennomforingId)) {
-			throw IgnoredException("Deltaker på en gjennomføring med id $arenaGjennomforingId er ignorert")
-		}
-
 		val gjennomforingId = mulighetsrommetApiClient.hentGjennomforingId(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert av Mulighetsrommet")
 

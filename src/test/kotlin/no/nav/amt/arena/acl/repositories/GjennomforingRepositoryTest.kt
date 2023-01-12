@@ -19,7 +19,7 @@ class GjennomforingRepositoryTest : FunSpec({
 		val arenaId = "ARENA_ID"
 		repository.upsert(arenaId,"INDOPPFAG", true)
 
-		repository.isValid(arenaId) shouldBe true
+		repository.get(arenaId)!!.isValid shouldBe true
 	}
 
 	test("upsert - skal oppdatere eksisterende") {
@@ -27,7 +27,7 @@ class GjennomforingRepositoryTest : FunSpec({
 		repository.upsert(arenaId,"INDOPPFAG", false)
 		repository.upsert(arenaId,"INDOPPFAG", true)
 
-		repository.isValid(arenaId) shouldBe true
+		repository.get(arenaId)!!.isValid shouldBe true
 	}
 
 	test("isValid - skal hente riktig record - flere er tilgjengelig") {
@@ -36,8 +36,8 @@ class GjennomforingRepositoryTest : FunSpec({
 		repository.upsert(arenaId1,"INDOPPFAG", true)
 		repository.upsert(arenaId2,"INDOPPFAG", false)
 
-		repository.isValid(arenaId1) shouldBe true
-		repository.isValid(arenaId2) shouldBe false
+		repository.get(arenaId1)!!.isValid shouldBe true
+		repository.get(arenaId2)!!.isValid shouldBe false
 
 	}
 })
