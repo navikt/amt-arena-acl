@@ -40,6 +40,8 @@ class TiltakGjennomforingProcessorTest {
 	private lateinit var kafkaProducerService: KafkaProducerService
 	private lateinit var gjennomforingProcessor: GjennomforingProcessor
 	private lateinit var ignoredArenaDataRepository: IgnoredArenaDataRepository
+	private lateinit var gjennomforingRepository: GjennomforingRepository
+
 	private lateinit var toggleService: ToggleService
 
 	val dataSource = SingletonPostgresContainer.getDataSource()
@@ -58,6 +60,7 @@ class TiltakGjennomforingProcessorTest {
 		ordsClient = mock(ArenaOrdsProxyClient::class.java)
 		kafkaProducerService = mock(KafkaProducerService::class.java)
 		ignoredArenaDataRepository = mock(IgnoredArenaDataRepository::class.java)
+		gjennomforingRepository = mock(GjennomforingRepository::class.java)
 		toggleService = mock(ToggleService::class.java)
 
 		val translationService = ArenaDataIdTranslationService(translationRepository)
@@ -69,6 +72,7 @@ class TiltakGjennomforingProcessorTest {
 			GjennomforingService(
 				ArenaGjennomforingRepository(jdbcTemplate),
 				ignoredArenaDataRepository,
+				gjennomforingRepository
 			),
 			tiltakService,
 			ordsClient,

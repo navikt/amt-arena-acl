@@ -6,10 +6,12 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakGjennomforing
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
+import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.ArenaSakRepository
@@ -36,8 +38,9 @@ open class GjennomforingProcessor(
 		val arenaGjennomforing = message.getData()
 		val arenaGjennomforingTiltakskode = arenaGjennomforing.TILTAKSKODE
 		val arenaGjennomforingId = arenaGjennomforing.TILTAKGJENNOMFORING_ID.toString()
-
 		val gjennomforingId = arenaDataIdTranslationService.hentEllerOpprettNyGjennomforingId(arenaGjennomforingId)
+
+		gjennomforingService.upsert(arenaGjennomforingId, arenaGjennomforingTiltakskode, isValid(arenaGjennomforing))
 
 		if (!gjennomforingService.isSupportedTiltak(arenaGjennomforingTiltakskode)) {
 			gjennomforingService.ignore(gjennomforingId)
@@ -81,6 +84,16 @@ open class GjennomforingProcessor(
 		kafkaProducerService.sendTilAmtTiltak(amtGjennomforing.id, amtData)
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(gjennomforing.tiltakgjennomforingId))
 		log.info("Melding for gjennomføring id=$gjennomforingId arenaId=${gjennomforing.tiltakgjennomforingId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
+	}
+
+	private fun isValid(arenaGjennomforing: ArenaGjennomforing): Boolean {
+		try {
+			arenaGjennomforing.mapTiltakGjennomforing()
+			return true
+		}
+		catch(e: ValidationException) {
+			return false
+		}
 	}
 
 	private fun TiltakGjennomforing.toAmtGjennomforing(
