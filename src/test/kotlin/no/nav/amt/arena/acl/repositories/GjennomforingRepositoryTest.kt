@@ -2,6 +2,7 @@ package no.nav.amt.arena.acl.repositories
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
@@ -11,6 +12,7 @@ class GjennomforingRepositoryTest : FunSpec({
 
 	beforeEach {
 		repository = GjennomforingRepository(NamedParameterJdbcTemplate(dataSource))
+		DatabaseTestUtils.cleanDatabase(dataSource)
 	}
 
 	test("upsert - skal upserte gjennomforing"){
