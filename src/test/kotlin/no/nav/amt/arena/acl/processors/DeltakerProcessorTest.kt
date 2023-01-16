@@ -93,6 +93,14 @@ class DeltakerProcessorTest {
 
 		`when`(gjennomforingService.getGjennomforing(gjennomforingId)).thenReturn(gjennomforing)
 
+		`when`(gjennomforingService.get(deltakerInput.tiltakgjennomforingId.toString())).thenReturn(
+			GjennomforingService.Gjennomforing(
+				arenaId = deltakerInput.tiltakgjennomforingId.toString(),
+				tiltakKode = "INDOPPFAG",
+				isValid = true
+		))
+
+
 		`when`(arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(deltakerInput.tiltakDeltakerId.toString()))
 			.thenReturn(deltakerId)
 

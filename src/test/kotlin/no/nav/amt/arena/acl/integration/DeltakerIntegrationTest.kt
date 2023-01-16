@@ -18,7 +18,9 @@ import no.nav.amt.arena.acl.integration.utils.AsyncUtils
 import no.nav.amt.arena.acl.integration.utils.DateUtils
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.repositories.GjennomforingRepository
 import no.nav.amt.arena.acl.repositories.IgnoredArenaDataRepository
+import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionListener
@@ -52,6 +54,9 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Autowired
 	lateinit var ignoredArenaDataRepository: IgnoredArenaDataRepository
+
+	@Autowired
+	lateinit var gjennomforingRepository: GjennomforingRepository
 
 
 	companion object {
@@ -117,6 +122,8 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Test
 	fun `ingest deltaker`() {
+		gjennomforingRepository.upsert(arenaGjennomforingId, SUPPORTED_TILTAK.first(), true)
+
 		mockMulighetsrommetApiServer.mockHentGjennomforingId(arenaGjennomforingId, gjennomforingId)
 		mockMulighetsrommetApiServer.mockHentGjennomforing(gjennomforingId, gjennomforing)
 		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingId, gjennomforingArenaData)
@@ -150,6 +157,8 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Test
 	fun `skal ignorere deltaker på ikke støttet gjennomføring`() {
+
+		gjennomforingRepository.upsert(arenaGjennomforingId, "IKKESTOTTET", true)
 		mockMulighetsrommetApiServer.mockHentGjennomforingId(arenaGjennomforingId, gjennomforingId)
 		mockMulighetsrommetApiServer.mockHentGjennomforing(gjennomforingId, gjennomforing.copy(tiltak = gjennomforing.tiltak.copy(arenaKode = "IKKESTOTTET")))
 		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingId, gjennomforingArenaData)
@@ -167,6 +176,7 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 	@Test
 	fun `skal ignorere deltaker på ikke en allerede ignorert gjennomføring`() {
 		ignoredArenaDataRepository.ignore(amtGjennomforingId)
+		gjennomforingRepository.upsert(arenaGjennomforingId, "IKKESTOTTET", true)
 
 		mockMulighetsrommetApiServer.mockHentGjennomforingId(arenaGjennomforingId, gjennomforingId)
 		mockMulighetsrommetApiServer.mockHentGjennomforing(gjennomforingId, gjennomforing.copy(tiltak = gjennomforing.tiltak.copy(arenaKode = "IKKESTOTTET")))
@@ -184,10 +194,11 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Test
 	fun `skal invalidere deltaker på gjennomføring uten virksomhetsnummer`() {
+		gjennomforingRepository.upsert(arenaGjennomforingId, SUPPORTED_TILTAK.first(), true)
 		mockMulighetsrommetApiServer.mockHentGjennomforingId(arenaGjennomforingId, gjennomforingId)
 		mockMulighetsrommetApiServer.mockHentGjennomforing(
 			gjennomforingId,
-			gjennomforing.copy(tiltak = gjennomforing.tiltak.copy(arenaKode = "INDOPPFAG"))
+			gjennomforing.copy(tiltak = gjennomforing.tiltak.copy(arenaKode = SUPPORTED_TILTAK.first()))
 		)
 		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(
 			gjennomforingId,
