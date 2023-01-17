@@ -14,8 +14,6 @@ import io.mockk.verify
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.GjennomforingProcessor
-import no.nav.amt.arena.acl.processors.SakProcessor
-import no.nav.amt.arena.acl.processors.TiltakProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -25,13 +23,10 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 
 	lateinit var arenaDataRepository: ArenaDataRepository
 
-	lateinit var tiltakProcessor: TiltakProcessor
 
 	lateinit var gjennomforingProcessor: GjennomforingProcessor
 
 	lateinit var deltakerProcessor: DeltakerProcessor
-
-	lateinit var sakProcessor: SakProcessor
 
 	lateinit var meterRegistry: MeterRegistry
 
@@ -42,18 +37,14 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		rootLogger.level = Level.WARN
 
 		arenaDataRepository = mockk()
-		tiltakProcessor = mockk()
 		gjennomforingProcessor = mockk()
-		sakProcessor = mockk()
 		deltakerProcessor = mockk()
 
 		meterRegistry = SimpleMeterRegistry()
 
 		messageProcessor = ArenaMessageProcessorService(
-			tiltakProcessor = tiltakProcessor,
 			gjennomforingProcessor = gjennomforingProcessor,
 			deltakerProcessor = deltakerProcessor,
-			sakProcessor = sakProcessor,
 			arenaDataRepository = arenaDataRepository,
 			meterRegistry = meterRegistry
 		)
@@ -97,24 +88,6 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		}
 	}
 
-	"should handle arena tiltak message" {
-		val tiltakJsonFileContent =
-			javaClass.classLoader.getResource("data/arena-tiltakendret-v1.json").readText()
-		val tiltakList: List<JsonNode> = fromJsonString(tiltakJsonFileContent)
-		val tiltakJson = tiltakList.toList()[0].toString()
-
-		every {
-			tiltakProcessor.handleArenaMessage(any())
-		} returns Unit
-
-		messageProcessor.handleArenaGoldenGateRecord(
-			ConsumerRecord("test", 1, 1, "123456", tiltakJson)
-		)
-
-		verify(exactly = 1) {
-			tiltakProcessor.handleArenaMessage(any())
-		}
-	}
 
 	"should handle message with unicode NULL" {
 		val tiltakgjennomforingerJsonFileContent =
@@ -140,25 +113,6 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		val capturedData = capturingSlot.captured
 
 		capturedData.after?.VURDERING_GJENNOMFORING shouldBe "Vurdering"
-	}
-
-	"should handle arena sak message" {
-		val tiltakJsonFileContent =
-			javaClass.classLoader.getResource("data/arena-sakendret-v1.json").readText()
-		val sakList: List<JsonNode> = fromJsonString(tiltakJsonFileContent)
-		val sakJson = sakList.toList()[0].toString()
-
-		every {
-			sakProcessor.handleArenaMessage(any())
-		} returns Unit
-
-		messageProcessor.handleArenaGoldenGateRecord(
-			ConsumerRecord("test", 1, 1, "123456", sakJson)
-		)
-
-		verify(exactly = 1) {
-			sakProcessor.handleArenaMessage(any())
-		}
 	}
 
 })

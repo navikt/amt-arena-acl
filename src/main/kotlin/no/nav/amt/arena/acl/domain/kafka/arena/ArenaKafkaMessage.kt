@@ -21,10 +21,7 @@ data class ArenaKafkaMessage<D>(
 	}
 }
 
-typealias ArenaTiltakKafkaMessage = ArenaKafkaMessage<ArenaTiltak>
 
 typealias ArenaGjennomforingKafkaMessage = ArenaKafkaMessage<ArenaGjennomforing>
 
 typealias ArenaDeltakerKafkaMessage = ArenaKafkaMessage<ArenaDeltaker>
-
-typealias ArenaSakKafkaMessage = ArenaKafkaMessage<ArenaSak>

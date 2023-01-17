@@ -23,26 +23,7 @@ class KafkaAmtIntegrationConsumer(
 
 	companion object {
 		private val deltakerSubsctiptions = mutableMapOf<UUID, (wrapper: AmtKafkaMessageDto<AmtDeltaker>) -> Unit>()
-		private val gjennomforingSubscriptions = mutableMapOf<UUID, (wrapper: AmtKafkaMessageDto<AmtGjennomforing>) -> Unit>()
 
-		fun subscribeDeltaker(handler: (record: AmtKafkaMessageDto<AmtDeltaker>) -> Unit): UUID {
-			val id = UUID.randomUUID()
-			deltakerSubsctiptions[id] = handler
-
-			return id
-		}
-
-		fun subscribeGjennomforing(handler: (record: AmtKafkaMessageDto<AmtGjennomforing>) -> Unit): UUID {
-			val id = UUID.randomUUID()
-			gjennomforingSubscriptions[id] = handler
-
-			return id
-		}
-
-		fun reset() {
-			deltakerSubsctiptions.clear()
-			gjennomforingSubscriptions.clear()
-		}
 	}
 
 
@@ -74,12 +55,6 @@ class KafkaAmtIntegrationConsumer(
 				val message = toKnownMessageWrapper(deltakerPayload, unknownMessageWrapper)
 				deltakerSubsctiptions.values.forEach { it.invoke(message) }
 
-			}
-			PayloadType.GJENNOMFORING -> {
-				val gjennomforingPayload =
-					fromJsonNode<AmtGjennomforing>(unknownMessageWrapper.payload)
-				val message = toKnownMessageWrapper(gjennomforingPayload, unknownMessageWrapper)
-				gjennomforingSubscriptions.values.forEach { it.invoke(message) }
 			}
 		}
 	}

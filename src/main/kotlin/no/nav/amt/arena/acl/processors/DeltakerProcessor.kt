@@ -5,24 +5,21 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
-import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
-import no.nav.amt.arena.acl.services.ToggleService
 import no.nav.amt.arena.acl.utils.SecureLog.secureLog
+import no.nav.amt.arena.acl.utils.tryRun
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.*
 
 @Component
 open class DeltakerProcessor(
@@ -34,7 +31,6 @@ open class DeltakerProcessor(
 	private val metrics: DeltakerMetricHandler,
 	private val kafkaProducerService: KafkaProducerService,
 	private val mulighetsrommetApiClient: MulighetsrommetApiClient,
-	private val toggleService: ToggleService,
 ) : ArenaMessageProcessor<ArenaDeltakerKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -47,19 +43,21 @@ open class DeltakerProcessor(
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
 		if (!gjennomforingInfo.isSupported) {
-			throw IgnoredException("Deltaker på en gjennomføring arenaId <$arenaGjennomforingId> er ignorert")
+			throw IgnoredException("Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
 		}
 		else if (!gjennomforingInfo.isValid) {
 			throw DependencyNotIngestedException("Deltaker på ugyldig gjennomføring <$arenaGjennomforingId>")
 		}
 
-		val gjennomforing = if (toggleService.hentGjennomforingFraMulighetsrommetEnabled()) {
-			getGjennomforingFraMulighetsrommet(arenaGjennomforingId)
-		} else {
-			getGjennomforing(arenaGjennomforingId)
-		}
+		val arenaDeltaker = arenaDeltakerRaw
+			.tryRun { it.mapTiltakDeltaker() }
+			.getOrThrow()
 
-		val arenaDeltaker = arenaDeltakerRaw.mapTiltakDeltaker()
+		val gjennomforingId = mulighetsrommetApiClient.hentGjennomforingId(arenaGjennomforingId)
+			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert av Mulighetsrommet")
+
+		val gjennomforingArenaData = mulighetsrommetApiClient.hentGjennomforingArenaData(gjennomforingId)
+		val status = GjennomforingStatusConverter.convert(gjennomforingArenaData.status)
 
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
 			?: throw IllegalStateException("Expected person with personId=${arenaDeltaker.personId} to exist")
@@ -68,8 +66,8 @@ open class DeltakerProcessor(
 
 		val amtDeltaker = arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerAmtId,
-			gjennomforingId = gjennomforing.id,
-			gjennomforingStatus = gjennomforing.status,
+			gjennomforingId = gjennomforingId,
+			gjennomforingStatus = status,
 			personIdent = personIdent
 		)
 
@@ -85,50 +83,11 @@ open class DeltakerProcessor(
 		)
 
 		kafkaProducerService.sendTilAmtTiltak(amtDeltaker.id, amtData)
-
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltaker.tiltakdeltakerId))
 
 		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} personId=${arenaDeltaker.personId} fnr=$personIdent er sendt")
 		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 		metrics.publishMetrics(message)
 	}
-
-	private fun getGjennomforing(arenaGjennomforingId: String): GjennomforingInfo {
-		val gjennomforingId = arenaDataIdTranslationService.findGjennomforingIdTranslation(arenaGjennomforingId)?.amtId
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
-
-		if (gjennomforingService.isIgnored(gjennomforingId)) {
-			throw IgnoredException("Deltaker på en gjennomføring $gjennomforingId er ignorert")
-		}
-
-		val gjennomforingInfo = gjennomforingService.getGjennomforing(gjennomforingId)
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
-
-		return GjennomforingInfo(gjennomforingInfo.id, gjennomforingInfo.status)
-	}
-
-	private fun getGjennomforingFraMulighetsrommet(arenaGjennomforingId: String): GjennomforingInfo {
-		val gjennomforingId = mulighetsrommetApiClient.hentGjennomforingId(arenaGjennomforingId)
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert av Mulighetsrommet")
-
-		val gjennomforing = mulighetsrommetApiClient.hentGjennomforing(gjennomforingId)
-
-		if (!gjennomforingService.isSupportedTiltak(gjennomforing.tiltak.arenaKode)) {
-			throw IgnoredException("Deltaker på gjennomføring $gjennomforingId med arenakode ${gjennomforing.tiltak.arenaKode} er ikke støttet")
-		}
-
-		val gjennomforingArenaData = mulighetsrommetApiClient.hentGjennomforingArenaData(gjennomforingId)
-
-		if (gjennomforingArenaData.virksomhetsnummer == null) throw ValidationException("Deltaker på gjennomføring med arenaId=$arenaGjennomforingId og id=$gjennomforingId mangler virksomhetsnummer")
-
-		val status = GjennomforingStatusConverter.convert(gjennomforingArenaData.status)
-
-		return GjennomforingInfo(gjennomforing.id, status)
-	}
-
-	data class GjennomforingInfo(
-		val id: UUID,
-		val status: AmtGjennomforing.Status,
-	)
 
 }

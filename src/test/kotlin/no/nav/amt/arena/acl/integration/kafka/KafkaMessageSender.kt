@@ -10,12 +10,12 @@ class KafkaMessageSender(
 	private val kafkaTopicProperties: KafkaTopicProperties,
 	private val kafkaProducer: KafkaProducerClientImpl<String, String>,
 ) {
-	fun publiserArenaGjennomforing(arenaGjennomforingId: String, jsonMessage: String) {
-		kafkaProducer.sendSync(ProducerRecord(kafkaTopicProperties.arenaTiltakGjennomforingTopic, arenaGjennomforingId, jsonMessage))
+	fun publiserArenaGjennomforing(arenaGjennomforingId: Long, jsonMessage: String) {
+		kafkaProducer.sendSync(ProducerRecord(kafkaTopicProperties.arenaTiltakGjennomforingTopic, arenaGjennomforingId.toString(), jsonMessage))
 	}
 
-	fun publiserArenaDeltaker(arenaDeltakerId: String, jsonMessage: String) {
-		kafkaProducer.sendSync(ProducerRecord(kafkaTopicProperties.arenaTiltakDeltakerTopic, arenaDeltakerId, jsonMessage))
+	fun publiserArenaDeltaker(arenaDeltakerId: Long, jsonMessage: String) {
+		kafkaProducer.sendSync(ProducerRecord(kafkaTopicProperties.arenaTiltakDeltakerTopic, arenaDeltakerId.toString(), jsonMessage))
 	}
 
 }

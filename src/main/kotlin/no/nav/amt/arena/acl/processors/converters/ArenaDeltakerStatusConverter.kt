@@ -1,7 +1,6 @@
 package no.nav.amt.arena.acl.processors.converters
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.amt.erAvsluttende
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import java.time.LocalDate
@@ -78,7 +77,7 @@ object ArenaDeltakerStatusConverter {
 		startDato: LocalDate?,
 		sluttDato: LocalDate?,
 		statusEndringTid: LocalDateTime?,
-		gjennomforingStatus: AmtGjennomforing.Status,
+		gjennomforingStatus: GjennomforingStatus,
 	): DeltakerStatus {
 		val status = if (deltakerStatusKode in avsluttendeStatuser) avsluttendeStatus(startDato, sluttDato, statusEndringTid)
 				else if (deltakerStatusKode in gjennomforendeStatuser) gjennomforendeStatus(startDato, sluttDato, statusEndringTid)
@@ -88,14 +87,9 @@ object ArenaDeltakerStatusConverter {
 					else alltidIkkeAktuell(statusEndringTid)
 				} else throw UnknownFormatConversionException("Kan ikke konvertere deltakerstatuskode: $deltakerStatusKode")
 
-		if(gjennomforingStatus == AmtGjennomforing.Status.AVSLUTTET && !status.navn.erAvsluttende()) {
+		if(gjennomforingStatus == GjennomforingStatus.AVSLUTTET && !status.navn.erAvsluttende()) {
 			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, statusEndringTid)
 		}
 		return status
 	}
-
-	data class DeltakerStatus(
-		val navn: AmtDeltaker.Status,
-		val endretDato: LocalDateTime?
-	)
 }

@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.domain.kafka.arena
 import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.utils.asValidatedLocalDate
 import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
-import no.nav.amt.arena.acl.utils.validatedLocalDateTime
 
 // @SONAR_START@
 data class ArenaGjennomforing(
@@ -48,24 +47,34 @@ data class ArenaGjennomforing(
 	val PARTISJON: Long? = null,
 	val MAALFORM_KRAVBREV: String? = null
 ) {
-	fun mapTiltakGjennomforing(): TiltakGjennomforing {
-		return TiltakGjennomforing(
-			tiltakgjennomforingId = TILTAKGJENNOMFORING_ID.toString(),
-			sakId = SAK_ID ?: throw ValidationException("SAK_ID er null"),
-			tiltakskode = TILTAKSKODE,
-			arbgivIdArrangor = ARBGIV_ID_ARRANGOR?.toString()
-				?: throw ValidationException("ARBGIV_ID_ARRANGOR er null"),
-			lokaltNavn = LOKALTNAVN ?: throw ValidationException("LOKALTNAVN er null"),
-			datoFra = DATO_FRA?.asValidatedLocalDate("DATO_FRA"),
-			datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
-			datoFremmote = DATO_FREMMOTE?.validatedLocalDateTime(
-				"DATO_FREMMOTE + KLOKKETID_FREMMOTE",
-				KLOKKETID_FREMMOTE
-			),
-			tiltakstatusKode = TILTAKSTATUSKODE
-				?: throw ValidationException("Forventet at TILTAKSTATUSKODE ikke er null"),
-			regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO")
-				?: throw ValidationException("REG_DATO er null")
+	fun mapTiltakGjennomforing(): Result<TiltakGjennomforing> {
+		return Result.success(
+			TiltakGjennomforing(
+				tiltakgjennomforingId = TILTAKGJENNOMFORING_ID.toString(),
+				sakId = SAK_ID ?: return Result.failure(ValidationException("SAK_ID er null")),
+				tiltakskode = TILTAKSKODE,
+				arbgivIdArrangor = ARBGIV_ID_ARRANGOR?.toString()
+					?: return Result.failure(ValidationException("ARBGIV_ID_ARRANGOR er null")),
+				lokaltNavn = LOKALTNAVN ?: return Result.failure(ValidationException("LOKALTNAVN er null")),
+				datoFra = try {
+					DATO_FRA?.asValidatedLocalDate("DATO_FRA")
+				} catch (e: Exception) {
+					return Result.failure(e)
+				},
+				datoTil = try {
+					DATO_TIL?.asValidatedLocalDate("DATO_TIL")
+				} catch (e: Exception) {
+					return Result.failure(e)
+				},
+				tiltakstatusKode = TILTAKSTATUSKODE
+					?: return Result.failure(ValidationException("Forventet at TILTAKSTATUSKODE ikke er null")),
+				regDato = try {
+					REG_DATO?.asValidatedLocalDateTime("REG_DATO")
+						?: return Result.failure(ValidationException("REG_DATO er null"))
+				} catch (e: Exception) {
+					return Result.failure(e)
+				}
+			)
 		)
 	}
 }

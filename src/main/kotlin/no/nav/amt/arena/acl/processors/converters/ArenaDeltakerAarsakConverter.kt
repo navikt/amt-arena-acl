@@ -1,7 +1,6 @@
 package no.nav.amt.arena.acl.processors.converters
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.amt.erAvsluttende
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 
@@ -10,7 +9,7 @@ import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 		arenaStatus: TiltakDeltaker.Status,
 		status: AmtDeltaker.Status,
 		statusAarsakKode: TiltakDeltaker.StatusAarsak?,
-		gjennomforingStatus: AmtGjennomforing.Status
+		gjennomforingStatus: GjennomforingStatus
 	): AmtDeltaker.StatusAarsak? {
 		val aarsakFraAarsak = utledMedArenaAarsak(statusAarsakKode)
 		val aarsakFraStatus = utledMedArenaStatus(arenaStatus)
@@ -23,8 +22,8 @@ import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 		else return aarsakFraAarsak
 	}
 
-	private fun utledMedGjennomforing(gjennomforingStatus: AmtGjennomforing.Status, arenaStatus: TiltakDeltaker.Status): AmtDeltaker.StatusAarsak? {
-		if(gjennomforingStatus != AmtGjennomforing.Status.AVSLUTTET) return null
+	private fun utledMedGjennomforing(gjennomforingStatus: GjennomforingStatus, arenaStatus: TiltakDeltaker.Status): AmtDeltaker.StatusAarsak? {
+		if(gjennomforingStatus != GjennomforingStatus.AVSLUTTET) return null
 		return when (arenaStatus) {
 			TiltakDeltaker.Status.AKTUELL -> AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
 			TiltakDeltaker.Status.INFOMOETE -> AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS

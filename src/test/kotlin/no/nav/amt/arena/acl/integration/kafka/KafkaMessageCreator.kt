@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.integration.kafka
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
+import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonNode
@@ -14,6 +15,8 @@ import java.time.format.DateTimeFormatter
 object KafkaMessageCreator {
 
 	private const val GENERIC_STRING = "STRING_NOT_SET"
+	private const val GENERIC_DATE_STRING = "2015-09-07 00:00:00"
+
 	private const val GENERIC_INT = Int.MIN_VALUE
 	private const val GENERIC_LONG = Long.MIN_VALUE
 	private const val GENERIC_FLOAT = Float.MIN_VALUE
@@ -30,12 +33,12 @@ object KafkaMessageCreator {
 	): ArenaKafkaMessageDto {
 		return arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_DELTAKER_TABLE_NAME, opPos)
 	}
-
-	fun opprettArenaGjennomforing(
-		arenaGjennomforing: ArenaGjennomforing,
+	fun <T> opprettArenaGjennomforingMessage(
+		data: T,
 		opType: String = "I",
+		opPos: String? = null,
 	): ArenaKafkaMessageDto {
-		return arenaKafkaMessageDto(opType, arenaGjennomforing, ARENA_GJENNOMFORING_TABLE_NAME)
+		return arenaKafkaMessageDto(opType, data, ARENA_GJENNOMFORING_TABLE_NAME, opPos)
 	}
 
 	private fun <T> arenaKafkaMessageDto(
@@ -70,9 +73,9 @@ object KafkaMessageCreator {
 
 	fun baseGjennomforing(
 		arenaGjennomforingId: Long,
-		tiltakskode: String,
-		navn: String,
-		tiltakstatuskode: String,
+		tiltakskode: String = SUPPORTED_TILTAK.first(),
+		navn: String = "Tiltak hos oslo kommune",
+		tiltakstatuskode: String = "GJENNOMFOR",
 		arbgivIdArrangor: Long? = null,
 		datoFra: LocalDateTime? = null,
 		datoTil: LocalDateTime? = null
@@ -91,9 +94,9 @@ object KafkaMessageCreator {
 			TEKST_KURSSTED = GENERIC_STRING,
 			TEKST_MAALGRUPPE = GENERIC_STRING,
 			STATUS_TREVERDIKODE_INNSOKNING = GENERIC_STRING,
-			REG_DATO = GENERIC_STRING,
+			REG_DATO = GENERIC_DATE_STRING,
 			REG_USER = GENERIC_STRING,
-			MOD_DATO = GENERIC_STRING,
+			MOD_DATO = GENERIC_DATE_STRING,
 			MOD_USER = GENERIC_STRING,
 			LOKALTNAVN = navn,
 			TILTAKSTATUSKODE = tiltakstatuskode,
@@ -102,11 +105,11 @@ object KafkaMessageCreator {
 			ARBGIV_ID_ARRANGOR = arbgivIdArrangor,
 			PROFILELEMENT_ID_GEOGRAFI = GENERIC_STRING,
 			KLOKKETID_FREMMOTE = null,
-			DATO_FREMMOTE = GENERIC_STRING,
+			DATO_FREMMOTE = null,
 			BEGRUNNELSE_STATUS = GENERIC_STRING,
 			AVTALE_ID = GENERIC_LONG,
 			AKTIVITET_ID = GENERIC_LONG,
-			DATO_INNSOKNINGSTART = GENERIC_STRING,
+			DATO_INNSOKNINGSTART = null,
 			GML_FRA_DATO = GENERIC_STRING,
 			GML_TIL_DATO = GENERIC_STRING,
 			AETAT_FREMMOTEREG = GENERIC_STRING,
@@ -115,21 +118,21 @@ object KafkaMessageCreator {
 			TILTAKGJENNOMFORING_ID_REL = GENERIC_STRING,
 			VURDERING_GJENNOMFORING = GENERIC_STRING,
 			PROFILELEMENT_ID_OPPL_TILTAK = GENERIC_STRING,
-			DATO_OPPFOLGING_OK = GENERIC_STRING,
-			PARTISJON = GENERIC_LONG,
+			DATO_OPPFOLGING_OK = null,
+			PARTISJON = 123,
 			MAALFORM_KRAVBREV = GENERIC_STRING
 		)
 	}
 
 	fun baseDeltaker(
-		arenaDeltakerId: Long,
-		personId: Long,
-		tiltakGjennomforingId: Long,
+		arenaDeltakerId: Long = (1..Long.MAX_VALUE).random(),
+		personId: Long = (1..Long.MAX_VALUE).random(),
+		tiltakGjennomforingId: Long = (1..Long.MAX_VALUE).random().toLong(),
 		deltakerStatusKode: String = "GJENN",
 		statusAarsak: String? = null,
 		startDato: LocalDate? = null,
 		sluttDato: LocalDate? = null,
-		datoStatusEndring: LocalDateTime? = null,
+		datoStatusEndring: LocalDateTime? = LocalDateTime.now(),
 		registrertDato: LocalDateTime = LocalDateTime.now(),
 	): ArenaDeltaker {
 		return ArenaDeltaker(

@@ -22,7 +22,6 @@ enum class AmtOperation {
 
 enum class PayloadType {
 	DELTAKER,
-	GJENNOMFORING
 }
 
 data class AmtKafkaMessageDto<T>(

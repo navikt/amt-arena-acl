@@ -2,13 +2,13 @@ package no.nav.amt.arena.acl.processors
 
 import io.kotest.matchers.shouldBe
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerAarsakConverter
+import no.nav.amt.arena.acl.processors.converters.GjennomforingStatus
 import org.junit.jupiter.api.Test
 
-class DeltakerStatusAarsakConverterTest {
-	val gjennomforingStatus = AmtGjennomforing.Status.GJENNOMFORES
+class DeltakerGjennomforingStatusAarsakConverterTest {
+	val gjennomforingStatus = GjennomforingStatus.GJENNOMFORES
 
 	@Test
 	fun `convert() - årsak brukes når årsak kan mappes direkte`() {
@@ -91,7 +91,7 @@ class DeltakerStatusAarsakConverterTest {
 			TiltakDeltaker.Status.INFOMOETE,
 			AmtDeltaker.Status.IKKE_AKTUELL,
 			TiltakDeltaker.StatusAarsak.SYK,
-			AmtGjennomforing.Status.AVSLUTTET
+			GjennomforingStatus.AVSLUTTET
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
