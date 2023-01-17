@@ -62,11 +62,10 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 		}
 
 	}
+	private fun createGjennomforing(arenaId: Long = 34524534543) = KafkaMessageCreator.baseGjennomforing(
+		arenaGjennomforingId = arenaId,
+		arbgivIdArrangor = 68968L,
+		datoFra = LocalDateTime.now().minusDays(3),
+		datoTil = LocalDateTime.now().plusDays(3),
+	)
 }
-
-fun createGjennomforing(arenaId: Long = 34524534543) = KafkaMessageCreator.baseGjennomforing(
-	arenaGjennomforingId = arenaId,
-	arbgivIdArrangor = 68968L,
-	datoFra = LocalDateTime.now().minusDays(3),
-	datoTil = LocalDateTime.now().plusDays(3),
-)
