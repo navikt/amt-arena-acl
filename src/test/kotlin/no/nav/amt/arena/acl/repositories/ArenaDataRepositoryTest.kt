@@ -47,7 +47,7 @@ class ArenaDataRepositoryTest : FunSpec({
 		val stored = repository.get(data.arenaTableName, data.operation, data.operationPosition)
 
 		stored shouldNotBe null
-		stored.id shouldNotBe -1
+		stored!!.id shouldNotBe -1
 		stored.arenaId shouldBe data.arenaId
 		stored.before shouldBe null
 		stored.after shouldBe after
@@ -79,7 +79,7 @@ class ArenaDataRepositoryTest : FunSpec({
 
 		val updated = repository.get(data.arenaTableName, data.operation, data.operationPosition)
 
-		stored.id shouldBe updated.id
+		stored!!.id shouldBe updated!!.id
 		updated.ingestStatus shouldBe IngestStatus.RETRY
 		updated.ingestedTimestamp!!.isEqualTo(newIngestedTimestamp) shouldBe true
 		updated.note shouldBe "some note"

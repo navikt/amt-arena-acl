@@ -2,10 +2,6 @@ package no.nav.amt.arena.acl.integration
 
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
-import no.nav.amt.arena.acl.integration.executors.DeltakerTestExecutor
-import no.nav.amt.arena.acl.integration.executors.GjennomforingTestExecutor
-import no.nav.amt.arena.acl.integration.executors.SakTestExecutor
-import no.nav.amt.arena.acl.integration.executors.TiltakTestExecutor
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.SingletonKafkaProvider
@@ -14,8 +10,6 @@ import no.nav.amt.arena.acl.kafka.KafkaProperties
 import no.nav.amt.arena.acl.mocks.MockArenaOrdsProxyHttpServer
 import no.nav.amt.arena.acl.mocks.MockMachineToMachineHttpServer
 import no.nav.amt.arena.acl.mocks.MockMulighetsrommetApiServer
-import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
-import no.nav.amt.arena.acl.services.TiltakService
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,24 +34,6 @@ abstract class IntegrationTestBase {
 	lateinit var dataSource: DataSource
 
 	@Autowired
-	private lateinit var retryArenaMessageProcessorService: RetryArenaMessageProcessorService
-
-	@Autowired
-	lateinit var tiltakService: TiltakService
-
-	@Autowired
-	lateinit var tiltakExecutor: TiltakTestExecutor
-
-	@Autowired
-	lateinit var gjennomforingExecutor: GjennomforingTestExecutor
-
-	@Autowired
-	lateinit var sakExecutor: SakTestExecutor
-
-	@Autowired
-	lateinit var deltakerExecutor: DeltakerTestExecutor
-
-	@Autowired
 	lateinit var kafkaMessageConsumer: KafkaMessageConsumer
 
 	@Autowired
@@ -72,7 +48,6 @@ abstract class IntegrationTestBase {
 
 	@AfterEach
 	fun cleanup() {
-		tiltakService.invalidateTiltakByKodeCache()
 		mockArenaOrdsProxyHttpServer.reset()
 		mockMulighetsrommetApiServer.reset()
 		kafkaMessageConsumer.stop()
@@ -114,9 +89,6 @@ abstract class IntegrationTestBase {
 		}
 	}
 
-	fun processMessages(batchSize: Int = 500) {
-		retryArenaMessageProcessorService.processMessages(batchSize)
-	}
 
 }
 

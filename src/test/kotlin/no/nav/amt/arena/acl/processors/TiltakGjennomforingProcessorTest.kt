@@ -1,19 +1,14 @@
 package no.nav.amt.arena.acl.processors
 
 import ArenaOrdsProxyClient
-import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
-import no.nav.amt.arena.acl.domain.db.ArenaSakDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtTiltak
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
-import no.nav.amt.arena.acl.exceptions.IgnoredException
-import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.repositories.*
 import no.nav.amt.arena.acl.services.*
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
@@ -26,7 +21,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.time.LocalDateTime
-import java.time.ZonedDateTime
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -34,67 +28,33 @@ class TiltakGjennomforingProcessorTest {
 	private lateinit var jdbcTemplate: NamedParameterJdbcTemplate
 	private lateinit var repository: ArenaDataRepository
 	private lateinit var translationRepository: ArenaDataIdTranslationRepository
-	private lateinit var tiltakService: TiltakService
-	private lateinit var sakRepository: ArenaSakRepository
 	private lateinit var ordsClient: ArenaOrdsProxyClient
 	private lateinit var kafkaProducerService: KafkaProducerService
 	private lateinit var gjennomforingProcessor: GjennomforingProcessor
-	private lateinit var ignoredArenaDataRepository: IgnoredArenaDataRepository
 	private lateinit var gjennomforingRepository: GjennomforingRepository
-
-	private lateinit var toggleService: ToggleService
+	private lateinit var gjennomforingService: GjennomforingService
 
 	val dataSource = SingletonPostgresContainer.getDataSource()
 	var tiltakKode = "INDOPPFAG"
-	var ukjentTiltakType = "UKJENTTILTAK"
 	var ARBGIV_ID_ARRANGOR = "661733"
 	var sakId = Random().nextLong()
+	var arenaGjennomforingId = 3728063
 
 	@BeforeAll
 	fun beforeAll() {
 		jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
 		repository = ArenaDataRepository(jdbcTemplate)
 		translationRepository = ArenaDataIdTranslationRepository(jdbcTemplate)
-		tiltakService = mock(TiltakService::class.java)
-		sakRepository = mock(ArenaSakRepository::class.java)
 		ordsClient = mock(ArenaOrdsProxyClient::class.java)
 		kafkaProducerService = mock(KafkaProducerService::class.java)
-		ignoredArenaDataRepository = mock(IgnoredArenaDataRepository::class.java)
-		gjennomforingRepository = mock(GjennomforingRepository::class.java)
-		toggleService = mock(ToggleService::class.java)
-
-		val translationService = ArenaDataIdTranslationService(translationRepository)
+		gjennomforingRepository = GjennomforingRepository(jdbcTemplate)
+		gjennomforingService = GjennomforingService(
+			gjennomforingRepository
+		)
 
 		gjennomforingProcessor = GjennomforingProcessor(
 			repository,
-			sakRepository,
-			translationService,
-			GjennomforingService(
-				ArenaGjennomforingRepository(jdbcTemplate),
-				ignoredArenaDataRepository,
-				gjennomforingRepository
-			),
-			tiltakService,
-			ordsClient,
-			kafkaProducerService,
-			toggleService,
-		)
-		`when`(sakRepository.hentSakMedArenaId(sakId)).thenReturn(
-			ArenaSakDbo(
-				Random().nextInt(),
-				sakId,
-				2001,
-				123213,
-				"4324",
-				ZonedDateTime.now()
-			)
-		)
-		`when`(this.tiltakService.getByKode(tiltakKode)).thenReturn(
-			AmtTiltak(
-				UUID.randomUUID(),
-				kode = tiltakKode,
-				navn = "Oppfølging"
-			)
+			gjennomforingService
 		)
 		`when`(ordsClient.hentVirksomhetsnummer(ARBGIV_ID_ARRANGOR)).thenReturn("123")
 	}
@@ -107,7 +67,6 @@ class TiltakGjennomforingProcessorTest {
 	@Test
 	fun `handleEntry() - Gyldig gjennomføring - inserter i korrekte tabeller`() {
 		val opPos = "1"
-
 		val arenaGjennomforing = fromJsonString<ArenaGjennomforing>(arenaGjennomforingJson)
 
 		val kafkaMessage = createArenaGjennomforingKafkaMessage(
@@ -117,19 +76,21 @@ class TiltakGjennomforingProcessorTest {
 
 		gjennomforingProcessor.handleArenaMessage(kafkaMessage)
 
-		val translationData = translationRepository.get(kafkaMessage.arenaTableName, "3728063")
-		translationData!!.arenaId shouldBe "3728063"
+		val gjennomforing = gjennomforingService.get(arenaGjennomforingId.toString())
+		gjennomforing shouldNotBe null
+		gjennomforing!!.isValid shouldBe true
+		gjennomforing.isSupported shouldBe true
 
 		repository.get(
 			kafkaMessage.arenaTableName,
 			AmtOperation.CREATED,
 			opPos
-		).ingestStatus shouldBe IngestStatus.HANDLED
+		)!!.ingestStatus shouldBe IngestStatus.HANDLED
 
 	}
 
 	@Test
-	fun `handleEntry() - ugyldig gjennomføring - skal kaste ValidationException`() {
+	fun `handleEntry() - ugyldig gjennomføring - skal markeres som invalid`() {
 		val opPos = "2"
 
 		val arenaGjennomforing = fromJsonString<ArenaGjennomforing>(arenaGjennomforingUgyldigJson)
@@ -139,13 +100,43 @@ class TiltakGjennomforingProcessorTest {
 			arenaGjennomforing = arenaGjennomforing,
 		)
 
-		shouldThrowExactly<ValidationException> {
-			gjennomforingProcessor.handleArenaMessage(kafkaMessage)
-		}
+		gjennomforingProcessor.handleArenaMessage(kafkaMessage)
+		val gjennomforing = gjennomforingService.get(arenaGjennomforingId.toString())
+
+		gjennomforing shouldNotBe null
+		gjennomforing!!.isValid shouldBe false
 	}
 
 	@Test
-	fun `handleEntry() - tiltaktype er ikke oppfølging - skal kaste IgnoredException`() {
+	fun `handleEntry() - ugyldig gjennomføring blir gyldig - skal markeres som valid`() {
+		val opPos = "2"
+
+		val arenaGjennomforingUgyldig = fromJsonString<ArenaGjennomforing>(arenaGjennomforingUgyldigJson)
+		val arenaGjennomforingGyldig = fromJsonString<ArenaGjennomforing>(arenaGjennomforingJson)
+
+
+		val kafkaMessageUgyldig = createArenaGjennomforingKafkaMessage(
+			operationPosition = opPos,
+			arenaGjennomforing = arenaGjennomforingUgyldig,
+		)
+
+		gjennomforingProcessor.handleArenaMessage(kafkaMessageUgyldig)
+
+		gjennomforingService.get(arenaGjennomforingId.toString())!!.isValid shouldBe false
+
+		val kafkaMessage = createArenaGjennomforingKafkaMessage(
+			operationPosition = opPos,
+			arenaGjennomforing = arenaGjennomforingGyldig,
+		)
+		gjennomforingProcessor.handleArenaMessage(kafkaMessage)
+
+		gjennomforingService.get(arenaGjennomforingId.toString())!!.isValid shouldBe true
+
+	}
+
+
+	@Test
+	fun `handleEntry() - tiltaktype er ikke støttet - skal lagres i riktige tabeller`() {
 		val opPos = "2"
 
 		val arenaGjennomforing = fromJsonString<ArenaGjennomforing>(arenaGjennomforingUkjentTypeJson)
@@ -154,18 +145,15 @@ class TiltakGjennomforingProcessorTest {
 			operationPosition = opPos,
 			arenaGjennomforing = arenaGjennomforing,
 		)
+		gjennomforingProcessor.handleArenaMessage(kafkaMessage)
+		gjennomforingService.get(arenaGjennomforingId.toString())!!.isValid shouldBe true
 
-		`when`(tiltakService.getByKode(ukjentTiltakType)).thenReturn(
-			AmtTiltak(
-				UUID.randomUUID(),
-				kode = tiltakKode,
-				navn = "Oppfølging"
-			)
-		)
+		repository.get(
+			kafkaMessage.arenaTableName,
+			AmtOperation.CREATED,
+			opPos
+		) shouldBe null
 
-		shouldThrowExactly<IgnoredException> {
-			gjennomforingProcessor.handleArenaMessage(kafkaMessage)
-		}
 	}
 
 	@Test
@@ -182,14 +170,13 @@ class TiltakGjennomforingProcessorTest {
 
 		gjennomforingProcessor.handleArenaMessage(kafkaMessage)
 
-		val translationData = translationRepository.get(ARENA_GJENNOMFORING_TABLE_NAME, "3728063")
-		translationData shouldNotBe null
+		gjennomforingService.get(arenaGjennomforingId.toString()) shouldNotBe null
 
 		repository.get(
 			ARENA_GJENNOMFORING_TABLE_NAME,
 			AmtOperation.DELETED,
 			opPos
-		).ingestStatus shouldBe IngestStatus.HANDLED
+		)!!.ingestStatus shouldBe IngestStatus.HANDLED
 	}
 
 	private fun createArenaGjennomforingKafkaMessage(
@@ -218,7 +205,7 @@ class TiltakGjennomforingProcessorTest {
 
 	private val arenaGjennomforingUgyldigJson = """
 		{
-		  "TILTAKGJENNOMFORING_ID": 830743204,
+		  "TILTAKGJENNOMFORING_ID": $arenaGjennomforingId,
 		  "SAK_ID": 13467550,
 		  "TILTAKSKODE": "$tiltakKode",
 		  "ANTALL_DELTAKERE": 70,
@@ -263,7 +250,7 @@ class TiltakGjennomforingProcessorTest {
 
 	private val arenaGjennomforingUkjentTypeJson = """
 		{
-		  "TILTAKGJENNOMFORING_ID": 7843295,
+		  "TILTAKGJENNOMFORING_ID": $arenaGjennomforingId,
 		  "SAK_ID": 13467550,
 		  "TILTAKSKODE": "ENNYTYPETILTAK",
 		  "ANTALL_DELTAKERE": 70,
@@ -308,7 +295,7 @@ class TiltakGjennomforingProcessorTest {
 
 	private val arenaGjennomforingJson = """
 		{
-		  "TILTAKGJENNOMFORING_ID": 3728063,
+		  "TILTAKGJENNOMFORING_ID": $arenaGjennomforingId,
 		  "SAK_ID": $sakId,
 		  "TILTAKSKODE": "$tiltakKode",
 		  "ANTALL_DELTAKERE": 70,

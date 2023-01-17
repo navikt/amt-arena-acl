@@ -1,9 +1,9 @@
 package no.nav.amt.arena.acl.domain.kafka.arena
 
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerAarsakConverter
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
+import no.nav.amt.arena.acl.processors.converters.GjennomforingStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -52,7 +52,7 @@ data class TiltakDeltaker(
 	fun constructDeltaker(
 		amtDeltakerId: UUID,
 		gjennomforingId: UUID,
-		gjennomforingStatus: AmtGjennomforing.Status,
+		gjennomforingStatus: GjennomforingStatus,
 		personIdent: String
 	): AmtDeltaker {
 		val deltakerStatus = ArenaDeltakerStatusConverter.convert(

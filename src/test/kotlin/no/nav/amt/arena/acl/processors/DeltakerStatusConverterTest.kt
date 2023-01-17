@@ -3,9 +3,9 @@ package no.nav.amt.arena.acl.processors
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.*
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter.convert
+import no.nav.amt.arena.acl.processors.converters.GjennomforingStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -14,7 +14,7 @@ private val yesterday = LocalDate.now().minusDays(1)
 private val now = LocalDateTime.now()
 
 class DeltakerStatusConverterTest : StringSpec({
-	val gjennomforingStatus = AmtGjennomforing.Status.GJENNOMFORES
+	val gjennomforingStatus = GjennomforingStatus.GJENNOMFORES
 
 	"status - AKTUELL - returnerer PABEGYNT" {
 		val status = convert(TiltakDeltaker.Status.AKTUELL, now, null, null, null, gjennomforingStatus)

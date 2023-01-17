@@ -4,7 +4,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import no.nav.amt.arena.acl.mocks.MockHttpServer
 import okhttp3.mockwebserver.MockResponse
-import java.time.LocalDate
 import java.util.*
 
 class MulighetsrommetApiClientImplTest : FunSpec({
@@ -18,53 +17,6 @@ class MulighetsrommetApiClientImplTest : FunSpec({
 
 	afterEach {
 		server.reset()
-	}
-
-	test("hentGjennomforing - skal lage riktig request og parse respons") {
-
-		val id = UUID.randomUUID()
-		val tiltakId = UUID.randomUUID()
-		val tiltakNavn = "Tiltak 1"
-		val tiltakArenaKode = "KODE"
-		val navn = "Gjennomforing 1"
-		val startDato = "2022-12-22"
-		val sluttDato = "2023-12-22"
-
-		server.handleRequest(
-			response = MockResponse().setBody(
-				"""
-					{
-						"id": "$id",
-						"tiltakstype": {
-							"id": "$tiltakId",
-							"navn": "$tiltakNavn",
-							"arenaKode": "$tiltakArenaKode"
-						},
-						"navn": "$navn",
-						"startDato": "$startDato",
-						"sluttDato": "$sluttDato"
-					}
-				""".trimIndent()
-			)
-		)
-
-		val gjennomforing = client.hentGjennomforing(id)
-
-		val request = server.latestRequest()
-
-		gjennomforing.id shouldBe id
-		gjennomforing.navn shouldBe navn
-		gjennomforing.startDato shouldBe LocalDate.parse(startDato)
-		gjennomforing.sluttDato shouldBe LocalDate.parse(sluttDato)
-
-		gjennomforing.tiltak.id shouldBe tiltakId
-		gjennomforing.tiltak.navn shouldBe tiltakNavn
-		gjennomforing.tiltak.arenaKode shouldBe tiltakArenaKode
-
-
-		request.path shouldBe "/api/v1/tiltaksgjennomforinger/$id"
-		request.method shouldBe "GET"
-		request.getHeader("Authorization") shouldBe "Bearer TOKEN"
 	}
 
 	test("hentGjennomforingId - skal lage riktig request og parse respons") {

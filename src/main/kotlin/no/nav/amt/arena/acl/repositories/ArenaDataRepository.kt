@@ -103,7 +103,7 @@ open class ArenaDataRepository(
 		)
 	}
 
-	fun get(tableName: String, operation: AmtOperation, position: String): ArenaDataDbo {
+	fun get(tableName: String, operation: AmtOperation, position: String): ArenaDataDbo? {
 		val sql = """
 			SELECT *
 			FROM arena_data
@@ -119,7 +119,6 @@ open class ArenaDataRepository(
 		)
 
 		return template.query(sql, parameters, rowMapper).firstOrNull()
-			?: throw NoSuchElementException("Element from table $tableName, operation: $operation, position: $position does not exist")
 	}
 
 	fun getByIngestStatus(

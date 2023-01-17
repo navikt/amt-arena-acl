@@ -12,7 +12,6 @@ data class TiltakGjennomforing(
 	val lokaltNavn: String,
 	val datoFra: LocalDate?,
 	val datoTil: LocalDate?,
-	val datoFremmote: LocalDateTime?,
 	val tiltakstatusKode: String,
 	val regDato: LocalDateTime
 )

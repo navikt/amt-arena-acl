@@ -5,7 +5,7 @@ import okhttp3.mockwebserver.MockResponse
 
 class MockArenaOrdsProxyHttpServer : MockHttpServer() {
 
-	fun mockHentFnr(arenaPersonId: String, fnr: String) {
+	fun mockHentFnr(arenaPersonId: Long, fnr: String) {
 		val body = """
 			{
 				"fnr": "$fnr"
@@ -28,9 +28,15 @@ class MockArenaOrdsProxyHttpServer : MockHttpServer() {
 		handleRequest(matchRegexPath = "^/api/ords/fnr.*".toRegex(), response = response)
 	}
 
+	fun mockFailHentFnr(arenaPersonId: Long) {
+		val response = MockResponse().setResponseCode(500)
+		handleRequest(matchPath = "/api/ords/fnr?personId=$arenaPersonId", response = response)
+	}
+
 	fun mockFailure(code: Int = 500) {
 		handleRequest(response = MockResponse().setResponseCode(code))
 	}
+
 
 	fun mockHentVirksomhetsnummer(arenaArbeidsgiverId: String, virksomhetsnummer: String) {
 		val body = """
