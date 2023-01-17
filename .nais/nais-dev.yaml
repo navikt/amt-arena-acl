@@ -53,14 +53,11 @@ spec:
     # Kafka topics
     - name: AMT_TOPIC
       value: amt.amt-tiltak-v1
-    - name: ARENA_TILTAK_TOPIC
-      value: teamarenanais.aapen-arena-tiltakendret-v1-q2
     - name: ARENA_TILTAKGJENNOMFORING_TOPIC
       value: teamarenanais.aapen-arena-tiltakgjennomforingendret-v1-q2
     - name: ARENA_TILTAK_DELTAKER_TOPIC
       value: teamarenanais.aapen-arena-tiltakdeltakerendret-v1-q2
-    - name: ARENA_SAK_TOPIC
-      value: teamarenanais.aapen-arena-tiltakssakendret-v1-q2
+
   gcp:
     sqlInstances:
       - name: amt-arena-acl-v1
