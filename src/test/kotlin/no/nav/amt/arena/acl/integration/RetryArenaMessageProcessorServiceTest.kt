@@ -4,16 +4,16 @@ import io.kotest.matchers.shouldBe
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.GjennomforingArenaData
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.integration.utils.AsyncUtils
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.repositories.GjennomforingRepository
-import no.nav.amt.arena.acl.schedule.ArenaDataSchedules
+import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils
 import org.junit.Ignore
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
@@ -29,22 +29,62 @@ class RetryArenaMessageProcessorServiceTest : IntegrationTestBase() {
 	lateinit var arenaDataRepository: ArenaDataRepository
 
 	@Autowired
-	lateinit var arenaDataSchedules: ArenaDataSchedules
+	lateinit var retryArenaMessageProcessorService: RetryArenaMessageProcessorService
+	val gjennomforingId = 5435345L
 
-	@Autowired
-	lateinit var gjennomforingRepository: GjennomforingRepository
+	@Test
+	fun `processMessages - deltaker har status RETRY pga manglende gjennomføring - får status HANDLED når gjennomføring er ingestet`() {
 
-	val amtGjennomforingId = UUID.randomUUID()
-	val gjennomforing = KafkaMessageCreator.baseGjennomforing(
-		arenaGjennomforingId = 5435345,
-		arbgivIdArrangor = 68968L,
-		datoFra = LocalDateTime.now().minusDays(3),
-		datoTil = LocalDateTime.now().plusDays(3),
-	)
+		val deltakere: MutableList<Pair<String, ArenaDeltaker>> = mutableListOf()
+		var pos = 1
 
+		repeat(3) {
+			val currentPos = pos++.toString()
+			val deltaker = publiserDeltaker(currentPos)
+			deltakere.add(Pair(currentPos, deltaker))
+		}
 
-	@BeforeEach
-	fun setup() {
+		publiserGjennomforing(pos++.toString())
+
+		retryArenaMessageProcessorService.processMessages(2)
+
+		deltakere.forEach {deltaker ->
+			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, deltaker.first)
+			println(deltaker)
+			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
+		}
+
+	}
+
+	private fun publiserDeltaker(pos: String): ArenaDeltaker {
+		val deltaker = KafkaMessageCreator.baseDeltaker(
+			tiltakGjennomforingId = gjennomforingId,
+		)
+		mockArenaOrdsProxyHttpServer.mockHentFnr(deltaker.PERSON_ID!!, (1..Long.MAX_VALUE).random().toString())
+
+		kafkaMessageSender.publiserArenaDeltaker(
+			deltaker.TILTAKDELTAKER_ID,
+			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = deltaker, opPos = pos))
+		)
+
+		AsyncUtils.eventually {
+			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
+			arenaData!!.ingestStatus shouldBe IngestStatus.RETRY
+
+		}
+
+		return deltaker
+
+	}
+	private fun publiserGjennomforing(pos: String) {
+		val gjennomforing = KafkaMessageCreator.baseGjennomforing(
+			arenaGjennomforingId = gjennomforingId,
+			arbgivIdArrangor = 68968L,
+			datoFra = LocalDateTime.now().minusDays(3),
+			datoTil = LocalDateTime.now().plusDays(3),
+		)
+
+		val gjennomforingIdMR = UUID.randomUUID()
 		val gjennomforingArenaData = GjennomforingArenaData(
 			opprettetAar = 2022,
 			lopenr = 123,
@@ -52,60 +92,20 @@ class RetryArenaMessageProcessorServiceTest : IntegrationTestBase() {
 			ansvarligNavEnhetId = "1234",
 			status = "GJENNOMFOR",
 		)
-		mockMulighetsrommetApiServer.mockHentGjennomforingId(gjennomforing.TILTAKGJENNOMFORING_ID, amtGjennomforingId)
-		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(amtGjennomforingId, gjennomforingArenaData)
-	}
-
-/*
-	@Test
-	fun `processMessages - deltaker har status RETRY pga manglende gjennomføring - får status HANDLED når gjennomføring er ingestet`() {
-		val deltaker1 = createDeltaker(gjennomforing.TILTAKGJENNOMFORING_ID)
-		val deltaker2 = createDeltaker(gjennomforing.TILTAKGJENNOMFORING_ID)
-		val pos1 = "12"
-		val pos2 = "34"
-
-		mockArenaOrdsProxyHttpServer.mockHentFnr(deltaker1.PERSON_ID!!, (0..10).random().toString())
-		mockArenaOrdsProxyHttpServer.mockHentFnr(deltaker2.PERSON_ID!!, (0..10).random().toString())
-
-		kafkaMessageSender.publiserArenaDeltaker(
-			deltaker1.TILTAKDELTAKER_ID,
-			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = deltaker1, opPos = pos1))
-		)
-		kafkaMessageSender.publiserArenaDeltaker(
-			deltaker2.TILTAKDELTAKER_ID,
-			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = deltaker2, opPos = pos2))
-		)
-
-		AsyncUtils.eventually {
-			val arenaData1 = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos1)
-			val arenaData2 = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos2)
-
-			arenaData1!!.ingestStatus shouldBe IngestStatus.RETRY
-			arenaData2!!.ingestStatus shouldBe IngestStatus.RETRY
-
-		}
+		mockMulighetsrommetApiServer.mockHentGjennomforingId(gjennomforingId, gjennomforingIdMR)
+		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingIdMR, gjennomforingArenaData)
 
 		kafkaMessageSender.publiserArenaGjennomforing(
-			gjennomforing.TILTAKGJENNOMFORING_ID,
-			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing))
+			gjennomforingId,
+			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos))
 		)
 
 		AsyncUtils.eventually {
-			val gjennomforingResult = gjennomforingRepository.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
-			gjennomforingResult!!.isValid shouldBe true
+			val arenaData = arenaDataRepository.get(ARENA_GJENNOMFORING_TABLE_NAME, AmtOperation.CREATED, pos)
+			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
+
 		}
 
-		arenaDataSchedules.processArenaMessages()
-
-		val arenaData1 = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos1)
-		val arenaData2 = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos2)
-
-		arenaData1!!.ingestStatus shouldBe IngestStatus.HANDLED
-		arenaData1.note shouldBe null
-
-		arenaData2!!.ingestStatus shouldBe IngestStatus.HANDLED
-		arenaData2.note shouldBe null
-
-	}*/
+	}
 
 }
