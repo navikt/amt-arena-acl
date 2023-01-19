@@ -258,7 +258,7 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 		}
 
 		dagerPerUke shouldBe baseDeltaker.ANTALL_DAGER_PR_UKE
-		innsokBegrunnelse shouldBe baseDeltaker.BEGRUNNELSE_INNSOKT
+		innsokBegrunnelse shouldBe baseDeltaker.BEGRUNNELSE_BESTILLING
 		prosentDeltid shouldBe baseDeltaker.PROSENT_DELTID
 		sluttDato shouldBe parseDate(baseDeltaker.DATO_TIL)
 		startDato shouldBe parseDate(baseDeltaker.DATO_FRA)

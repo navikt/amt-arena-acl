@@ -4,7 +4,6 @@ import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.*
-import no.nav.amt.arena.acl.utils.tryRun
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -18,23 +17,21 @@ open class GjennomforingProcessor(
 
 	override fun handleArenaMessage(message: ArenaGjennomforingKafkaMessage) {
 		val arenaGjennomforing = message.getData()
-		val arenaGjennomforingTiltakskode = arenaGjennomforing.TILTAKSKODE
-		val arenaGjennomforingId = arenaGjennomforing.TILTAKGJENNOMFORING_ID.toString()
+		val arenaTiltakskode = arenaGjennomforing.TILTAKSKODE
+		val arenaId = arenaGjennomforing.TILTAKGJENNOMFORING_ID.toString()
 
 		val gjennomforingResult = arenaGjennomforing.mapTiltakGjennomforing()
 		val isValid = gjennomforingResult.isSuccess
 
-		arenaGjennomforing.tryRun { it.mapTiltakGjennomforing() }
+		gjennomforingService.upsert(arenaId, arenaTiltakskode, isValid)
 
-		gjennomforingService.upsert(arenaGjennomforingId, arenaGjennomforingTiltakskode, isValid)
-
-		if (!gjennomforingService.isSupportedTiltak(arenaGjennomforingTiltakskode)) {
-			log.info("Gjennomføring $arenaGjennomforingId ble ignorert fordi $arenaGjennomforingTiltakskode er ikke støttet")
+		if (!gjennomforingService.isSupportedTiltak(arenaTiltakskode)) {
+			log.info("Gjennomføring $arenaId ble ignorert fordi $arenaTiltakskode er ikke støttet")
 			return
 		}
 
-		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaGjennomforingId))
-		log.info("Gjennomføring $arenaGjennomforingId er ferdig håndtert")
+		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaId))
+		log.info("Gjennomføring $arenaId er ferdig håndtert")
 
 	}
 }
