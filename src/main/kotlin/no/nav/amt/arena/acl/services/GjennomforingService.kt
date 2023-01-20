@@ -1,7 +1,10 @@
 package no.nav.amt.arena.acl.services
 
-import no.nav.amt.arena.acl.repositories.*
+import no.nav.amt.arena.acl.domain.Gjennomforing
+import no.nav.amt.arena.acl.repositories.GjennomforingDbo
+import no.nav.amt.arena.acl.repositories.GjennomforingRepository
 import org.springframework.stereotype.Service
+import java.util.*
 
 val SUPPORTED_TILTAK = setOf(
 	"INDOPPFAG",
@@ -14,7 +17,7 @@ val SUPPORTED_TILTAK = setOf(
 
 @Service
 class GjennomforingService(
-	private val gjennomforingRepository: GjennomforingRepository
+	private val gjennomforingRepository: GjennomforingRepository,
 ) {
 	fun upsert(arenaId: String, tiltakKode: String, isValid: Boolean) {
 		gjennomforingRepository.upsert(arenaId, tiltakKode, isValid)
@@ -24,22 +27,18 @@ class GjennomforingService(
 		return gjennomforingRepository.get(arenaId)?.toModel()
 	}
 
+	fun setGjennomforingId(arenaId: String, gjennomforingId: UUID) {
+		return gjennomforingRepository.updateGjennomforingId(arenaId, gjennomforingId)
+	}
 
 	fun isSupportedTiltak(kode: String): Boolean {
 		return SUPPORTED_TILTAK.contains(kode)
 	}
-
-	data class Gjennomforing (
-		val arenaId: String,
-		val tiltakKode: String,
-		val isValid: Boolean,
-	) {
-		val isSupported = SUPPORTED_TILTAK.contains(tiltakKode)
-	}
 }
 
-fun GjennomforingDbo.toModel() = GjennomforingService.Gjennomforing(
+fun GjennomforingDbo.toModel() = Gjennomforing(
 	arenaId = arenaId,
 	tiltakKode = tiltakKode,
-	isValid = isValid
+	isValid = isValid,
+	id = id
 )

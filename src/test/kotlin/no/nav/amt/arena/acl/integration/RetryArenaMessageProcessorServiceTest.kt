@@ -5,6 +5,7 @@ import no.nav.amt.arena.acl.clients.mulighetsrommet_api.GjennomforingArenaData
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
+import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.integration.utils.AsyncUtils
@@ -30,7 +31,10 @@ class RetryArenaMessageProcessorServiceTest : IntegrationTestBase() {
 
 	@Autowired
 	lateinit var retryArenaMessageProcessorService: RetryArenaMessageProcessorService
-	val gjennomforingId = 5435345L
+
+	val gjennomforingArenaId = 5435345L
+	val gjennomforingIdMR = UUID.randomUUID()
+
 
 	@Test
 	fun `processMessages - deltaker har status RETRY pga manglende gjennomføring - får status HANDLED når gjennomføring er ingestet`() {
@@ -48,19 +52,34 @@ class RetryArenaMessageProcessorServiceTest : IntegrationTestBase() {
 
 		retryArenaMessageProcessorService.processMessages(2)
 
-		deltakere.forEach {deltaker ->
+		deltakere.forEach { deltaker ->
 			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, deltaker.first)
 			println(deltaker)
 			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 
+		AsyncUtils.eventually {
+			val deltakerRecord = kafkaMessageConsumer.getRecords(KafkaMessageConsumer.Topic.AMT_TILTAK)
+			deltakerRecord.size shouldBe 3
+		}
+
+
 	}
 
 	private fun publiserDeltaker(pos: String): ArenaDeltaker {
 		val deltaker = KafkaMessageCreator.baseDeltaker(
-			tiltakGjennomforingId = gjennomforingId,
+			gjennomforingId = gjennomforingArenaId,
 		)
+		val gjennomforingArenaData = GjennomforingArenaData(
+			opprettetAar = 2022,
+			lopenr = 123,
+			virksomhetsnummer = "999888777",
+			ansvarligNavEnhetId = "1234",
+			status = "GJENNOMFOR",
+		)
+
 		mockArenaOrdsProxyHttpServer.mockHentFnr(deltaker.PERSON_ID!!, (1..Long.MAX_VALUE).random().toString())
+		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingIdMR, gjennomforingArenaData)
 
 		kafkaMessageSender.publiserArenaDeltaker(
 			deltaker.TILTAKDELTAKER_ID,
@@ -74,29 +93,20 @@ class RetryArenaMessageProcessorServiceTest : IntegrationTestBase() {
 		}
 
 		return deltaker
-
 	}
+
 	private fun publiserGjennomforing(pos: String) {
 		val gjennomforing = KafkaMessageCreator.baseGjennomforing(
-			arenaGjennomforingId = gjennomforingId,
+			arenaGjennomforingId = gjennomforingArenaId,
 			arbgivIdArrangor = 68968L,
 			datoFra = LocalDateTime.now().minusDays(3),
 			datoTil = LocalDateTime.now().plusDays(3),
 		)
 
-		val gjennomforingIdMR = UUID.randomUUID()
-		val gjennomforingArenaData = GjennomforingArenaData(
-			opprettetAar = 2022,
-			lopenr = 123,
-			virksomhetsnummer = "999888777",
-			ansvarligNavEnhetId = "1234",
-			status = "GJENNOMFOR",
-		)
-		mockMulighetsrommetApiServer.mockHentGjennomforingId(gjennomforingId, gjennomforingIdMR)
-		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingIdMR, gjennomforingArenaData)
+		mockMulighetsrommetApiServer.mockHentGjennomforingId(gjennomforingArenaId, gjennomforingIdMR)
 
 		kafkaMessageSender.publiserArenaGjennomforing(
-			gjennomforingId,
+			gjennomforingArenaId,
 			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos))
 		)
 

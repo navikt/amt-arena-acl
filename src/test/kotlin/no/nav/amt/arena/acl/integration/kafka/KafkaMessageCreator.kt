@@ -127,7 +127,7 @@ object KafkaMessageCreator {
 	fun baseDeltaker(
 		arenaDeltakerId: Long = (1..Long.MAX_VALUE).random(),
 		personId: Long = (1..Long.MAX_VALUE).random(),
-		tiltakGjennomforingId: Long = (1..Long.MAX_VALUE).random(),
+		gjennomforingId: Long = (1..Long.MAX_VALUE).random(),
 		deltakerStatusKode: String = "GJENN",
 		statusAarsak: String? = null,
 		startDato: LocalDate? = null,
@@ -139,7 +139,7 @@ object KafkaMessageCreator {
 		return ArenaDeltaker(
 			TILTAKDELTAKER_ID = arenaDeltakerId,
 			PERSON_ID = personId,
-			TILTAKGJENNOMFORING_ID = tiltakGjennomforingId,
+			TILTAKGJENNOMFORING_ID = gjennomforingId,
 			DELTAKERSTATUSKODE = deltakerStatusKode,
 			DELTAKERTYPEKODE = GENERIC_STRING,
 			AARSAKVERDIKODE_STATUS = statusAarsak,

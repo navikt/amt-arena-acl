@@ -6,14 +6,14 @@ import java.util.*
 
 class MockMulighetsrommetApiServer : MockHttpServer() {
 
-	fun mockHentGjennomforingId(arenaId: Long, gjennomforingId: UUID) {
+	fun mockHentGjennomforingId(arenaId: Long, gjennomforingId: UUID, responseCode: Int = 200) {
 		val body = """
 			{
 				"id": "$gjennomforingId"
 			}
 		""".trimIndent()
 
-		val response = MockResponse().setResponseCode(200).setBody(body)
+		val response = MockResponse().setResponseCode(responseCode).setBody(body)
 		handleRequest(matchPath = "/api/v1/tiltaksgjennomforinger/id/${arenaId}", response = response)
 	}
 
