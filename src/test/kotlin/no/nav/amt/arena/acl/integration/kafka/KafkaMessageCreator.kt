@@ -33,8 +33,8 @@ object KafkaMessageCreator {
 	): ArenaKafkaMessageDto {
 		return arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_DELTAKER_TABLE_NAME, opPos)
 	}
-	fun <T> opprettArenaGjennomforingMessage(
-		data: T,
+	fun opprettArenaGjennomforingMessage(
+		data: ArenaGjennomforing,
 		opType: String = "I",
 		opPos: String? = null,
 	): ArenaKafkaMessageDto {
@@ -127,18 +127,19 @@ object KafkaMessageCreator {
 	fun baseDeltaker(
 		arenaDeltakerId: Long = (1..Long.MAX_VALUE).random(),
 		personId: Long = (1..Long.MAX_VALUE).random(),
-		tiltakGjennomforingId: Long = (1..Long.MAX_VALUE).random().toLong(),
+		gjennomforingId: Long = (1..Long.MAX_VALUE).random(),
 		deltakerStatusKode: String = "GJENN",
 		statusAarsak: String? = null,
 		startDato: LocalDate? = null,
 		sluttDato: LocalDate? = null,
 		datoStatusEndring: LocalDateTime? = LocalDateTime.now(),
 		registrertDato: LocalDateTime = LocalDateTime.now(),
+		innsokBegrunnelse: String = "Trenger hjelp med jobbsøking"
 	): ArenaDeltaker {
 		return ArenaDeltaker(
 			TILTAKDELTAKER_ID = arenaDeltakerId,
 			PERSON_ID = personId,
-			TILTAKGJENNOMFORING_ID = tiltakGjennomforingId,
+			TILTAKGJENNOMFORING_ID = gjennomforingId,
 			DELTAKERSTATUSKODE = deltakerStatusKode,
 			DELTAKERTYPEKODE = GENERIC_STRING,
 			AARSAKVERDIKODE_STATUS = statusAarsak,
@@ -165,7 +166,7 @@ object KafkaMessageCreator {
 			STATUS_OPPTAK_PAKKE = GENERIC_STRING,
 			OPPLYSNINGER_INNSOK = GENERIC_STRING,
 			PARTISJON = GENERIC_INT,
-			BEGRUNNELSE_BESTILLING = GENERIC_STRING,
+			BEGRUNNELSE_BESTILLING = innsokBegrunnelse,
 			ANTALL_DAGER_PR_UKE = GENERIC_INT,
 		)
 	}

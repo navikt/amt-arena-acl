@@ -2,10 +2,14 @@ package no.nav.amt.arena.acl.integration
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import no.nav.amt.arena.acl.domain.db.IngestStatus
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.integration.utils.AsyncUtils
-import no.nav.amt.arena.acl.repositories.GjennomforingRepository
+import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.services.GjennomforingService
+import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionListener
 import no.nav.amt.arena.acl.utils.JsonUtils
 import org.junit.jupiter.api.BeforeEach
@@ -25,7 +29,10 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	lateinit var kafkaMessageSender: KafkaMessageSender
 
 	@Autowired
-	lateinit var gjennomforingRepository: GjennomforingRepository
+	lateinit var gjennomforingService: GjennomforingService
+
+	@Autowired
+	lateinit var arenaDataRepository: ArenaDataRepository
 
 	@BeforeEach
 	fun setup() {
@@ -35,14 +42,23 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	@Test
 	fun `Konsumer gjennomføring - gyldig gjennomføring - ingestes uten feil`() {
 		val gjennomforing = createGjennomforing()
+		val pos = (1..Long.MAX_VALUE).random().toString()
+
 		kafkaMessageSender.publiserArenaGjennomforing(
 			gjennomforing.TILTAKGJENNOMFORING_ID,
-			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing))
+			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos))
 		)
 		AsyncUtils.eventually(until = Duration.ofSeconds(10))  {
-			val gjennomforingResult = gjennomforingRepository.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
+			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
 			gjennomforingResult shouldNotBe null
 			gjennomforingResult!!.isValid shouldBe true
+			gjennomforingResult.isSupported shouldBe true
+
+			arenaDataRepository.get(
+				ARENA_GJENNOMFORING_TABLE_NAME,
+				AmtOperation.CREATED,
+				pos
+			)!!.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 
 	}
@@ -50,16 +66,48 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	@Test
 	fun `Konsumer gjennomføring - ugyldig gjennomføring - får status invalid`() {
 		var gjennomforing = createGjennomforing()
+		val pos = (1..Long.MAX_VALUE).random().toString()
 		gjennomforing = gjennomforing.copy(ARBGIV_ID_ARRANGOR = null)
 		kafkaMessageSender.publiserArenaGjennomforing(
 			gjennomforing.TILTAKGJENNOMFORING_ID,
-			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing))
+			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos))
 		)
 		AsyncUtils.eventually(until = Duration.ofSeconds(10))  {
-			val gjennomforingResult = gjennomforingRepository.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
+			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
 			gjennomforingResult shouldNotBe null
 			gjennomforingResult!!.isValid shouldBe false
+			gjennomforingResult.isSupported shouldBe true
+
+			arenaDataRepository.get(
+				ARENA_GJENNOMFORING_TABLE_NAME,
+				AmtOperation.CREATED,
+				pos
+			)!!.ingestStatus shouldBe IngestStatus.HANDLED
 		}
+
+	}
+	@Test
+	fun `Konsumer gjennomføring - tiltakstype er ikke støttet - lagrer med korrekte verdier`() {
+		val gjennomforing = createGjennomforing().copy(TILTAKSKODE = "IKKE STØTTET")
+		val pos = (1..Long.MAX_VALUE).random().toString()
+
+		kafkaMessageSender.publiserArenaGjennomforing(
+			gjennomforing.TILTAKGJENNOMFORING_ID,
+			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos))
+		)
+		AsyncUtils.eventually {
+			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
+			gjennomforingResult shouldNotBe null
+			gjennomforingResult!!.isValid shouldBe true
+			gjennomforingResult.isSupported shouldBe false
+
+			arenaDataRepository.get(
+				ARENA_GJENNOMFORING_TABLE_NAME,
+				AmtOperation.CREATED,
+				pos
+			) shouldBe null
+		}
+
 
 	}
 	private fun createGjennomforing(arenaId: Long = 34524534543) = KafkaMessageCreator.baseGjennomforing(

@@ -1,9 +1,11 @@
 package no.nav.amt.arena.acl.repositories
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
 import no.nav.amt.arena.acl.utils.getLocalDate
+import no.nav.amt.arena.acl.utils.getNullableUUID
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import java.util.*
 
 @Component
 class GjennomforingRepository(
@@ -14,7 +16,8 @@ class GjennomforingRepository(
 			arenaId = rs.getString("arena_id"),
 			tiltakKode = rs.getString("tiltak_kode"),
 			isValid = rs.getBoolean("is_valid"),
-			createdAt = rs.getLocalDate("created_at")
+			createdAt = rs.getLocalDate("created_at"),
+			id = rs.getNullableUUID("id")
 		)
 	}
 	fun upsert(arenaId: String, tiltakKode: String, isValid: Boolean) {
@@ -25,6 +28,12 @@ class GjennomforingRepository(
 		""".trimIndent()
 		val parameters = sqlParameters("arenaId" to arenaId, "tiltakKode" to tiltakKode, "isValid" to isValid)
 		template.update(sql, parameters)
+	}
+
+	fun updateGjennomforingId(arenaId: String, gjennomforingId: UUID) {
+		template.update(
+			"UPDATE gjennomforing SET id=:gjennomforingId WHERE arena_id=:arenaId",
+			sqlParameters("arenaId" to arenaId, "gjennomforingId" to gjennomforingId))
 	}
 
 	fun get(arenaId: String): GjennomforingDbo? {

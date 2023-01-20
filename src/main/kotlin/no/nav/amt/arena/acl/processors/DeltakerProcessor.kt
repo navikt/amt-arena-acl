@@ -20,6 +20,7 @@ import no.nav.amt.arena.acl.utils.SecureLog.secureLog
 import no.nav.amt.arena.acl.utils.tryRun
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.util.*
 
 @Component
 open class DeltakerProcessor(
@@ -39,25 +40,24 @@ open class DeltakerProcessor(
 		val arenaDeltakerRaw = message.getData()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
 
-		val gjennomforingInfo = gjennomforingService.get(arenaGjennomforingId)
+		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
-		if (!gjennomforingInfo.isSupported) {
+		if (!gjennomforing.isSupported) {
 			throw IgnoredException("Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
-		}
-		else if (!gjennomforingInfo.isValid) {
+		} else if (!gjennomforing.isValid) {
 			throw DependencyNotIngestedException("Deltaker på ugyldig gjennomføring <$arenaGjennomforingId>")
+		}
+
+		val gjennomforingId = gjennomforing.id?: getGjennomforingId(gjennomforing.arenaId).also {
+			gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
 		}
 
 		val arenaDeltaker = arenaDeltakerRaw
 			.tryRun { it.mapTiltakDeltaker() }
 			.getOrThrow()
 
-		val gjennomforingId = mulighetsrommetApiClient.hentGjennomforingId(arenaGjennomforingId)
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert av Mulighetsrommet")
-
 		val gjennomforingArenaData = mulighetsrommetApiClient.hentGjennomforingArenaData(gjennomforingId)
-		val status = GjennomforingStatusConverter.convert(gjennomforingArenaData.status)
 
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
 			?: throw IllegalStateException("Expected person with personId=${arenaDeltaker.personId} to exist")
@@ -67,13 +67,16 @@ open class DeltakerProcessor(
 		val amtDeltaker = arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerAmtId,
 			gjennomforingId = gjennomforingId,
-			gjennomforingStatus = status,
+			gjennomforingStatus = GjennomforingStatusConverter.convert(gjennomforingArenaData.status),
 			personIdent = personIdent
 		)
 
 		meterRegistry.counter(
 			"amt.arena-acl.deltaker.status",
-			listOf(Tag.of("arena", arenaDeltaker.deltakerStatusKode.name), Tag.of("amt-tiltak", arenaDeltaker.deltakerStatusKode.name))
+			listOf(
+				Tag.of("arena", arenaDeltaker.deltakerStatusKode.name),
+				Tag.of("amt-tiltak", arenaDeltaker.deltakerStatusKode.name)
+			)
 		).increment()
 
 		val amtData = AmtKafkaMessageDto(
@@ -88,6 +91,11 @@ open class DeltakerProcessor(
 		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} personId=${arenaDeltaker.personId} fnr=$personIdent er sendt")
 		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
 		metrics.publishMetrics(message)
+	}
+
+	private fun getGjennomforingId(arenaId: String): UUID {
+		return mulighetsrommetApiClient.hentGjennomforingId(arenaId)
+			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet")
 	}
 
 }
