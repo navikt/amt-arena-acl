@@ -30,7 +30,7 @@
         <nimbus.version>9.43.1</nimbus.version>
         <token-support.version>2.1.5</token-support.version>
         <mockito-kotlin.version>3.2.0</mockito-kotlin.version>
-        <schedlock.version>4.42.0</schedlock.version>
+        <schedlock.version>4.44.0</schedlock.version>
     </properties>
 
     <repositories>
