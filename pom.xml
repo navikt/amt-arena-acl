@@ -28,7 +28,7 @@
         <testcontainers.version>1.17.6</testcontainers.version>
         <okhttp.version>4.10.0</okhttp.version>
         <nimbus.version>9.43.1</nimbus.version>
-        <token-support.version>2.1.5</token-support.version>
+        <token-support.version>2.1.9</token-support.version>
         <mockito-kotlin.version>3.2.0</mockito-kotlin.version>
         <schedlock.version>4.42.0</schedlock.version>
     </properties>
