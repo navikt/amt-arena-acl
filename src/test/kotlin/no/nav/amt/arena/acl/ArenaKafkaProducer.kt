@@ -11,7 +11,6 @@ import java.util.*
 
 fun main() {
 	val producer = ArenaKafkaProducer()
-	producer.send("data/arena-tiltakendret-v1.json", "tiltak")
 	producer.send("data/arena-tiltakgjennomforingendret-v1.json", "gjennomforing")
 	producer.send("data/arena-tiltakdeltakerendret-v1.json", "deltaker")
 }
