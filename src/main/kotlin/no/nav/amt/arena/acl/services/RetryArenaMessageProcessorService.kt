@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.services
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
+import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.GjennomforingProcessor
@@ -65,9 +66,7 @@ open class RetryArenaMessageProcessorService(
 		try {
 			when (arenaDataDbo.arenaTableName) {
 				ARENA_GJENNOMFORING_TABLE_NAME -> gjennomforingProcessor.handleArenaMessage(
-					toArenaKafkaMessage(
-						arenaDataDbo
-					)
+					toArenaKafkaMessage(arenaDataDbo)
 				)
 				ARENA_DELTAKER_TABLE_NAME -> deltakerProcessor.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
 			}
@@ -78,10 +77,14 @@ open class RetryArenaMessageProcessorService(
 			if (e is IgnoredException) {
 				log.info("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}'")
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.IGNORED)
-			} else if (arenaDataDbo.ingestStatus == IngestStatus.RETRY && hasReachedMaxRetries) {
+			}
+			else if (e is DependencyNotValidException) {
+				log.error("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}'")
+				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.WAITING)
+			}
+			else if (arenaDataDbo.ingestStatus == IngestStatus.RETRY && hasReachedMaxRetries) {
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.FAILED)
 			}
-
 
 			arenaDataRepository.updateIngestAttempts(arenaDataDbo.id, currentIngestAttempts, e.message)
 		}

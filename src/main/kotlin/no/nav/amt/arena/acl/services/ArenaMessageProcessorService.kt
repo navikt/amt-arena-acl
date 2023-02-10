@@ -7,16 +7,17 @@ import no.nav.amt.arena.acl.domain.db.toUpsertInput
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
-import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
-import no.nav.amt.arena.acl.exceptions.IgnoredException
-import no.nav.amt.arena.acl.exceptions.OperationNotImplementedException
-import no.nav.amt.arena.acl.exceptions.ValidationException
-import no.nav.amt.arena.acl.processors.*
+import no.nav.amt.arena.acl.exceptions.*
+import no.nav.amt.arena.acl.processors.ArenaMessageProcessor
+import no.nav.amt.arena.acl.processors.DeltakerProcessor
+import no.nav.amt.arena.acl.processors.GjennomforingProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.utils.*
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DateUtils.parseArenaDateTime
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonNode
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
+import no.nav.amt.arena.acl.utils.removeNullCharacters
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -66,6 +67,10 @@ open class ArenaMessageProcessorService(
 				is DependencyNotIngestedException -> {
 					log.info("Dependency for $arenaId in table $arenaTableName is not ingested: '${e.message}'")
 					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.RETRY, note = e.message))
+				}
+				is DependencyNotValidException -> {
+					log.info("Dependency for $arenaId in table $arenaTableName is invalid: '${e.message}'")
+					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.WAITING, note = e.message))
 				}
 				is ValidationException -> {
 					log.info("$arenaId in table $arenaTableName is not valid: '${e.message}'")

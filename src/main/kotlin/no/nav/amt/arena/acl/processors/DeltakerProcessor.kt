@@ -9,6 +9,7 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
+import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
@@ -46,7 +47,7 @@ open class DeltakerProcessor(
 		if (!gjennomforing.isSupported) {
 			throw IgnoredException("Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
 		} else if (!gjennomforing.isValid) {
-			throw DependencyNotIngestedException("Deltaker på ugyldig gjennomføring <$arenaGjennomforingId>")
+			throw DependencyNotValidException("Deltaker på ugyldig gjennomføring <$arenaGjennomforingId>")
 		}
 
 		val gjennomforingId = gjennomforing.id?: getGjennomforingId(gjennomforing.arenaId).also {
