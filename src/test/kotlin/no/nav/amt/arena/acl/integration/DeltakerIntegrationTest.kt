@@ -113,7 +113,7 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 	}
 
 	@Test
-	fun `ingest deltaker - gjennomføring er ugyldig - deltaker får status RETRY`() {
+	fun `ingest deltaker - gjennomføring er ugyldig - deltaker får status WAITING`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), false)
 		mockMulighetsrommetApiServer.mockHentGjennomforingId(
@@ -134,7 +134,7 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 		AsyncUtils.eventually {
 			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
-			arenaData!!.ingestStatus shouldBe IngestStatus.RETRY
+			arenaData!!.ingestStatus shouldBe IngestStatus.WAITING
 		}
 	}
 
