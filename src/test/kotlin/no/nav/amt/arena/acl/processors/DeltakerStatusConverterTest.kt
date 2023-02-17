@@ -19,7 +19,7 @@ class DeltakerStatusConverterTest : StringSpec({
 	"status - AKTUELL - returnerer PABEGYNT" {
 		val status = convert(TiltakDeltaker.Status.AKTUELL, now, null, null, null, gjennomforingStatus)
 
-		status.navn shouldBe PABEGYNT
+		status.navn shouldBe PABEGYNT_REGISTRERING
 	}
 
 	"status - AVSLAG og mangler startdato - returnerer IKKE_AKTUELL" {
@@ -273,7 +273,7 @@ class DeltakerStatusConverterTest : StringSpec({
 			null,
 			null,
 			gjennomforingStatus
-		).navn shouldBe PABEGYNT
+		).navn shouldBe PABEGYNT_REGISTRERING
 	}
 	"status - JATAKK - returnerer VENTER_PÅ_OPPSTART" {
 		convert(
@@ -393,6 +393,6 @@ class DeltakerStatusConverterTest : StringSpec({
 			null,
 			null,
 			gjennomforingStatus
-		).navn shouldBe PABEGYNT
+		).navn shouldBe PABEGYNT_REGISTRERING
 	}
 })
