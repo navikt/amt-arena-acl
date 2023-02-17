@@ -275,8 +275,55 @@ class DeltakerStatusConverterTest : StringSpec({
 			gjennomforingStatus
 		).navn shouldBe PABEGYNT
 	}
-	"status - JATAKK - returnerer PABEGYNT" {
-		convert(TiltakDeltaker.Status.JATAKK, now, null, null, null, gjennomforingStatus).navn shouldBe PABEGYNT
+	"status - JATAKK - returnerer VENTER_PÅ_OPPSTART" {
+		convert(
+			TiltakDeltaker.Status.JATAKK,
+			now,
+			null,
+			null,
+			null,
+			gjennomforingStatus
+		).navn shouldBe VENTER_PA_OPPSTART
+	}
+	"status - JATAKK og har startdato i fortid - returnerer GJENNOMFORES" {
+		convert(
+			TiltakDeltaker.Status.JATAKK,
+			now,
+			yesterday,
+			null,
+			null,
+			gjennomforingStatus
+		).navn shouldBe DELTAR
+	}
+	"status - JATAKK og har startdato i fremtid - returnerer VENTER_PÅ_OPPSTART" {
+		convert(
+			TiltakDeltaker.Status.JATAKK,
+			now,
+			tomorrow,
+			null,
+			null,
+			gjennomforingStatus
+		).navn shouldBe VENTER_PA_OPPSTART
+	}
+	"status - JATAKK og har sluttdato i fortid - returnerer HAR_SLUTTET" {
+		convert(
+			TiltakDeltaker.Status.JATAKK,
+			now,
+			yesterday.minusDays(1),
+			yesterday,
+			null,
+			gjennomforingStatus
+		).navn shouldBe HAR_SLUTTET
+	}
+	"status - JATAKK og har sluttdato i fremtid - returnerer GJENNOMFORES" {
+		convert(
+			TiltakDeltaker.Status.JATAKK,
+			now,
+			yesterday,
+			tomorrow,
+			null,
+			gjennomforingStatus
+		).navn shouldBe DELTAR
 	}
 	"status - NEITAKK - returnerer IKKE_AKTUELL" {
 		convert(
