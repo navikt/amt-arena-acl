@@ -69,7 +69,7 @@ object ArenaDeltakerStatusConverter {
 			DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, statusEndringTid)
 	}
 
-	private fun ventendeStatus(statusEndringTid: LocalDateTime?) = DeltakerStatus(AmtDeltaker.Status.PABEGYNT, statusEndringTid)
+	private fun ventendeStatus(statusEndringTid: LocalDateTime?) = DeltakerStatus(AmtDeltaker.Status.PABEGYNT_REGISTRERING, statusEndringTid)
 
 	fun convert(
 		deltakerStatusKode: TiltakDeltaker.Status,
