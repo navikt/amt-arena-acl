@@ -20,11 +20,14 @@ object ArenaDeltakerStatusConverter {
 		TiltakDeltaker.Status.AVSLAG,
 		TiltakDeltaker.Status.NEITAKK
 	)
-	private val gjennomforendeStatuser = listOf(TiltakDeltaker.Status.GJENN, TiltakDeltaker.Status.TILBUD)
+	private val gjennomforendeStatuser = listOf(
+		TiltakDeltaker.Status.GJENN,
+		TiltakDeltaker.Status.TILBUD,
+		TiltakDeltaker.Status.JATAKK
+	)
 	private val utkastStatuser = listOf(
 		TiltakDeltaker.Status.VENTELISTE,
 		TiltakDeltaker.Status.AKTUELL,
-		TiltakDeltaker.Status.JATAKK,
 		TiltakDeltaker.Status.INFOMOETE
 	)
 
