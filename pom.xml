@@ -124,7 +124,7 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>7.2</version>
+            <version>7.3</version>
         </dependency>
         <dependency>
             <groupId>net.javacrumbs.shedlock</groupId>
