@@ -52,7 +52,7 @@ jobs:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-gcp
           RESOURCE: .nais/nais-dev.yaml
-          VAR: image=${{ needs.build.outputs.image }}
+          VAR: image=${{ needs.docker-build-push.outputs.image }}
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
@@ -74,7 +74,7 @@ jobs:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: prod-gcp
           RESOURCE: .nais/nais-prod.yaml
-          VAR: image=${{ needs.build.outputs.image }}
+          VAR: image=${{ needs.docker-build-push.outputs.image }}
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
