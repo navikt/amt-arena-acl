@@ -6,7 +6,7 @@ on:
       - main
 env:
   PRINT_PAYLOAD: true
-
+ 
 jobs:
   test-build-and-push:
     permissions:
