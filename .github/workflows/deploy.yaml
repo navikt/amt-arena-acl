@@ -11,6 +11,9 @@ env:
 
 jobs:
   test-build-and-push:
+    permissions:
+      contents: "read"
+      id-token: "write"
     name: Test, build and push
     runs-on: ubuntu-latest
     steps:
