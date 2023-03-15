@@ -35,6 +35,7 @@ jobs:
         id: docker-build-push
         with:
           team: amt
+          tag: ${{ github.sha }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
     outputs:
@@ -58,7 +59,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: Release to dev
-          tag_name: release/dev@${{ env.IMAGE_TAG }}
+          tag_name: release/dev@${{ github.sha }}
           prerelease: true
 
   deploy-prod:
@@ -80,5 +81,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: Release to prod
-          tag_name: release/prod@${{ env.IMAGE_TAG }}
+          tag_name: release/prod@${{ github.sha }}
           prerelease: false
