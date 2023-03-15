@@ -29,13 +29,15 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
       - name: Build maven artifacts
         run: mvn -B package
-      - name: Build and push Docker image
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo ${GITHUB_TOKEN} | docker login ghcr.io -u ${GITHUB_REPOSITORY} --password-stdin
-          docker build -t ${IMAGE}:${IMAGE_TAG} .
-          docker push ${IMAGE}:${IMAGE_TAG}
+      - name: docker-build-push
+        uses: nais/docker-build-push@v0
+        id: docker-build-push
+        with:
+          team: amt
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+    outputs:
+      image: ${{ steps.docker-build-push.outputs.image }}
 
   deploy-dev:
     name: Deploy application to dev
@@ -45,12 +47,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Deploy application
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@master
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-gcp
           RESOURCE: .nais/nais-dev.yaml
-          VAR: version=${{ env.IMAGE_TAG }}
+          VAR: version=${{ env.IMAGE_TAG }},image=${{ needs.build.outputs.image }}
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
@@ -67,12 +69,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Deploy application
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@master
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: prod-gcp
           RESOURCE: .nais/nais-prod.yaml
-          VAR: version=${{ env.IMAGE_TAG }}
+          VAR: version=${{ env.IMAGE_TAG }},image=${{ needs.build.outputs.image }}
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
