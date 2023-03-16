@@ -6,7 +6,7 @@ metadata:
   labels:
     team: amt
 spec:
-  image: ghcr.io/navikt/amt-arena-acl/amt-arena-acl:{{version}}
+  image: {{image}}
   port: 8080
   prometheus:
     enabled: true
