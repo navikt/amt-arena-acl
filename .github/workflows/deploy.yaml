@@ -65,7 +65,7 @@ jobs:
 
   deploy-prod:
     name: Deploy application to production
-    needs: deploy-dev
+    needs: [ test-build-and-push, deploy-dev ]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
