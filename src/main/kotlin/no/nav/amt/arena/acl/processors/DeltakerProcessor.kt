@@ -46,9 +46,13 @@ open class DeltakerProcessor(
 		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
-		if (gjennomforing.isKurs && unleashClient.isEnabled("amt.konsumer-kurs")) {
+		if (unleashClient.isEnabled("amt.konsumer-kurs")) {
 			log.info("Toggle amt.konsumer-kurs er skrudd på")
 		}
+		else {
+			log.info("Toggle amt.konsumer-kurs er skrudd av")
+		}
+
 		if (!gjennomforing.isSupported) {
 			throw IgnoredException("Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
 		} else if (!gjennomforing.isValid) {
