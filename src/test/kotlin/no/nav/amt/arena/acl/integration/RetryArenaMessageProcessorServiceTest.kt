@@ -1,7 +1,8 @@
 package no.nav.amt.arena.acl.integration
 
 import io.kotest.matchers.shouldBe
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.GjennomforingArenaData
+import io.kotest.matchers.shouldNotBe
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
@@ -10,6 +11,7 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.integration.utils.AsyncUtils
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
@@ -17,6 +19,7 @@ import no.nav.amt.arena.acl.utils.JsonUtils
 import org.junit.Ignore
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
@@ -31,6 +34,9 @@ class RetryArenaMessageProcessorServiceTest : IntegrationTestBase() {
 
 	@Autowired
 	lateinit var retryArenaMessageProcessorService: RetryArenaMessageProcessorService
+
+	@Autowired
+	lateinit var gjennomforingService: GjennomforingService
 
 	val gjennomforingArenaId = 5435345L
 	val gjennomforingIdMR = UUID.randomUUID()
@@ -70,16 +76,21 @@ class RetryArenaMessageProcessorServiceTest : IntegrationTestBase() {
 		val deltaker = KafkaMessageCreator.baseDeltaker(
 			gjennomforingId = gjennomforingArenaId,
 		)
-		val gjennomforingArenaData = GjennomforingArenaData(
-			opprettetAar = 2022,
-			lopenr = 123,
-			virksomhetsnummer = "999888777",
-			ansvarligNavEnhetId = "1234",
-			status = "GJENNOMFOR",
+		val gjennomforingData = Gjennomforing(
+			id = gjennomforingIdMR,
+			tiltakstype = Gjennomforing.Tiltakstype(
+				id = UUID.randomUUID(),
+				navn = "Navn på tiltak",
+				arenaKode = "INDOPPFAG"
+			),
+			navn = "navn på gjennomføring",
+			startDato = LocalDate.now(),
+			sluttDato = LocalDate.now().plusDays(5),
+			status = Gjennomforing.Status.GJENNOMFORES,
+			virksomhetsnummer = "999888777"
 		)
-
 		mockArenaOrdsProxyHttpServer.mockHentFnr(deltaker.PERSON_ID!!, (1..Long.MAX_VALUE).random().toString())
-		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingIdMR, gjennomforingArenaData)
+		mockMulighetsrommetApiServer.mockHentGjennomforingData(gjennomforingIdMR, gjennomforingData)
 
 		kafkaMessageSender.publiserArenaDeltaker(
 			deltaker.TILTAKDELTAKER_ID,
@@ -113,6 +124,8 @@ class RetryArenaMessageProcessorServiceTest : IntegrationTestBase() {
 		AsyncUtils.eventually {
 			val arenaData = arenaDataRepository.get(ARENA_GJENNOMFORING_TABLE_NAME, AmtOperation.CREATED, pos)
 			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
+			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
+			gjennomforingResult shouldNotBe null
 
 		}
 

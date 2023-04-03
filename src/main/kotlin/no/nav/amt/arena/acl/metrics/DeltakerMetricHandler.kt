@@ -12,6 +12,18 @@ class DeltakerMetricHandler(
 ) {
 
 	fun publishMetrics(message: ArenaDeltakerKafkaMessage) {
+
+		// Flyttet fra et annet sted, er noe rart her men må undersøke hva denne brukes til
+		if(message.after != null) {
+			registry.counter(
+				"amt.arena-acl.deltaker.status",
+				listOf(
+					Tag.of("arena", message.after.DELTAKERSTATUSKODE),
+					Tag.of("amt-tiltak", message.after.DELTAKERSTATUSKODE)
+				)
+			).increment()
+		}
+
 		if (message.operationType == AmtOperation.CREATED) {
 			registry.counter("amt.arena-acl.deltaker.ny").increment()
 		} else if (message.operationType == AmtOperation.MODIFIED) {

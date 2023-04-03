@@ -7,92 +7,152 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-object ArenaDeltakerStatusConverter {
-	private val avsluttendeStatuser = listOf(
-		TiltakDeltaker.Status.DELAVB,
-		TiltakDeltaker.Status.FULLF,
-		TiltakDeltaker.Status.GJENN_AVB,
-		TiltakDeltaker.Status.GJENN_AVL,
-		TiltakDeltaker.Status.IKKEM,
-	)
-	private val ikkeAktuelleStatuser = listOf(
-		TiltakDeltaker.Status.IKKAKTUELL,
-		TiltakDeltaker.Status.AVSLAG,
-		TiltakDeltaker.Status.NEITAKK
-	)
-	private val gjennomforendeStatuser = listOf(
-		TiltakDeltaker.Status.GJENN,
-		TiltakDeltaker.Status.TILBUD,
-		TiltakDeltaker.Status.JATAKK
-	)
-	private val utkastStatuser = listOf(
-		TiltakDeltaker.Status.VENTELISTE,
-		TiltakDeltaker.Status.AKTUELL,
-		TiltakDeltaker.Status.INFOMOETE
-	)
+class ArenaDeltakerStatusConverter(
+	val arenaStatus: TiltakDeltaker.Status,
+	val deltakerRegistrertDato: LocalDateTime,
+	val deltakerStartdato: LocalDate?,
+	val deltakerSluttdato: LocalDate?,
+	val datoStatusEndring: LocalDateTime?,
+	val erGjennomforingAvsluttet: Boolean,
+	val gjennomforingSluttdato: LocalDate?,
+	val erKurs: Boolean
+) {
 
-	private fun statusEndretSammeDagSomRegistrering(statusEndringTid: LocalDateTime?, deltakerRegistrertDato: LocalDateTime) =
-		statusEndringTid != null && statusEndringTid.toLocalDate() == deltakerRegistrertDato.toLocalDate()
+	private fun statusEndretSammeDagSomRegistrering() = datoStatusEndring != null && datoStatusEndring.toLocalDate() == deltakerRegistrertDato.toLocalDate()
 
-	private fun starterIDag(startDato: LocalDate?) = startDato?.equals(LocalDate.now()) == true
+	private fun sluttetForTidlig() = deltakerSluttdato?.isBefore(gjennomforingSluttdato) == true
 
-	private fun startDatoPassert(startDato: LocalDate?) = startDato?.isBefore(LocalDate.now()) ?: false
+	private fun starterIDag() = deltakerStartdato?.equals(LocalDate.now()) == true
 
-	private fun sluttDatoPassert(sluttDato: LocalDate?) = sluttDato?.isBefore(LocalDate.now()) ?: false
+	private fun startDatoHarPassert() = deltakerStartdato?.isBefore(LocalDate.now()) ?: false
 
-	private fun endretEtterStartDato(startDato: LocalDate?, statusEndringTid: LocalDateTime?) =
-		startDato != null && statusEndringTid?.toLocalDate()?.isAfter(startDato) ?: false
+	private fun sluttDatoHarPassert() = deltakerSluttdato?.isBefore(LocalDate.now()) ?: false
 
-	private fun sluttDatoHaddePassert(sluttDato: LocalDate?, statusEndringTid: LocalDateTime?)
-		= statusEndringTid != null && sluttDato?.isBefore(statusEndringTid.toLocalDate()) ?: false
+	private fun statusEndretEtterStartDato() =
+		deltakerStartdato != null && datoStatusEndring?.toLocalDate()?.isAfter(deltakerStartdato) ?: false
 
-	private fun kanskjeFeilregistrert(statusEndringTid: LocalDateTime?, deltakerRegistrertDato: LocalDateTime): DeltakerStatus {
-		return if (statusEndretSammeDagSomRegistrering(statusEndringTid, deltakerRegistrertDato))
-			DeltakerStatus(AmtDeltaker.Status.FEILREGISTRERT, statusEndringTid)
-		else
-			DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, statusEndringTid)
+	private fun sluttDatoHaddePassert() =
+		datoStatusEndring != null && deltakerSluttdato?.isBefore(datoStatusEndring.toLocalDate()) ?: false
+
+
+	private fun utledGjennomforendeStatus(): DeltakerStatus {
+		if (startDatoHarPassert() && sluttDatoHarPassert())
+			return DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, deltakerSluttdato?.atStartOfDay())
+		else if (starterIDag() || startDatoHarPassert())
+			return DeltakerStatus(AmtDeltaker.Status.DELTAR, deltakerStartdato?.atStartOfDay())
+		else return DeltakerStatus(AmtDeltaker.Status.VENTER_PA_OPPSTART, datoStatusEndring)
 	}
 
-	private fun alltidIkkeAktuell(statusEndringTid: LocalDateTime?) = DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, statusEndringTid)
-
-	private fun gjennomforendeStatus(startDato: LocalDate?, sluttDato: LocalDate?, statusEndringTid: LocalDateTime?): DeltakerStatus {
-		return if (startDatoPassert(startDato) && sluttDatoPassert(sluttDato))
-			DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, sluttDato?.atStartOfDay())
-		else if (starterIDag(startDato) || startDatoPassert(startDato))
-			DeltakerStatus(AmtDeltaker.Status.DELTAR, startDato?.atStartOfDay())
-		else DeltakerStatus(AmtDeltaker.Status.VENTER_PA_OPPSTART, statusEndringTid)
+	private fun utledSoktInnStatus(): DeltakerStatus {
+		return when (arenaStatus) {
+			TiltakDeltaker.Status.AKTUELL -> DeltakerStatus(AmtDeltaker.Status.SOKT_INN, datoStatusEndring)
+			TiltakDeltaker.Status.INFOMOETE -> DeltakerStatus(AmtDeltaker.Status.VURDERES, datoStatusEndring)
+			TiltakDeltaker.Status.VENTELISTE -> DeltakerStatus(AmtDeltaker.Status.VENTELISTE, datoStatusEndring)
+			else -> throw IllegalStateException("Fant ikke status ${arenaStatus.name}")
+		}
 	}
 
-	private fun avsluttendeStatus(startDato: LocalDate?, sluttDato: LocalDate?, statusEndringTid: LocalDateTime?): DeltakerStatus {
-		return if (endretEtterStartDato(startDato, statusEndringTid) && sluttDatoHaddePassert(sluttDato, statusEndringTid))
-			DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, sluttDato?.atStartOfDay())
-		else if (endretEtterStartDato(startDato, statusEndringTid))
-			DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, statusEndringTid)
-		else
-			DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, statusEndringTid)
+	private fun utledAvsluttendeStatus(): DeltakerStatus {
+		if (statusEndretEtterStartDato()) {
+			val dato = if (sluttDatoHaddePassert()) deltakerSluttdato?.atStartOfDay() else datoStatusEndring
+			return DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, dato)
+		} else {
+			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
+		}
 	}
 
-	private fun ventendeStatus(statusEndringTid: LocalDateTime?) = DeltakerStatus(AmtDeltaker.Status.PABEGYNT_REGISTRERING, statusEndringTid)
+	private fun utledAvbruttStatus(): DeltakerStatus {
+		if (statusEndretEtterStartDato() && sluttetForTidlig()) {
+			val dato = if (sluttDatoHaddePassert()) deltakerSluttdato?.atStartOfDay() else datoStatusEndring
+			return  DeltakerStatus(AmtDeltaker.Status.AVBRUTT, dato)
+		} else {
+			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
+		}
+	}
+	private fun utledIkkeAkuelleStatus(): DeltakerStatus {
+		if (arenaStatus == TiltakDeltaker.Status.IKKAKTUELL
+			&& statusEndretSammeDagSomRegistrering()) {
+			return DeltakerStatus(AmtDeltaker.Status.FEILREGISTRERT, datoStatusEndring)
+		}
+		else return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
+	}
 
-	fun convert(
-		deltakerStatusKode: TiltakDeltaker.Status,
-		deltakerRegistrertDato: LocalDateTime,
-		startDato: LocalDate?,
-		sluttDato: LocalDate?,
-		statusEndringTid: LocalDateTime?,
-		gjennomforingStatus: GjennomforingStatus,
-	): DeltakerStatus {
-		val status = if (deltakerStatusKode in avsluttendeStatuser) avsluttendeStatus(startDato, sluttDato, statusEndringTid)
-				else if (deltakerStatusKode in gjennomforendeStatuser) gjennomforendeStatus(startDato, sluttDato, statusEndringTid)
-				else if (deltakerStatusKode in utkastStatuser) ventendeStatus(statusEndringTid)
-				else if (deltakerStatusKode in ikkeAktuelleStatuser) {
-					if (deltakerStatusKode == TiltakDeltaker.Status.IKKAKTUELL) kanskjeFeilregistrert(statusEndringTid, deltakerRegistrertDato)
-					else alltidIkkeAktuell(statusEndringTid)
-				} else throw UnknownFormatConversionException("Kan ikke konvertere deltakerstatuskode: $deltakerStatusKode")
+	fun convert(): DeltakerStatus {
+		val status =
+			if (erKurs) convertKursStatuser()
+			else if (arenaStatus.erSoktInn()) DeltakerStatus(AmtDeltaker.Status.PABEGYNT_REGISTRERING, datoStatusEndring)
+			else if (arenaStatus.erGjennomforende()) utledGjennomforendeStatus()
+			else if (arenaStatus.erAvsluttende()) utledAvsluttendeStatus()
+			else if (arenaStatus.erIkkeAktuell()) utledIkkeAkuelleStatus()
+			else throw UnknownFormatConversionException("Kan ikke konvertere deltakerstatuskode: $arenaStatus")
 
-		if(gjennomforingStatus == GjennomforingStatus.AVSLUTTET && !status.navn.erAvsluttende()) {
-			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, statusEndringTid)
+		if (erGjennomforingAvsluttet && !status.navn.erAvsluttende()) {
+			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
 		}
 		return status
 	}
+
+	private fun convertKursStatuser() : DeltakerStatus {
+		val status: DeltakerStatus
+
+		if (arenaStatus.erSoktInn()) status = utledSoktInnStatus()
+
+		else if (arenaStatus.erGjennomforende()) {
+			if (startDatoHarPassert() && sluttDatoHarPassert() && sluttetForTidlig()) {
+				status = DeltakerStatus(AmtDeltaker.Status.AVBRUTT, deltakerSluttdato?.atStartOfDay())
+			}
+			else if (utledGjennomforendeStatus().navn == AmtDeltaker.Status.VENTER_PA_OPPSTART) {
+				status = DeltakerStatus(AmtDeltaker.Status.FATT_PLASS, deltakerSluttdato?.atStartOfDay())
+			}
+			else status = utledGjennomforendeStatus()
+		}
+
+		else if (arenaStatus.erAvsluttende()) {
+			if(arenaStatus == TiltakDeltaker.Status.FULLF) status = utledAvsluttendeStatus()
+			else status = utledAvbruttStatus()
+		}
+
+		else if (arenaStatus.erIkkeAktuell()) {
+			status = utledIkkeAkuelleStatus()
+		}
+
+		else throw UnknownFormatConversionException("Kan ikke konvertere deltakerstatuskode: $arenaStatus")
+
+		return status
+	}
+
+	private fun TiltakDeltaker.Status.erAvsluttende(): Boolean {
+		return this in listOf(
+			TiltakDeltaker.Status.DELAVB,
+			TiltakDeltaker.Status.FULLF,
+			TiltakDeltaker.Status.GJENN_AVB,
+			TiltakDeltaker.Status.GJENN_AVL,
+			TiltakDeltaker.Status.IKKEM,
+		)
+	}
+
+	private fun TiltakDeltaker.Status.erIkkeAktuell(): Boolean {
+		return this in listOf(
+			TiltakDeltaker.Status.IKKAKTUELL,
+			TiltakDeltaker.Status.AVSLAG,
+			TiltakDeltaker.Status.NEITAKK
+		)
+	}
+
+	private fun TiltakDeltaker.Status.erGjennomforende(): Boolean {
+		return this in listOf(
+			TiltakDeltaker.Status.GJENN,
+			TiltakDeltaker.Status.TILBUD,
+			TiltakDeltaker.Status.JATAKK
+		)
+	}
+
+	private fun TiltakDeltaker.Status.erSoktInn(): Boolean {
+		return this in listOf(
+			TiltakDeltaker.Status.VENTELISTE,
+			TiltakDeltaker.Status.AKTUELL,
+			TiltakDeltaker.Status.INFOMOETE
+		)
+	}
+
 }

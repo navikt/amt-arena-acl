@@ -11,5 +11,5 @@ data class Gjennomforing (
 	val id: UUID?
 ) {
 	val isSupported = SUPPORTED_TILTAK.contains(tiltakKode)
-	val isKurs = KURS_TILTAK.contains(tiltakKode)
+	val erKurs = KURS_TILTAK.contains(tiltakKode)
 }

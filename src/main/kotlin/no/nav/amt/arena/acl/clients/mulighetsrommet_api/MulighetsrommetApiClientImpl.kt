@@ -36,9 +36,9 @@ class MulighetsrommetApiClientImpl(
 		}
 	}
 
-	override fun hentGjennomforingArenaData(id: UUID): GjennomforingArenaData {
+	override fun hentGjennomforing(id: UUID): Gjennomforing {
 		val request = Request.Builder()
-			.url("$baseUrl/api/v1/tiltaksgjennomforinger/arenadata/$id")
+			.url("$baseUrl/api/v1/tiltaksgjennomforinger/$id")
 			.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
 			.get()
 			.build()
@@ -50,26 +50,9 @@ class MulighetsrommetApiClientImpl(
 
 			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
 
-			val responseBody = fromJsonString<HentGjennomforingArenaData.Response>(body)
+			return fromJsonString(body)
 
-			return GjennomforingArenaData(
-				opprettetAar = responseBody.opprettetAar,
-				lopenr = responseBody.lopenr,
-				virksomhetsnummer = responseBody.virksomhetsnummer,
-				ansvarligNavEnhetId = responseBody.ansvarligNavEnhetId,
-				status = responseBody.status,
-			)
 		}
-	}
-
-	object HentGjennomforingArenaData {
-		data class Response(
-			val opprettetAar: Int,
-			val lopenr: Int,
-			val virksomhetsnummer: String?,
-			val ansvarligNavEnhetId: String,
-			val status: String
-		)
 	}
 
 	object HentGjennomforingId{
