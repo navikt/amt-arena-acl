@@ -19,6 +19,7 @@ import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.utils.SecureLog.secureLog
 import no.nav.amt.arena.acl.utils.tryRun
+import no.nav.common.featuretoggle.UnleashClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.*
@@ -33,6 +34,7 @@ open class DeltakerProcessor(
 	private val metrics: DeltakerMetricHandler,
 	private val kafkaProducerService: KafkaProducerService,
 	private val mulighetsrommetApiClient: MulighetsrommetApiClient,
+	private val unleashClient: UnleashClient
 ) : ArenaMessageProcessor<ArenaDeltakerKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -43,6 +45,13 @@ open class DeltakerProcessor(
 
 		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
+
+		if (unleashClient.isEnabled("amt.konsumer-kurs")) {
+			log.info("Toggle amt.konsumer-kurs er skrudd på")
+		}
+		else {
+			log.info("Toggle amt.konsumer-kurs er skrudd av")
+		}
 
 		if (!gjennomforing.isSupported) {
 			throw IgnoredException("Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")

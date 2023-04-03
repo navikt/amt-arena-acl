@@ -15,6 +15,11 @@ val SUPPORTED_TILTAK = setOf(
 	"DIGIOPPARB"
 )
 
+val KURS_TILTAK = setOf(
+	"JOBBK",
+	"GRUPPEAMO",
+	"GRUFAGYRKE"
+)
 @Service
 class GjennomforingService(
 	private val gjennomforingRepository: GjennomforingRepository,
@@ -32,7 +37,7 @@ class GjennomforingService(
 	}
 
 	fun isSupportedTiltak(kode: String): Boolean {
-		return SUPPORTED_TILTAK.contains(kode)
+		return SUPPORTED_TILTAK.contains(kode) || KURS_TILTAK.contains(kode)
 	}
 }
 
