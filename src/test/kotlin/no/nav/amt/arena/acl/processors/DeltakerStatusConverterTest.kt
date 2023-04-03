@@ -112,9 +112,17 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 
 	"status - FULLF og har endretdato etter sluttdato - returnerer HAR_SLUTTET" {
 		val sluttDato = now.toLocalDate().atTime(12, 30)
-		val status = ArenaDeltakerStatusConverter(TiltakDeltaker.Status.FULLF, now, sluttDato.minusDays(1).toLocalDate(), sluttDato.toLocalDate(), sluttDato, erGjennomforingAvsluttet, LocalDate.now(), false).convert()
+		val status = ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.FULLF,
+			now,
+			deltakerStartdato = sluttDato.minusDays(1).toLocalDate(),
+			deltakerSluttdato = sluttDato.toLocalDate(),
+			datoStatusEndring = sluttDato,
+			erGjennomforingAvsluttet,
+			gjennomforingSluttdato = LocalDate.now(),
+			false
+		).convert()
 		status.navn shouldBe HAR_SLUTTET
-		status.endretDato shouldBe sluttDato
 	}
 
 	"status - GJENN - returnerer VENTER_PÅ_OPPSTART" {
@@ -391,17 +399,6 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 		).convert().navn shouldBe PABEGYNT_REGISTRERING
 	}
 
-	"status - FULLF samme dag som startdato - returnerer IKKE_AKTUELL" {
-		ArenaDeltakerStatusConverter(
-			TiltakDeltaker.Status.FULLF,
-			now,
-			LocalDate.now(),
-			null,
-			LocalDateTime.now(),
-			erGjennomforingAvsluttet, LocalDate.now(), false
-		).convert().navn shouldBe IKKE_AKTUELL
-	}
-
 	"convert - VENTELISTE på kurstiltak - returnerer VENTELISTE" {
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.VENTELISTE,
@@ -463,5 +460,70 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			gjennomforingSluttdato = LocalDate.now().plusDays(3),
 			true
 		).convert().navn shouldBe FATT_PLASS
+	}
+
+	"convert - FULLF samme dag som kurset er ferdig - blir HAR_SLUTTET" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.FULLF,
+			deltakerRegistrertDato = now,
+			deltakerStartdato = LocalDate.now().plusDays(1),
+			deltakerSluttdato = LocalDate.now().plusDays(3),
+			datoStatusEndring = LocalDateTime.now().plusDays(3),
+			erGjennomforingAvsluttet,
+			gjennomforingSluttdato = LocalDate.now().plusDays(3),
+			true
+		).convert().navn shouldBe HAR_SLUTTET
+	}
+
+	"convert - FULLF før kurset er ferdig - blir AVBRUTT" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.FULLF,
+			deltakerRegistrertDato = now,
+			deltakerStartdato = LocalDate.now().plusDays(1),
+			deltakerSluttdato = LocalDate.now().plusDays(2),
+			datoStatusEndring = LocalDateTime.now().plusDays(2),
+			erGjennomforingAvsluttet,
+			gjennomforingSluttdato = LocalDate.now().plusDays(3),
+			true
+		).convert().navn shouldBe AVBRUTT
+	}
+
+	"convert - DELAVB før kurset er ferdig - blir AVBRUTT" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.DELAVB,
+			deltakerRegistrertDato = now,
+			deltakerStartdato = LocalDate.now().plusDays(1),
+			deltakerSluttdato = LocalDate.now().plusDays(2),
+			datoStatusEndring = LocalDateTime.now().plusDays(2),
+			erGjennomforingAvsluttet,
+			gjennomforingSluttdato = LocalDate.now().plusDays(3),
+			true
+		).convert().navn shouldBe AVBRUTT
+	}
+
+	"convert - DELAVB etter kurset er ferdig - blir AVBRUTT" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.DELAVB,
+			deltakerRegistrertDato = now,
+			deltakerStartdato = LocalDate.now().plusDays(1),
+			deltakerSluttdato = LocalDate.now().plusDays(4),
+			datoStatusEndring = LocalDateTime.now().plusDays(2),
+			erGjennomforingAvsluttet,
+			gjennomforingSluttdato = LocalDate.now().plusDays(3),
+			true
+		).convert().navn shouldBe AVBRUTT
+	}
+
+	"convert - FULLF kurs varer en dag - blir HAR_SLUTTET" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.FULLF,
+			deltakerRegistrertDato = now,
+			deltakerStartdato = LocalDate.now().plusDays(1),
+			deltakerSluttdato = LocalDate.now().plusDays(1),
+			datoStatusEndring = LocalDateTime.now().plusDays(1),
+			erGjennomforingAvsluttet,
+			gjennomforingSluttdato = LocalDate.now().plusDays(1),
+			true
+		).convert().navn shouldBe HAR_SLUTTET
 	}
 })

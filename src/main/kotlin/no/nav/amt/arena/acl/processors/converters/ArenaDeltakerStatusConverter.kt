@@ -18,65 +18,6 @@ class ArenaDeltakerStatusConverter(
 	val erKurs: Boolean
 ) {
 
-	private fun statusEndretSammeDagSomRegistrering() = datoStatusEndring != null && datoStatusEndring.toLocalDate() == deltakerRegistrertDato.toLocalDate()
-
-	private fun sluttetForTidlig() = deltakerSluttdato?.isBefore(gjennomforingSluttdato) == true
-
-	private fun starterIDag() = deltakerStartdato?.equals(LocalDate.now()) == true
-
-	private fun startDatoHarPassert() = deltakerStartdato?.isBefore(LocalDate.now()) ?: false
-
-	private fun sluttDatoHarPassert() = deltakerSluttdato?.isBefore(LocalDate.now()) ?: false
-
-	private fun statusEndretEtterStartDato() =
-		deltakerStartdato != null && datoStatusEndring?.toLocalDate()?.isAfter(deltakerStartdato) ?: false
-
-	private fun sluttDatoHaddePassert() =
-		datoStatusEndring != null && deltakerSluttdato?.isBefore(datoStatusEndring.toLocalDate()) ?: false
-
-
-	private fun utledGjennomforendeStatus(): DeltakerStatus {
-		if (startDatoHarPassert() && sluttDatoHarPassert())
-			return DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, deltakerSluttdato?.atStartOfDay())
-		else if (starterIDag() || startDatoHarPassert())
-			return DeltakerStatus(AmtDeltaker.Status.DELTAR, deltakerStartdato?.atStartOfDay())
-		else return DeltakerStatus(AmtDeltaker.Status.VENTER_PA_OPPSTART, datoStatusEndring)
-	}
-
-	private fun utledSoktInnStatus(): DeltakerStatus {
-		return when (arenaStatus) {
-			TiltakDeltaker.Status.AKTUELL -> DeltakerStatus(AmtDeltaker.Status.SOKT_INN, datoStatusEndring)
-			TiltakDeltaker.Status.INFOMOETE -> DeltakerStatus(AmtDeltaker.Status.VURDERES, datoStatusEndring)
-			TiltakDeltaker.Status.VENTELISTE -> DeltakerStatus(AmtDeltaker.Status.VENTELISTE, datoStatusEndring)
-			else -> throw IllegalStateException("Fant ikke status ${arenaStatus.name}")
-		}
-	}
-
-	private fun utledAvsluttendeStatus(): DeltakerStatus {
-		if (statusEndretEtterStartDato()) {
-			val dato = if (sluttDatoHaddePassert()) deltakerSluttdato?.atStartOfDay() else datoStatusEndring
-			return DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, dato)
-		} else {
-			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
-		}
-	}
-
-	private fun utledAvbruttStatus(): DeltakerStatus {
-		if (statusEndretEtterStartDato() && sluttetForTidlig()) {
-			val dato = if (sluttDatoHaddePassert()) deltakerSluttdato?.atStartOfDay() else datoStatusEndring
-			return  DeltakerStatus(AmtDeltaker.Status.AVBRUTT, dato)
-		} else {
-			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
-		}
-	}
-	private fun utledIkkeAkuelleStatus(): DeltakerStatus {
-		if (arenaStatus == TiltakDeltaker.Status.IKKAKTUELL
-			&& statusEndretSammeDagSomRegistrering()) {
-			return DeltakerStatus(AmtDeltaker.Status.FEILREGISTRERT, datoStatusEndring)
-		}
-		else return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
-	}
-
 	fun convert(): DeltakerStatus {
 		val status =
 			if (erKurs) convertKursStatuser()
@@ -106,10 +47,12 @@ class ArenaDeltakerStatusConverter(
 			}
 			else status = utledGjennomforendeStatus()
 		}
-
+		else if (arenaStatus == TiltakDeltaker.Status.FULLF) {
+			if (sluttetForTidlig()) status = utledAvbruttStatus()
+			else status = utledAvsluttendeStatus()
+		}
 		else if (arenaStatus.erAvsluttende()) {
-			if(arenaStatus == TiltakDeltaker.Status.FULLF) status = utledAvsluttendeStatus()
-			else status = utledAvbruttStatus()
+			status = utledAvbruttStatus()
 		}
 
 		else if (arenaStatus.erIkkeAktuell()) {
@@ -120,6 +63,66 @@ class ArenaDeltakerStatusConverter(
 
 		return status
 	}
+
+	private fun statusEndretSammeDagSomRegistrering() = datoStatusEndring != null && datoStatusEndring.toLocalDate() == deltakerRegistrertDato.toLocalDate()
+
+	private fun sluttetForTidlig() = deltakerSluttdato?.isBefore(gjennomforingSluttdato) == true
+
+	private fun starterIDag() = deltakerStartdato?.equals(LocalDate.now()) == true
+
+	private fun startDatoHarPassert() = deltakerStartdato?.isBefore(LocalDate.now()) ?: false
+
+	private fun sluttDatoHarPassert() = deltakerSluttdato?.isBefore(LocalDate.now()) ?: false
+
+	private fun statusEndretEtterStartDato() =
+		deltakerStartdato != null && datoStatusEndring?.isAfter(deltakerStartdato.atStartOfDay()) ?: false
+
+	private fun sluttDatoHaddePassert() =
+		datoStatusEndring != null && deltakerSluttdato?.atStartOfDay()?.isBefore(datoStatusEndring) ?: false
+
+
+	private fun utledGjennomforendeStatus(): DeltakerStatus {
+		if (startDatoHarPassert() && sluttDatoHarPassert())
+			return DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, deltakerSluttdato?.atStartOfDay())
+		else if (starterIDag() || startDatoHarPassert())
+			return DeltakerStatus(AmtDeltaker.Status.DELTAR, deltakerStartdato?.atStartOfDay())
+		else return DeltakerStatus(AmtDeltaker.Status.VENTER_PA_OPPSTART, datoStatusEndring)
+	}
+
+	private fun utledSoktInnStatus(): DeltakerStatus {
+		return when (arenaStatus) {
+			TiltakDeltaker.Status.AKTUELL -> DeltakerStatus(AmtDeltaker.Status.SOKT_INN, datoStatusEndring)
+			TiltakDeltaker.Status.INFOMOETE -> DeltakerStatus(AmtDeltaker.Status.VURDERES, datoStatusEndring)
+			TiltakDeltaker.Status.VENTELISTE -> DeltakerStatus(AmtDeltaker.Status.VENTELISTE, datoStatusEndring)
+			else -> throw IllegalStateException("Fant ikke status ${arenaStatus.name}")
+		}
+	}
+
+	private fun utledAvsluttendeStatus(): DeltakerStatus {
+		if (statusEndretEtterStartDato()) {
+			val dato = if (sluttDatoHaddePassert()) deltakerSluttdato?.atStartOfDay() else datoStatusEndring
+			return DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, dato)
+		} else {
+			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
+		}
+	}
+
+	private fun utledAvbruttStatus(): DeltakerStatus {
+		if (statusEndretEtterStartDato()) {
+			val dato = if (sluttDatoHaddePassert()) deltakerSluttdato?.atStartOfDay() else datoStatusEndring
+			return  DeltakerStatus(AmtDeltaker.Status.AVBRUTT, dato)
+		} else {
+			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
+		}
+	}
+	private fun utledIkkeAkuelleStatus(): DeltakerStatus {
+		if (arenaStatus == TiltakDeltaker.Status.IKKAKTUELL
+			&& statusEndretSammeDagSomRegistrering()) {
+			return DeltakerStatus(AmtDeltaker.Status.FEILREGISTRERT, datoStatusEndring)
+		}
+		else return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
+	}
+
 
 	private fun TiltakDeltaker.Status.erAvsluttende(): Boolean {
 		return this in listOf(
