@@ -24,7 +24,6 @@ object SingletonPostgresContainer {
 		return getDataSource(getContainer())
 	}
 
-
 	fun getContainer(): PostgreSQLContainer<Nothing> {
 		if (postgresContainer == null) {
 			log.info("Starting new postgres database...")
@@ -55,6 +54,7 @@ object SingletonPostgresContainer {
 		val flyway: Flyway = Flyway.configure()
 			.dataSource(dataSource)
 			.connectRetries(10)
+			.cleanDisabled(false)
 			.load()
 
 		flyway.clean()
@@ -100,6 +100,4 @@ object SingletonPostgresContainer {
 			false
 		}
 	}
-
-
 }
