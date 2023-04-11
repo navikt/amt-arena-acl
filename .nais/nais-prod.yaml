@@ -36,6 +36,8 @@ spec:
       rules:
         - application: mulighetsrommet-api
           namespace: team-mulighetsrommet
+    external:
+      - host: amt-arena-ords-proxy.prod-fss-pub.nais.io
   kafka:
     pool: nav-prod
   secureLogs:
