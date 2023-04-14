@@ -21,7 +21,7 @@ data class AmtDeltaker(
 
 	enum class Status {
 		VENTER_PA_OPPSTART, DELTAR, HAR_SLUTTET, IKKE_AKTUELL, FEILREGISTRERT, PABEGYNT_REGISTRERING,
-		SOKT_INN, VURDERES, VENTELISTE, FATT_PLASS, AVBRUTT // kurs statuser
+		SOKT_INN, VURDERES, VENTELISTE, AVBRUTT // kurs statuser
 	}
 
 	enum class StatusAarsak {

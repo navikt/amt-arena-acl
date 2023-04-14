@@ -42,9 +42,6 @@ class ArenaDeltakerStatusConverter(
 			if (startDatoHarPassert() && sluttDatoHarPassert() && sluttetForTidlig()) {
 				status = DeltakerStatus(AmtDeltaker.Status.AVBRUTT, deltakerSluttdato?.atStartOfDay())
 			}
-			else if (utledGjennomforendeStatus().navn == AmtDeltaker.Status.VENTER_PA_OPPSTART) {
-				status = DeltakerStatus(AmtDeltaker.Status.FATT_PLASS, deltakerSluttdato?.atStartOfDay())
-			}
 			else status = utledGjennomforendeStatus()
 		}
 		else if (arenaStatus == TiltakDeltaker.Status.FULLF) {

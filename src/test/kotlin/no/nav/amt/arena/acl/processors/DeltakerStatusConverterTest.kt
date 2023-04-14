@@ -449,7 +449,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 		).convert().navn shouldBe HAR_SLUTTET
 	}
 
-	"convert - GODKJENT_TILTAKSPLASS på kurstiltak - FÅTT_PLASS" {
+	"convert - GODKJENT_TILTAKSPLASS på kurstiltak - VENTER_PA_OPPSTART" {
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.TILBUD,
 			deltakerRegistrertDato = now,
@@ -459,7 +459,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(3),
 			true
-		).convert().navn shouldBe FATT_PLASS
+		).convert().navn shouldBe VENTER_PA_OPPSTART
 	}
 
 	"convert - FULLF samme dag som kurset er ferdig - blir HAR_SLUTTET" {
