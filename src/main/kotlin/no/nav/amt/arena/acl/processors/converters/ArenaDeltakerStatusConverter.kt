@@ -45,8 +45,7 @@ class ArenaDeltakerStatusConverter(
 			else status = utledGjennomforendeStatus()
 		}
 		else if (arenaStatus == TiltakDeltaker.Status.FULLF) {
-			if (sluttetForTidlig()) status = utledAvbruttStatus()
-			else status = utledAvsluttendeStatus()
+			status = utledAvsluttendeStatus()
 		}
 		else if (arenaStatus.erAvsluttende()) {
 			status = utledAvbruttStatus()

@@ -485,7 +485,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(3),
 			true
-		).convert().navn shouldBe AVBRUTT
+		).convert().navn shouldBe HAR_SLUTTET
 	}
 
 	"convert - DELAVB før kurset er ferdig - blir AVBRUTT" {
