@@ -9,11 +9,11 @@ import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 		arenaStatus: TiltakDeltaker.Status,
 		status: AmtDeltaker.Status,
 		statusAarsakKode: TiltakDeltaker.StatusAarsak?,
-		gjennomforingStatus: GjennomforingStatus
+		erGjennomforingAvsluttet: Boolean
 	): AmtDeltaker.StatusAarsak? {
 		val aarsakFraAarsak = utledMedArenaAarsak(statusAarsakKode)
 		val aarsakFraStatus = utledMedArenaStatus(arenaStatus)
-		val aarsakFraGjennomforing = utledMedGjennomforing(gjennomforingStatus, arenaStatus)
+		val aarsakFraGjennomforing = utledMedGjennomforing(erGjennomforingAvsluttet, arenaStatus)
 
 		if (!status.erAvsluttende()) return null
 
@@ -22,8 +22,8 @@ import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 		else return aarsakFraAarsak
 	}
 
-	private fun utledMedGjennomforing(gjennomforingStatus: GjennomforingStatus, arenaStatus: TiltakDeltaker.Status): AmtDeltaker.StatusAarsak? {
-		if(gjennomforingStatus != GjennomforingStatus.AVSLUTTET) return null
+	private fun utledMedGjennomforing(erGjennomforingAvsluttet: Boolean, arenaStatus: TiltakDeltaker.Status): AmtDeltaker.StatusAarsak? {
+		if(!erGjennomforingAvsluttet) return null
 		return when (arenaStatus) {
 			TiltakDeltaker.Status.AKTUELL -> AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
 			TiltakDeltaker.Status.INFOMOETE -> AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS

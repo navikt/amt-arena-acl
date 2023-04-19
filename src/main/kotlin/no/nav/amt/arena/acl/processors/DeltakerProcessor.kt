@@ -1,23 +1,22 @@
 package no.nav.amt.arena.acl.processors
 
 import ArenaOrdsProxyClient
-import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.Tag
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
-import no.nav.amt.arena.acl.processors.converters.GjennomforingStatusConverter
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
-import no.nav.amt.arena.acl.utils.SecureLog.secureLog
 import no.nav.amt.arena.acl.utils.tryRun
 import no.nav.common.featuretoggle.UnleashClient
 import org.slf4j.LoggerFactory
@@ -26,7 +25,6 @@ import java.util.*
 
 @Component
 open class DeltakerProcessor(
-	val meterRegistry: MeterRegistry,
 	private val arenaDataRepository: ArenaDataRepository,
 	private val gjennomforingService: GjennomforingService,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
@@ -41,66 +39,63 @@ open class DeltakerProcessor(
 
 	override fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
 		val arenaDeltakerRaw = message.getData()
+		val arenaDeltakerId = arenaDeltakerRaw.TILTAKDELTAKER_ID.toString()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
 
-		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
+		val gjennomforing = getGjennomforing(arenaGjennomforingId)
+		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
 
-		if (unleashClient.isEnabled("amt.konsumer-kurs")) {
-			log.info("Toggle amt.konsumer-kurs er skrudd på")
-		}
-		else {
-			log.info("Toggle amt.konsumer-kurs er skrudd av")
-		}
+		val deltakerKafkaMessage = AmtKafkaMessageDto(
+			type = PayloadType.DELTAKER,
+			operation = message.operationType,
+			payload = deltaker
+		)
 
-		if (!gjennomforing.isSupported) {
-			throw IgnoredException("Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
-		} else if (!gjennomforing.isValid) {
-			throw DependencyNotValidException("Deltaker på ugyldig gjennomføring <$arenaGjennomforingId>")
-		}
+		kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
+		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
 
-		val gjennomforingId = gjennomforing.id?: getGjennomforingId(gjennomforing.arenaId).also {
-			gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
-		}
+		log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
+		metrics.publishMetrics(message)
+	}
 
+	private fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
 		val arenaDeltaker = arenaDeltakerRaw
 			.tryRun { it.mapTiltakDeltaker() }
 			.getOrThrow()
-
-		val gjennomforingArenaData = mulighetsrommetApiClient.hentGjennomforingArenaData(gjennomforingId)
 
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
 			?: throw IllegalStateException("Expected person with personId=${arenaDeltaker.personId} to exist")
 
 		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId)
 
-		val amtDeltaker = arenaDeltaker.constructDeltaker(
+		return arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerAmtId,
-			gjennomforingId = gjennomforingId,
-			gjennomforingStatus = GjennomforingStatusConverter.convert(gjennomforingArenaData.status),
-			personIdent = personIdent
+			gjennomforingId = gjennomforing.id,
+			gjennomforingSluttDato = gjennomforing.sluttDato,
+			erGjennomforingAvsluttet = gjennomforing.erAvsluttet(),
+			erKurs = gjennomforing.erKurs(),
+			personIdent = personIdent,
 		)
+	}
 
-		meterRegistry.counter(
-			"amt.arena-acl.deltaker.status",
-			listOf(
-				Tag.of("arena", arenaDeltaker.deltakerStatusKode.name),
-				Tag.of("amt-tiltak", arenaDeltaker.deltakerStatusKode.name)
-			)
-		).increment()
+	private fun getGjennomforing(arenaGjennomforingId: String): Gjennomforing {
+		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
+			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
-		val amtData = AmtKafkaMessageDto(
-			type = PayloadType.DELTAKER,
-			operation = message.operationType,
-			payload = amtDeltaker
-		)
+		val konsumerKursDeltaker = gjennomforing.erKurs && unleashClient.isEnabled("amt.konsumer-kurs")
+		if (!gjennomforing.isSupported && !konsumerKursDeltaker) {
+			throw IgnoredException("Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
+		} else if (!gjennomforing.isValid) {
+			throw DependencyNotValidException("Deltaker på ugyldig gjennomføring <$arenaGjennomforingId>")
+		}
 
-		kafkaProducerService.sendTilAmtTiltak(amtDeltaker.id, amtData)
-		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltaker.tiltakdeltakerId))
+		// id kan være null for våre typer fordi id ikke ble lagret fra starten
+		// og pga en bug se trellokort #877
+		val gjennomforingId = gjennomforing.id?: getGjennomforingId(gjennomforing.arenaId).also {
+			gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
+		}
 
-		secureLog.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} personId=${arenaDeltaker.personId} fnr=$personIdent er sendt")
-		log.info("Melding for deltaker id=$deltakerAmtId arenaId=${arenaDeltaker.tiltakdeltakerId} transactionId=${amtData.transactionId} op=${amtData.operation} er sendt")
-		metrics.publishMetrics(message)
+		return mulighetsrommetApiClient.hentGjennomforing(gjennomforingId)
 	}
 
 	private fun getGjennomforingId(arenaId: String): UUID {

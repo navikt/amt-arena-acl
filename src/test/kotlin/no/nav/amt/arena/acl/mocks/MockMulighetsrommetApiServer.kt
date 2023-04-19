@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.mocks
 
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.GjennomforingArenaData
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import okhttp3.mockwebserver.MockResponse
 import java.util.*
 
@@ -17,20 +17,25 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 		handleRequest(matchPath = "/api/v1/tiltaksgjennomforinger/id/${arenaId}", response = response)
 	}
 
-	fun mockHentGjennomforingArenaData(id: UUID, gjennomforingArenaData: GjennomforingArenaData) {
-		val virksomhetsnummer = if (gjennomforingArenaData.virksomhetsnummer == null) "null" else "\"${gjennomforingArenaData.virksomhetsnummer}\""
+	fun mockHentGjennomforingData(id: UUID, gjennomforingData: Gjennomforing?) {
 		val body = """
 			{
-				"opprettetAar": "${gjennomforingArenaData.opprettetAar}",
-				"lopenr": ${gjennomforingArenaData.lopenr},
-				"virksomhetsnummer": $virksomhetsnummer,
-				"ansvarligNavEnhetId": "${gjennomforingArenaData.ansvarligNavEnhetId}",
-				"status": "${gjennomforingArenaData.status}"
+				"id": "$id",
+				"tiltakstype": {
+					"id": "${UUID.randomUUID()}",
+					"arenaKode": "INDOPPFAG",
+					"navn": "navn på tiltakstype"
+				},
+				"navn": "navn på gjennomføring",
+				"status": "GJENNOMFORES",
+				"startDato": "${gjennomforingData?.startDato}",
+				"sluttDato": "${gjennomforingData?.sluttDato}",
+				"virksomhetsnummer": "${gjennomforingData?.virksomhetsnummer}"
 			}
 		""".trimIndent()
 
-		val response = MockResponse().setResponseCode(200).setBody(body)
-		handleRequest(matchPath = "/api/v1/tiltaksgjennomforinger/arenadata/${id}", response = response)
+		val response = if(gjennomforingData != null) MockResponse().setResponseCode(200).setBody(body) else MockResponse().setResponseCode(404).setBody("{}")
+		handleRequest(matchPath = "/api/v1/tiltaksgjennomforinger/$id", response = response)
 	}
 
 }

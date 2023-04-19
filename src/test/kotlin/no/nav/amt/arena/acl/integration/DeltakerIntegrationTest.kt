@@ -2,7 +2,6 @@ package no.nav.amt.arena.acl.integration
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.GjennomforingArenaData
 import no.nav.amt.arena.acl.domain.Gjennomforing
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
@@ -57,12 +56,18 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 	)
 
 	val gjennomforingIdMR = UUID.randomUUID()
-	val gjennomforingArenaData = GjennomforingArenaData(
-		opprettetAar = 2022,
-		lopenr = 123,
-		virksomhetsnummer = "999888777",
-		ansvarligNavEnhetId = "1234",
-		status = "GJENNOMFOR",
+	val gjennomforingMRData = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing(
+		id = gjennomforingIdMR,
+		tiltakstype =  no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Tiltakstype(
+			id = UUID.randomUUID(),
+			navn = "Navn på tiltak",
+			arenaKode = "INDOPPFAG"
+		),
+		navn = "Navn på gjennomføring",
+	 	startDato = LocalDate.now(),
+		sluttDato = LocalDate.now().plusDays(3),
+		status = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Status.GJENNOMFORES,
+		virksomhetsnummer = "999888777"
 	)
 
 	val fnr = "123456789"
@@ -73,7 +78,7 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 			baseGjennomforing.TILTAKGJENNOMFORING_ID,
 			gjennomforingIdMR
 		)
-		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(gjennomforingIdMR, gjennomforingArenaData)
+		mockMulighetsrommetApiServer.mockHentGjennomforingData(gjennomforingIdMR, gjennomforingMRData)
 	}
 
 	@Test
@@ -116,15 +121,6 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 	fun `ingest deltaker - gjennomføring er ugyldig - deltaker får status WAITING`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), false)
-		mockMulighetsrommetApiServer.mockHentGjennomforingId(
-			baseGjennomforing.TILTAKGJENNOMFORING_ID,
-			gjennomforingIdMR
-		)
-
-		mockMulighetsrommetApiServer.mockHentGjennomforingArenaData(
-			gjennomforingIdMR,
-			gjennomforingArenaData.copy(virksomhetsnummer = null)
-		)
 
 		val pos = "77"
 		kafkaMessageSender.publiserArenaDeltaker(

@@ -85,6 +85,8 @@ open class RetryArenaMessageProcessorService(
 			else if (arenaDataDbo.ingestStatus == IngestStatus.RETRY && hasReachedMaxRetries) {
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.FAILED)
 			}
+			else log.error("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}'")
+
 
 			arenaDataRepository.updateIngestAttempts(arenaDataDbo.id, currentIngestAttempts, e.message)
 		}

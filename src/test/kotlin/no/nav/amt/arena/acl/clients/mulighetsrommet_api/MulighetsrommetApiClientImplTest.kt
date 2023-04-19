@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import no.nav.amt.arena.acl.mocks.MockHttpServer
 import okhttp3.mockwebserver.MockResponse
+import java.time.LocalDate
 import java.util.*
 
 class MulighetsrommetApiClientImplTest : FunSpec({
@@ -50,32 +51,38 @@ class MulighetsrommetApiClientImplTest : FunSpec({
 	}
 
 	test("hentGjennomforingArenaData - skal lage riktig request og parse respons") {
+		val id = UUID.randomUUID()
+		val startDato = LocalDate.now()
+		val virksomhetsnummer = "8530254"
 		server.handleRequest(
 			response = MockResponse().setBody(
 				"""
 					{
-						"opprettetAar": 2022,
-						"lopenr": 123,
-						"virksomhetsnummer": "999222333",
-						"ansvarligNavEnhetId": "1234",
-						"status": "GJENNOMFORES"
+						"id": "$id",
+						"tiltakstype": {
+							"id": "${UUID.randomUUID()}",
+							"navn": "tiltaksnavn",
+							"arenaKode": "INDOPPFAG"
+						},
+						"navn": "navn på gjennomføring",
+						"status": "GJENNOMFORES",
+						"startDato": "$startDato",
+						"sluttDato": null,
+						"virksomhetsnummer": "$virksomhetsnummer"
 					}
 				""".trimIndent()
 			)
 		)
 
-		val id = UUID.randomUUID()
-		val gjennomforingArenaData = client.hentGjennomforingArenaData(id)
+		val gjennomforingArenaData = client.hentGjennomforing(id)
 
 		val request = server.latestRequest()
 
-		gjennomforingArenaData.opprettetAar shouldBe 2022
-		gjennomforingArenaData.lopenr shouldBe 123
-		gjennomforingArenaData.virksomhetsnummer shouldBe "999222333"
-		gjennomforingArenaData.ansvarligNavEnhetId shouldBe "1234"
-		gjennomforingArenaData.status shouldBe "GJENNOMFORES"
+		gjennomforingArenaData.virksomhetsnummer shouldBe virksomhetsnummer
+		gjennomforingArenaData.status shouldBe Gjennomforing.Status.GJENNOMFORES
+		gjennomforingArenaData.startDato shouldBe startDato
 
-		request.path shouldBe "/api/v1/tiltaksgjennomforinger/arenadata/$id"
+		request.path shouldBe "/api/v1/tiltaksgjennomforinger/$id"
 		request.method shouldBe "GET"
 		request.getHeader("Authorization") shouldBe "Bearer TOKEN"
 	}

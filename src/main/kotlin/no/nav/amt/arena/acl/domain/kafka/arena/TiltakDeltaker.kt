@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.domain.kafka.arena
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerAarsakConverter
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
-import no.nav.amt.arena.acl.processors.converters.GjennomforingStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -52,22 +51,26 @@ data class TiltakDeltaker(
 	fun constructDeltaker(
 		amtDeltakerId: UUID,
 		gjennomforingId: UUID,
-		gjennomforingStatus: GjennomforingStatus,
-		personIdent: String
+		gjennomforingSluttDato: LocalDate?,
+		erGjennomforingAvsluttet: Boolean,
+		personIdent: String,
+		erKurs: Boolean
 	): AmtDeltaker {
-		val deltakerStatus = ArenaDeltakerStatusConverter.convert(
+		val deltakerStatus = ArenaDeltakerStatusConverter(
 			deltakerRegistrertDato = regDato,
-			startDato = datoFra,
-			sluttDato = datoTil,
-			deltakerStatusKode = deltakerStatusKode,
-			statusEndringTid = datoStatusendring,
-			gjennomforingStatus = gjennomforingStatus
-		)
+			deltakerStartdato = datoFra,
+			deltakerSluttdato = datoTil,
+			arenaStatus = deltakerStatusKode,
+			datoStatusEndring = datoStatusendring,
+			gjennomforingSluttdato = gjennomforingSluttDato,
+			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
+			erKurs = erKurs
+		).convert()
 		val statusAarsak = ArenaDeltakerAarsakConverter.convert(
 			deltakerStatusKode,
 			deltakerStatus.navn,
 			statusAarsakKode,
-			gjennomforingStatus
+			erGjennomforingAvsluttet
 		)
 
 		return AmtDeltaker(

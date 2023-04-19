@@ -4,11 +4,10 @@ import io.kotest.matchers.shouldBe
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerAarsakConverter
-import no.nav.amt.arena.acl.processors.converters.GjennomforingStatus
 import org.junit.jupiter.api.Test
 
 class DeltakerGjennomforingStatusAarsakConverterTest {
-	val gjennomforingStatus = GjennomforingStatus.GJENNOMFORES
+	val erGjennomforingAvsluttet = false
 
 	@Test
 	fun `convert() - årsak brukes når årsak kan mappes direkte`() {
@@ -16,7 +15,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.NEITAKK,
 			AmtDeltaker.Status.HAR_SLUTTET,
 			TiltakDeltaker.StatusAarsak.SYK,
-			gjennomforingStatus
+			erGjennomforingAvsluttet
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.SYK
@@ -28,7 +27,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.IKKAKTUELL,
 			AmtDeltaker.Status.HAR_SLUTTET,
 			TiltakDeltaker.StatusAarsak.UTV,
-			gjennomforingStatus
+			erGjennomforingAvsluttet
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.ANNET
@@ -40,7 +39,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.IKKAKTUELL,
 			AmtDeltaker.Status.DELTAR,
 			TiltakDeltaker.StatusAarsak.SYK,
-			gjennomforingStatus
+			erGjennomforingAvsluttet
 		)
 
 		actual shouldBe null
@@ -52,7 +51,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.IKKEM,
 			AmtDeltaker.Status.HAR_SLUTTET,
 			TiltakDeltaker.StatusAarsak.HENLU,
-			gjennomforingStatus
+			erGjennomforingAvsluttet
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.IKKE_MOTT
@@ -65,7 +64,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.AVSLAG,
 			AmtDeltaker.Status.HAR_SLUTTET,
 			TiltakDeltaker.StatusAarsak.HENLU,
-			gjennomforingStatus
+			erGjennomforingAvsluttet
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
@@ -78,7 +77,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.AVSLAG,
 			AmtDeltaker.Status.HAR_SLUTTET,
 			TiltakDeltaker.StatusAarsak.SYK,
-			gjennomforingStatus
+			erGjennomforingAvsluttet
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.SYK
@@ -91,7 +90,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.INFOMOETE,
 			AmtDeltaker.Status.IKKE_AKTUELL,
 			TiltakDeltaker.StatusAarsak.SYK,
-			GjennomforingStatus.AVSLUTTET
+			true
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
