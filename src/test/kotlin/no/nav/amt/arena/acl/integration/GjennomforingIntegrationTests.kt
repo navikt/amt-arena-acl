@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.TestExecutionListeners
 import java.time.Duration
 import java.time.LocalDateTime
+import java.util.UUID
 
 @TestExecutionListeners(
 	listeners = [DirtyContextBeforeAndAfterClassTestExecutionListener::class],
@@ -42,6 +43,8 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	@Test
 	fun `Konsumer gjennomføring - gyldig gjennomføring - ingestes uten feil`() {
 		val gjennomforing = createGjennomforing()
+		val gjennomforingId = UUID.randomUUID()
+		mockMulighetsrommetApiServer.mockHentGjennomforingId(gjennomforing.TILTAKGJENNOMFORING_ID, gjennomforingId)
 		val pos = (1..Long.MAX_VALUE).random().toString()
 
 		kafkaMessageSender.publiserArenaGjennomforing(
@@ -53,6 +56,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 			gjennomforingResult shouldNotBe null
 			gjennomforingResult!!.isValid shouldBe true
 			gjennomforingResult.isSupported shouldBe true
+			gjennomforingResult.id shouldBe gjennomforingId
 
 			arenaDataRepository.get(
 				ARENA_GJENNOMFORING_TABLE_NAME,
@@ -66,6 +70,8 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	@Test
 	fun `Konsumer gjennomføring - ugyldig gjennomføring - får status invalid`() {
 		var gjennomforing = createGjennomforing()
+		val gjennomforingId = UUID.randomUUID()
+		mockMulighetsrommetApiServer.mockHentGjennomforingId(gjennomforing.TILTAKGJENNOMFORING_ID, gjennomforingId)
 		val pos = (1..Long.MAX_VALUE).random().toString()
 		gjennomforing = gjennomforing.copy(ARBGIV_ID_ARRANGOR = null)
 		kafkaMessageSender.publiserArenaGjennomforing(
@@ -77,6 +83,7 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 			gjennomforingResult shouldNotBe null
 			gjennomforingResult!!.isValid shouldBe false
 			gjennomforingResult.isSupported shouldBe true
+			gjennomforingResult.id shouldBe gjennomforingId
 
 			arenaDataRepository.get(
 				ARENA_GJENNOMFORING_TABLE_NAME,

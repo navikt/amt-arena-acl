@@ -1,18 +1,22 @@
 package no.nav.amt.arena.acl.processors
 
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
+import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.util.UUID
 
 @Component
 open class GjennomforingProcessor(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val gjennomforingService: GjennomforingService,
+	private val mulighetsrommetApiClient: MulighetsrommetApiClient
 ) : ArenaMessageProcessor<ArenaGjennomforingKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -32,6 +36,9 @@ open class GjennomforingProcessor(
 			return
 		}
 
+		val gjennomforingId = getGjennomforingId(arenaId)
+		gjennomforingService.setGjennomforingId(arenaId, gjennomforingId)
+
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaId))
 
 		if(isValid) retryDeltakere()
@@ -45,5 +52,10 @@ open class GjennomforingProcessor(
 			.forEach {
 				arenaDataRepository.updateIngestStatus(it.arenaId.toInt(), IngestStatus.RETRY)
 			}
+	}
+
+	private fun getGjennomforingId(arenaId: String): UUID {
+		return mulighetsrommetApiClient.hentGjennomforingId(arenaId)
+			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet")
 	}
 }
