@@ -96,8 +96,6 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 	@Test
 	fun `Konsumer gjennomføring - tiltakstype er ikke støttet - lagrer med korrekte verdier`() {
 		val gjennomforing = createGjennomforing().copy(TILTAKSKODE = "IKKE STØTTET")
-		val gjennomforingId = UUID.randomUUID()
-		mockMulighetsrommetApiServer.mockHentGjennomforingId(gjennomforing.TILTAKGJENNOMFORING_ID, gjennomforingId)
 		val pos = (1..Long.MAX_VALUE).random().toString()
 
 		kafkaMessageSender.publiserArenaGjennomforing(
@@ -109,7 +107,6 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 			gjennomforingResult shouldNotBe null
 			gjennomforingResult!!.isValid shouldBe true
 			gjennomforingResult.isSupported shouldBe false
-			gjennomforingResult.id shouldBe gjennomforingId
 
 			arenaDataRepository.get(
 				ARENA_GJENNOMFORING_TABLE_NAME,

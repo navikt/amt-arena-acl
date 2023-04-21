@@ -30,13 +30,14 @@ open class GjennomforingProcessor(
 		val isValid = gjennomforingResult.isSuccess
 
 		gjennomforingService.upsert(arenaId, arenaTiltakskode, isValid)
-		val gjennomforingId = getGjennomforingId(arenaId)
-		gjennomforingService.setGjennomforingId(arenaId, gjennomforingId)
 
 		if (!gjennomforingService.isSupportedTiltak(arenaTiltakskode)) {
 			log.info("Gjennomføring $arenaId ble ignorert fordi $arenaTiltakskode er ikke støttet")
 			return
 		}
+
+		val gjennomforingId = getGjennomforingId(arenaId)
+		gjennomforingService.setGjennomforingId(arenaId, gjennomforingId)
 
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaId))
 
