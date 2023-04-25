@@ -121,6 +121,23 @@ open class ArenaDataRepository(
 		return template.query(sql, parameters, rowMapper).firstOrNull()
 	}
 
+	fun get(tableName: String, arenaId: String): List<ArenaDataDbo> {
+		val sql = """
+			SELECT *
+			FROM arena_data
+			WHERE arena_table_name = :arena_table_name
+			AND arena_id = :arena_id
+			ORDER BY id asc
+		""".trimIndent()
+
+		val parameters = sqlParameters(
+			"arena_table_name" to tableName,
+			"arena_id" to arenaId,
+		)
+
+		return template.query(sql, parameters, rowMapper)
+	}
+
 	fun getByIngestStatus(
 		tableName: String,
 		status: IngestStatus,

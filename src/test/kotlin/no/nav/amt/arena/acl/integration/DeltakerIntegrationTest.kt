@@ -74,6 +74,12 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@BeforeEach
 	fun setup() {
+		setupMocks()
+	}
+
+	fun setupMocks() {
+		mockMulighetsrommetApiServer.reset()
+		mockArenaOrdsProxyHttpServer.reset()
 		mockMulighetsrommetApiServer.mockHentGjennomforingId(
 			baseGjennomforing.TILTAKGJENNOMFORING_ID,
 			gjennomforingIdMR
@@ -99,6 +105,46 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 			gjennomforing!!.id shouldBe gjennomforingIdMR
 		}
 	}
+
+	@Test
+	fun `ingest deltaker - forrige melding på deltaker er ikke ingestet - feiler med status RETRY`() {
+		val pos1 = "33"
+		val pos2 = "35"
+
+		mockArenaOrdsProxyHttpServer.mockFailHentFnr(baseDeltaker.PERSON_ID!!)
+		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
+		kafkaMessageSender.publiserArenaDeltaker(
+			baseDeltaker.TILTAKDELTAKER_ID,
+			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(baseDeltaker, opPos = pos1))
+		)
+
+		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
+			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
+			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos1)
+
+			deltakerRecord shouldBe null
+			arenaData!!.ingestStatus shouldBe IngestStatus.RETRY
+
+		}
+		setupMocks()
+		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
+		val endretDeltaker = baseDeltaker.copy(DELTAKERSTATUSKODE = "AKTUELL")
+		kafkaMessageSender.publiserArenaDeltaker(
+			endretDeltaker.TILTAKDELTAKER_ID,
+			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(endretDeltaker, opPos = pos2))
+		)
+
+		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
+			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
+			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos2)
+
+			deltakerRecord shouldBe null
+			arenaData!!.ingestStatus shouldBe IngestStatus.RETRY
+			arenaData.note shouldBe "Forrige melding på deltaker med id=${baseDeltaker.TILTAKDELTAKER_ID} er ikke håndtert enda"
+
+		}
+	}
+
 
 	@Test
 	fun `ingest deltaker - ikke støttet tiltak - skal ignoreres`() {
