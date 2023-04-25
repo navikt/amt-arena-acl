@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.TestExecutionListeners
 import java.time.Duration
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 @TestExecutionListeners(
 	listeners = [DirtyContextBeforeAndAfterClassTestExecutionListener::class],
@@ -69,17 +69,18 @@ class GjennomforingIntegrationTests : IntegrationTestBase() {
 
 	@Test
 	fun `Konsumer gjennomføring - ugyldig gjennomføring - får status invalid`() {
-		var gjennomforing = createGjennomforing()
+		val ugyldigGjennomforing = createGjennomforing().copy(ARBGIV_ID_ARRANGOR = null)
 		val gjennomforingId = UUID.randomUUID()
-		mockMulighetsrommetApiServer.mockHentGjennomforingId(gjennomforing.TILTAKGJENNOMFORING_ID, gjennomforingId)
+
+		mockMulighetsrommetApiServer.mockHentGjennomforingId(ugyldigGjennomforing.TILTAKGJENNOMFORING_ID, gjennomforingId)
 		val pos = (1..Long.MAX_VALUE).random().toString()
-		gjennomforing = gjennomforing.copy(ARBGIV_ID_ARRANGOR = null)
+
 		kafkaMessageSender.publiserArenaGjennomforing(
-			gjennomforing.TILTAKGJENNOMFORING_ID,
-			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos))
+			ugyldigGjennomforing.TILTAKGJENNOMFORING_ID,
+			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(ugyldigGjennomforing, opPos = pos))
 		)
 		AsyncUtils.eventually(until = Duration.ofSeconds(10))  {
-			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
+			val gjennomforingResult = gjennomforingService.get(ugyldigGjennomforing.TILTAKGJENNOMFORING_ID.toString())
 			gjennomforingResult shouldNotBe null
 			gjennomforingResult!!.isValid shouldBe false
 			gjennomforingResult.isSupported shouldBe true

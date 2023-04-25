@@ -10,7 +10,7 @@ import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.UUID
+import java.util.*
 
 @Component
 open class GjennomforingProcessor(
@@ -36,13 +36,16 @@ open class GjennomforingProcessor(
 			return
 		}
 
-		val gjennomforingId = getGjennomforingId(arenaId)
-		gjennomforingService.setGjennomforingId(arenaId, gjennomforingId)
+		kotlin.runCatching {
+			val gjennomforingId = getGjennomforingId(arenaId)
+			gjennomforingService.setGjennomforingId(arenaId, gjennomforingId)
+		}
+
+		if(isValid) {
+			retryDeltakere()
+		}
 
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaId))
-
-		if(isValid) retryDeltakere()
-
 		log.info("Gjennomføring $arenaId er ferdig håndtert")
 
 	}
