@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.processors
 import ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
+import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
@@ -17,6 +18,7 @@ import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.tryRun
 import no.nav.common.featuretoggle.UnleashClient
 import org.slf4j.LoggerFactory
@@ -44,6 +46,13 @@ open class DeltakerProcessor(
 
 		val gjennomforing = getGjennomforing(arenaGjennomforingId)
 		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
+
+		arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
+			.lastOrNull { it.operationPosition != message.operationPosition }
+			?.takeUnless { it.ingestStatus in listOf(IngestStatus.HANDLED, IngestStatus.INVALID) }
+			?.let {
+				throw DependencyNotIngestedException("Forrige melding på deltaker med id=$arenaDeltakerId er ikke håndtert enda")
+			}
 
 		val deltakerKafkaMessage = AmtKafkaMessageDto(
 			type = PayloadType.DELTAKER,
