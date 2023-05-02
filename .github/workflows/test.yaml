@@ -5,6 +5,8 @@ on:
       - main
 jobs:
   test:
+    permissions:
+      contents: "write"
     name: Run tests
     runs-on: ubuntu-latest
     steps:
@@ -23,3 +25,5 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
       - name: Run maven tests
         run: mvn -B verify
+      - name: Dependency submission (for dependabot)
+        uses: advanced-security/maven-dependency-submission-action@v3
