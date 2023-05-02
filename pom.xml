@@ -23,7 +23,7 @@
         <kotlin.version>1.8.10</kotlin.version>
         <java.version>17</java.version>
 
-        <common.version>3.2023.04.11_09.05-411b59915166</common.version>
+        <common.version>3.2023.04.18_10.07-0576b4e09008</common.version>
         <kotest.version>5.5.5</kotest.version>
         <testcontainers.version>1.17.6</testcontainers.version>
         <okhttp.version>4.10.0</okhttp.version>
