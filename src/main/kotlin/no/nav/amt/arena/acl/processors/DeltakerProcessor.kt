@@ -47,9 +47,9 @@ open class DeltakerProcessor(
 		val gjennomforing = getGjennomforing(arenaGjennomforingId)
 		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
 
-		arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
-			.lastOrNull { it.operationPosition != message.operationPosition }
-			?.takeUnless { it.ingestStatus in listOf(IngestStatus.HANDLED, IngestStatus.INVALID) }
+		arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId) // nyeste: 1145899
+			.filter { it.operationPosition < message.operationPosition}
+			.firstOrNull { it.ingestStatus in listOf(IngestStatus.RETRY, IngestStatus.FAILED, IngestStatus.WAITING) }
 			?.let {
 				throw DependencyNotIngestedException("Forrige melding på deltaker med id=$arenaDeltakerId er ikke håndtert enda")
 			}
