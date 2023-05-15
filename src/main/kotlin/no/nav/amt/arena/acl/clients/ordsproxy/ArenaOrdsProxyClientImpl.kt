@@ -8,11 +8,6 @@ import okhttp3.Request
 import org.springframework.http.HttpStatus
 import java.util.function.Supplier
 
-data class Arbeidsgiver(
-	val virksomhetsnummer: String,
-	val organisasjonsnummerMorselskap: String
-)
-
 open class ArenaOrdsProxyClientImpl(
 	private val arenaOrdsProxyUrl: String,
 	private val tokenProvider: Supplier<String>,
