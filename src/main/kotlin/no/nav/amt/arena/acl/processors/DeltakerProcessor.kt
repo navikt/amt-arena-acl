@@ -13,6 +13,7 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
+import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
@@ -73,7 +74,7 @@ open class DeltakerProcessor(
 			.getOrThrow()
 
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
-			?: throw IllegalStateException("Expected person with personId=${arenaDeltaker.personId} to exist")
+			?: throw ValidationException("Arena mangler personlig ident for personId=${arenaDeltaker.personId}")
 
 		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId)
 
