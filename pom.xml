@@ -23,13 +23,13 @@
         <kotlin.version>1.8.21</kotlin.version>
         <java.version>17</java.version>
 
-        <common.version>3.2023.05.02_06.50-0576b4e09008</common.version>
+        <common.version>3.2023.05.08_11.05-d13adbef1e85</common.version>
         <kotest.version>5.6.1</kotest.version>
-        <testcontainers.version>1.18.0</testcontainers.version>
+        <testcontainers.version>1.18.1</testcontainers.version>
         <okhttp.version>4.11.0</okhttp.version>
-        <nimbus.version>10.8</nimbus.version>
-        <token-support.version>3.0.11</token-support.version>
-        <schedlock.version>5.2.0</schedlock.version>
+        <nimbus.version>10.9.1</nimbus.version>
+        <token-support.version>3.0.12</token-support.version>
+        <schedlock.version>5.3.0</schedlock.version>
         <logstashencoder.version>7.3</logstashencoder.version>
         <mockk.version>1.13.5</mockk.version>
     </properties>
