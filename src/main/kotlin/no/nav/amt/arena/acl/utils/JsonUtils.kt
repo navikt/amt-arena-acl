@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.utils
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -16,6 +17,7 @@ object JsonUtils {
 		.registerModule(JavaTimeModule())
 		.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 		.configure(MapperFeature.USE_STD_BEAN_NAMING, true)
+		.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
 	inline fun <reified T> fromJsonString(jsonStr: String): T {
 		return objectMapper.readValue(jsonStr)
