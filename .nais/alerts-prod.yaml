@@ -19,7 +19,7 @@ spec:
             namespace: amt
             severity: critical
         - alert: høy feilrate i logger
-          expr: (100 * sum by (log_app, log_namespace) (rate(logd_messages_total{log_app="amt-arena-acl",log_level=~"Warning|Error"}[3m])) / sum by (log_app, log_namespace) (rate(logd_messages_total{log_app="amt-arena-acl"}[3m]))) > 10
+          expr: (100 * sum by (app, namespace) (rate(log_messages_errors{app="amt-arena-acl",level="Error"}[3m]))) / sum by (app, namespace) (rate(log_messages_total{app="amt-arena-acl"}[3m])) > 10
           for: 3m
           annotations:
             action: "Sjekk loggene til app amt-arena-acl i namespace amt, for å se hvorfor det er så mye feil"
@@ -27,7 +27,7 @@ spec:
             namespace: amt
             severity: warning
         - alert: feil logges
-          expr: sum by(log_app, log_namespace) (increase(logd_messages_total{log_app="amt-arena-acl",log_level=~"Error"}[5m])) > 0
+          expr: sum by(app, namespace) (increase(log_messages_errors{app="amt-arena-acl",level="Error"}[5m])) > 0
           for: 5m
           annotations:
             action: "Sjekk loggene til app amt-arena-acl i namespace amt, for å se hva som feiler"
