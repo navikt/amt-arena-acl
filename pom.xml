@@ -20,7 +20,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
-        <kotlin.version>1.8.21</kotlin.version>
+        <kotlin.version>1.8.22</kotlin.version>
         <java.version>17</java.version>
 
         <common.version>3.2023.05.08_11.05-d13adbef1e85</common.version>
@@ -29,7 +29,7 @@
         <okhttp.version>4.11.0</okhttp.version>
         <nimbus.version>10.9.1</nimbus.version>
         <token-support.version>3.1.0</token-support.version>
-        <schedlock.version>5.3.0</schedlock.version>
+        <schedlock.version>5.4.0</schedlock.version>
         <logstashencoder.version>7.3</logstashencoder.version>
         <mockk.version>1.13.5</mockk.version>
     </properties>
