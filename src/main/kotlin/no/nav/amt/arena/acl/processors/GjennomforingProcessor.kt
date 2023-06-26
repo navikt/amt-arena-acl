@@ -7,10 +7,9 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
-import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.*
+import java.util.UUID
 
 @Component
 open class GjennomforingProcessor(
@@ -41,20 +40,13 @@ open class GjennomforingProcessor(
 			gjennomforingService.setGjennomforingId(arenaId, gjennomforingId)
 		}
 
-		if(isValid) {
-			retryDeltakere()
+		if (isValid) {
+			arenaDataRepository.retryDeltakereMedGjennomforingIdOgStatus(arenaId, listOf(IngestStatus.WAITING))
 		}
 
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaId))
 		log.info("Gjennomføring $arenaId er ferdig håndtert")
 
-	}
-
-	fun retryDeltakere() {
-		arenaDataRepository.getByIngestStatus(ARENA_DELTAKER_TABLE_NAME, IngestStatus.WAITING, 0)
-			.forEach {
-				arenaDataRepository.updateIngestStatus(it.arenaId.toInt(), IngestStatus.RETRY)
-			}
 	}
 
 	private fun getGjennomforingId(arenaId: String): UUID {

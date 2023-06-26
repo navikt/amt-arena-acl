@@ -163,6 +163,24 @@ open class ArenaDataRepository(
 
 		return template.query(sql, parameters, rowMapper)
 	}
+	fun retryDeltakereMedGjennomforingIdOgStatus(arenaGjennomforingId: String, statuses: List<IngestStatus>): Int {
+		val sql = """
+		UPDATE arena_data
+		SET ingest_status      = 'RETRY',
+			ingest_attempts    = 0
+		WHERE (after ->> 'TILTAKGJENNOMFORING_ID' = :gjennomforing_id
+			OR before ->> 'TILTAKGJENNOMFORING_ID' = :gjennomforing_id)
+		  AND ingest_status in (:statuses)
+		  AND arena_table_name = 'SIAMO.TILTAKDELTAKER'
+		""".trimIndent()
+
+		val parameters = sqlParameters(
+			"gjennomforing_id" to arenaGjennomforingId,
+			"statuses" to statuses.map { it.name }
+		)
+
+		return template.update(sql, parameters)
+	}
 
 	fun getStatusCount(): List<LogStatusCountDto> {
 		val sql = """
