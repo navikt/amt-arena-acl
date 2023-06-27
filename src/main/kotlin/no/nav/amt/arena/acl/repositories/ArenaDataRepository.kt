@@ -5,6 +5,7 @@ import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertInput
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.dto.LogStatusCountDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
@@ -166,12 +167,12 @@ open class ArenaDataRepository(
 	fun retryDeltakereMedGjennomforingIdOgStatus(arenaGjennomforingId: String, statuses: List<IngestStatus>): Int {
 		val sql = """
 		UPDATE arena_data
-		SET ingest_status      = 'RETRY',
+		SET ingest_status      =  '${IngestStatus.RETRY.name}',
 			ingest_attempts    = 0
 		WHERE (after ->> 'TILTAKGJENNOMFORING_ID' = :gjennomforing_id
 			OR before ->> 'TILTAKGJENNOMFORING_ID' = :gjennomforing_id)
 		  AND ingest_status in (:statuses)
-		  AND arena_table_name = 'SIAMO.TILTAKDELTAKER'
+		  AND arena_table_name = '$ARENA_DELTAKER_TABLE_NAME'
 		""".trimIndent()
 
 		val parameters = sqlParameters(
