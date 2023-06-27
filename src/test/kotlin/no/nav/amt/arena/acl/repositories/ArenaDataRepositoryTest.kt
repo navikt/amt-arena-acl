@@ -53,6 +53,27 @@ class ArenaDataRepositoryTest : FunSpec({
 		stored.after shouldBe after
 	}
 
+	test("retryDeltakereMedGjennomforingIdOgStatus - skal ikke feile") {
+		val gjennomforingId = 123
+		val afterDeltaker = "{\"TILTAKGJENNOMFORING_ID\": \"$gjennomforingId\"}"
+
+
+		val data = ArenaDataUpsertInput(
+			arenaTableName = "Table",
+			arenaId = "ARENA_ID",
+			operation = AmtOperation.CREATED,
+			operationPosition = "1",
+			operationTimestamp = LocalDateTime.now(),
+			ingestStatus = IngestStatus.WAITING,
+			after = afterDeltaker
+		)
+
+		repository.upsert(data)
+
+		repository.retryDeltakereMedGjennomforingIdOgStatus(gjennomforingId.toString(), listOf(IngestStatus.WAITING))
+
+	}
+
 	test("Upserting a Inserted object should modify it") {
 		val data = ArenaDataUpsertInput(
 			arenaTableName = "Table",
