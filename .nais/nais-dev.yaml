@@ -39,6 +39,9 @@ spec:
       external:
         - host: amt-arena-ords-proxy.dev-fss-pub.nais.io
         - host: unleash.nais.io
+    inbound:
+      rules:
+        - application: amt-aktivitetskort-publisher
   kafka:
     pool: nav-dev
   secureLogs:

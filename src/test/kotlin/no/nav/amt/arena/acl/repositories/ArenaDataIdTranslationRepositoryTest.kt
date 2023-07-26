@@ -18,12 +18,6 @@ class ArenaDataIdTranslationRepositoryTest : FunSpec({
 
 	lateinit var repository: ArenaDataIdTranslationRepository
 
-	val testObject = ArenaDataIdTranslationDbo(
-		amtId = UUID.randomUUID(),
-		arenaTableName = "ARENA_TABLE_NAME",
-		arenaId = "ARENA_ID"
-	)
-
 	beforeEach {
 		val rootLogger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 		rootLogger.level = Level.WARN
@@ -33,7 +27,13 @@ class ArenaDataIdTranslationRepositoryTest : FunSpec({
 		DatabaseTestUtils.cleanDatabase(dataSource)
 	}
 
-	test("Insert and get should return inserted object") {
+	test("get(arenaId) - skal returnere eksisterende record") {
+		val testObject = ArenaDataIdTranslationDbo(
+			amtId = UUID.randomUUID(),
+			arenaTableName = "ARENA_TABLE_NAME",
+			arenaId = "ARENA_ID"
+		)
+
 		repository.insert(testObject)
 
 		val stored = repository.get(testObject.arenaTableName, testObject.arenaId)
@@ -41,6 +41,21 @@ class ArenaDataIdTranslationRepositoryTest : FunSpec({
 		stored shouldNotBe null
 		stored!!.amtId shouldBe testObject.amtId
 		stored.arenaTableName shouldBe testObject.arenaTableName
+		stored.arenaId shouldBe testObject.arenaId
+	}
+
+	test("get(amtId) - skal returnere arenaId") {
+		val testObject = ArenaDataIdTranslationDbo(
+			amtId = UUID.randomUUID(),
+			arenaTableName = "ARENA_TABLE_NAME",
+			arenaId = "ARENA_ID123"
+		)
+		repository.insert(testObject)
+
+		val stored = repository.get(testObject.amtId)
+
+		stored shouldNotBe null
+		stored!!.arenaTableName shouldBe testObject.arenaTableName
 		stored.arenaId shouldBe testObject.arenaId
 	}
 })
