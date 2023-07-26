@@ -7,6 +7,7 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
+import java.util.*
 
 @Component
 open class ArenaDataIdTranslationRepository(
@@ -48,6 +49,19 @@ open class ArenaDataIdTranslationRepository(
 		val parameters = sqlParameters(
 			"arena_table_name" to table,
 			"arena_id" to arenaId
+		)
+
+		return template.query(sql, parameters, rowMapper)
+			.firstOrNull()
+	}
+
+	fun get(id: UUID): ArenaDataIdTranslationDbo? {
+		val sql = """
+			SELECT * FROM arena_data_id_translation WHERE amt_id = :amt_id
+		""".trimIndent()
+
+		val parameters = sqlParameters(
+			"amt_id" to id
 		)
 
 		return template.query(sql, parameters, rowMapper)

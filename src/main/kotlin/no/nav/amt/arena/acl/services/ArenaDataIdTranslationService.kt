@@ -14,6 +14,9 @@ open class ArenaDataIdTranslationService(
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
+	fun hentArenaId(id: UUID): String? {
+		return arenaDataIdTranslationRepository.get(id)?.arenaId
+	}
 
 	fun hentEllerOpprettNyDeltakerId(deltakerArenaId: String): UUID {
 		val deltakerId = arenaDataIdTranslationRepository.get(ARENA_DELTAKER_TABLE_NAME, deltakerArenaId)?.amtId
