@@ -244,6 +244,23 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 	}
 
 	@Test
+	fun `ingest deltaker - dagerPerUke kan ha desimaler`() {
+		val pos = "33"
+		val deltaker = baseDeltaker.copy(ANTALL_DAGER_PR_UKE = 2.5f)
+
+		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
+		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
+		kafkaMessageSender.publiserArenaDeltaker(
+			baseDeltaker.TILTAKDELTAKER_ID,
+			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(deltaker, opPos = pos))
+		)
+
+		deltaker.publiserOgValiderOutput {
+			it.dagerPerUke shouldBe 2.5f
+		}
+	}
+
+	@Test
 	fun `slett deltaker - deltaker blir slettet`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 

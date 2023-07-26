@@ -39,7 +39,7 @@ data class ArenaDeltaker(
 	val OPPLYSNINGER_INNSOK: String? = null,
 	val PARTISJON: Int? = null,
 	val BEGRUNNELSE_BESTILLING: String? = null,
-	val ANTALL_DAGER_PR_UKE: Int? = null
+	val ANTALL_DAGER_PR_UKE: Float? = null
 ) {
 
 	private val log = LoggerFactory.getLogger(javaClass)

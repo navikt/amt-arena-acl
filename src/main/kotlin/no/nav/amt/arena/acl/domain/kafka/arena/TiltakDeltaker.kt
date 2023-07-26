@@ -16,7 +16,7 @@ data class TiltakDeltaker(
 	val statusAarsakKode: StatusAarsak?,
 	val deltakerStatusKode: Status,
 	val datoStatusendring: LocalDateTime?,
-	val dagerPerUke: Int?,
+	val dagerPerUke: Float?,
 	val prosentDeltid: Float?,
 	val regDato: LocalDateTime,
 	val innsokBegrunnelse: String?
