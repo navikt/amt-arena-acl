@@ -38,7 +38,7 @@ spec:
           namespace: team-mulighetsrommet
       external:
         - host: amt-arena-ords-proxy.prod-fss-pub.nais.io
-        - host: unleash.nais.io
+        - host: amt-unleash-api.nav.cloud.nais.io
     inbound:
       rules:
         - application: amt-aktivitetskort-publisher
@@ -46,6 +46,8 @@ spec:
     pool: nav-prod
   secureLogs:
     enabled: true
+  envFrom:
+    - secret: amt-arena-acl-unleash-api-token
   env:
     - name: AMT_ARENA_ORDS_PROXY_SCOPE
       value: api://prod-fss.amt.amt-arena-ords-proxy/.default
@@ -55,8 +57,6 @@ spec:
       value: api://prod-gcp.team-mulighetsrommet.mulighetsrommet-api/.default
     - name: MULIGHETSROMMET_API_URL
       value: http://mulighetsrommet-api.team-mulighetsrommet.svc.cluster.local
-    - name: UNLEASH_URL
-      value: https://unleash.nais.io/api/
 
     # Kafka topics
     - name: AMT_TOPIC
