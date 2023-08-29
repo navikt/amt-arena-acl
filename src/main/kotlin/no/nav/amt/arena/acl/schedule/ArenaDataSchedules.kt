@@ -1,6 +1,5 @@
 package no.nav.amt.arena.acl.schedule
 
-import io.getunleash.Unleash
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
 import no.nav.amt.arena.acl.utils.AT_MIDNIGHT
@@ -17,8 +16,7 @@ import org.springframework.stereotype.Component
 open class ArenaDataSchedules(
 	private val retryArenaMessageProcessorService: RetryArenaMessageProcessorService,
 	private val arenaDataRepository: ArenaDataRepository,
-	private val leaderElectionClient: LeaderElectionClient,
-	private val unleash: Unleash
+	private val leaderElectionClient: LeaderElectionClient
 ) {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -27,11 +25,6 @@ open class ArenaDataSchedules(
 	open fun processArenaMessages() {
 		if (leaderElectionClient.isLeader) {
 			JobRunner.run("process_arena_messages", retryArenaMessageProcessorService::processMessages)
-			if (unleash.isEnabled("amt-testtoggle")) {
-				log.info("testtoggle er på!")
-			} else {
-				log.info("testtoggle er av")
-			}
 		}
 	}
 
