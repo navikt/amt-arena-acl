@@ -39,6 +39,7 @@ spec:
       external:
         - host: amt-arena-ords-proxy.prod-fss-pub.nais.io
         - host: amt-unleash-api.nav.cloud.nais.io
+        - host: unleash.nais.io
     inbound:
       rules:
         - application: amt-aktivitetskort-publisher
