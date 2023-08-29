@@ -32,6 +32,7 @@
         <schedlock.version>5.7.0</schedlock.version>
         <logstashencoder.version>7.4</logstashencoder.version>
         <mockk.version>1.13.7</mockk.version>
+        <unleash.version>8.3.0</unleash.version>
     </properties>
 
     <repositories>
@@ -175,9 +176,9 @@
             <version>${common.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.navikt.common-java-modules</groupId>
-            <artifactId>feature-toggle</artifactId>
-            <version>${common.version}</version>
+            <groupId>io.getunleash</groupId>
+            <artifactId>unleash-client-java</artifactId>
+            <version>${unleash.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

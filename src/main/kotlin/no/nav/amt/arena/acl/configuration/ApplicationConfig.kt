@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.configuration
 
-import no.nav.common.featuretoggle.UnleashClient
-import no.nav.common.featuretoggle.UnleashClientImpl
+import io.getunleash.DefaultUnleash
+import io.getunleash.util.UnleashConfig
 import no.nav.common.token_client.builder.AzureAdTokenClientBuilder
 import no.nav.common.token_client.client.MachineToMachineTokenClient
 import no.nav.security.token.support.spring.api.EnableJwtTokenValidation
@@ -28,8 +28,16 @@ open class ApplicationConfig {
 
 	@Bean
 	open fun unleashClient(
-		@Value("\${app.env.unleashUrl}") unleashUrl: String) : UnleashClient {
-		return UnleashClientImpl(unleashUrl, "amt-arena-acl")
+		@Value("\${app.env.unleashUrl}") unleashUrl: String,
+		@Value("\${app.env.unleashApiToken}") unleashApiToken: String
+	) : DefaultUnleash {
+		val appName = "amt-arena-acl"
+		val config = UnleashConfig.builder()
+			.appName(appName)
+			.instanceId(appName)
+			.unleashAPI(unleashUrl)
+			.apiKey(unleashApiToken)
+			.build()
+		return DefaultUnleash(config)
 	}
-
 }
