@@ -1,7 +1,6 @@
 package no.nav.amt.arena.acl.processors
 
 import ArenaOrdsProxyClient
-import io.getunleash.Unleash
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.domain.db.IngestStatus
@@ -24,7 +23,7 @@ import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.tryRun
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.*
+import java.util.UUID
 
 @Component
 open class DeltakerProcessor(
@@ -34,8 +33,7 @@ open class DeltakerProcessor(
 	private val ordsClient: ArenaOrdsProxyClient,
 	private val metrics: DeltakerMetricHandler,
 	private val kafkaProducerService: KafkaProducerService,
-	private val mulighetsrommetApiClient: MulighetsrommetApiClient,
-	private val unleash: Unleash
+	private val mulighetsrommetApiClient: MulighetsrommetApiClient
 ) : ArenaMessageProcessor<ArenaDeltakerKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -93,8 +91,7 @@ open class DeltakerProcessor(
 		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
-		val konsumerKursDeltaker = gjennomforing.erKurs && unleash.isEnabled("amt.konsumer-kurs", true)
-		if (!gjennomforing.isSupported && !konsumerKursDeltaker) {
+		if (!gjennomforing.isSupported) {
 			throw IgnoredException("Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
 		} else if (!gjennomforing.isValid) {
 			throw DependencyNotValidException("Deltaker på ugyldig gjennomføring <$arenaGjennomforingId>")
