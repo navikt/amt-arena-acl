@@ -1,8 +1,7 @@
 package no.nav.amt.arena.acl.domain
 
-import no.nav.amt.arena.acl.services.KURS_TILTAK
 import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
-import java.util.*
+import java.util.UUID
 
 data class Gjennomforing (
 	val arenaId: String,
@@ -11,5 +10,4 @@ data class Gjennomforing (
 	val id: UUID?
 ) {
 	val isSupported = SUPPORTED_TILTAK.contains(tiltakKode)
-	val erKurs = KURS_TILTAK.contains(tiltakKode)
 }

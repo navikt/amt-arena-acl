@@ -12,7 +12,10 @@ val SUPPORTED_TILTAK = setOf(
 	"AVKLARAG",
 	"VASV",
 	"ARBRRHDAG",
-	"DIGIOPPARB"
+	"DIGIOPPARB",
+	"JOBBK",
+	"GRUPPEAMO",
+	"GRUFAGYRKE"
 )
 
 val KURS_TILTAK = setOf(
@@ -37,7 +40,7 @@ class GjennomforingService(
 	}
 
 	fun isSupportedTiltak(kode: String): Boolean {
-		return SUPPORTED_TILTAK.contains(kode) || KURS_TILTAK.contains(kode)
+		return SUPPORTED_TILTAK.contains(kode)
 	}
 }
 
