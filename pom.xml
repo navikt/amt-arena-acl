@@ -24,7 +24,7 @@
         <java.version>17</java.version>
 
         <common.version>3.2023.07.07_09.10-85326e9557f0</common.version>
-        <kotest.version>5.6.2</kotest.version>
+        <kotest.version>5.7.1</kotest.version>
         <testcontainers.version>1.19.0</testcontainers.version>
         <okhttp.version>4.11.0</okhttp.version>
         <nimbus.version>10.14.2</nimbus.version>
@@ -32,7 +32,7 @@
         <schedlock.version>5.7.0</schedlock.version>
         <logstashencoder.version>7.4</logstashencoder.version>
         <mockk.version>1.13.7</mockk.version>
-        <unleash.version>8.3.0</unleash.version>
+        <unleash.version>8.3.1</unleash.version>
     </properties>
 
     <repositories>
