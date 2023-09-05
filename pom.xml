@@ -24,7 +24,7 @@
         <java.version>17</java.version>
 
         <common.version>3.2023.07.07_09.10-85326e9557f0</common.version>
-        <kotest.version>5.7.1</kotest.version>
+        <kotest.version>5.7.2</kotest.version>
         <testcontainers.version>1.19.0</testcontainers.version>
         <okhttp.version>4.11.0</okhttp.version>
         <nimbus.version>10.14.2</nimbus.version>
