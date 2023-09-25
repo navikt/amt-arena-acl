@@ -31,7 +31,7 @@
         <token-support.version>3.1.5</token-support.version>
         <schedlock.version>5.8.0</schedlock.version>
         <logstashencoder.version>7.4</logstashencoder.version>
-        <mockk.version>1.13.7</mockk.version>
+        <mockk.version>1.13.8</mockk.version>
         <unleash.version>8.3.1</unleash.version>
     </properties>
 
