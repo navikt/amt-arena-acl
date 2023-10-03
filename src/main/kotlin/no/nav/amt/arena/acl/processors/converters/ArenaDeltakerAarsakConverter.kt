@@ -4,22 +4,18 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.erAvsluttende
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 
- object ArenaDeltakerAarsakConverter {
+object ArenaDeltakerAarsakConverter {
 	fun convert(
 		arenaStatus: TiltakDeltaker.Status,
 		status: AmtDeltaker.Status,
 		statusAarsakKode: TiltakDeltaker.StatusAarsak?,
 		erGjennomforingAvsluttet: Boolean
 	): AmtDeltaker.StatusAarsak? {
-		val aarsakFraAarsak = utledMedArenaAarsak(statusAarsakKode)
-		val aarsakFraStatus = utledMedArenaStatus(arenaStatus)
-		val aarsakFraGjennomforing = utledMedGjennomforing(erGjennomforingAvsluttet, arenaStatus)
-
 		if (!status.erAvsluttende()) return null
 
-		if (aarsakFraGjennomforing != null) return aarsakFraGjennomforing
-		if (aarsakFraAarsak == null) return aarsakFraStatus
-		else return aarsakFraAarsak
+		return utledMedGjennomforing(erGjennomforingAvsluttet, arenaStatus)
+			?: utledMedArenaAarsak(statusAarsakKode)
+			?: utledMedArenaStatus(arenaStatus)
 	}
 
 	private fun utledMedGjennomforing(erGjennomforingAvsluttet: Boolean, arenaStatus: TiltakDeltaker.Status): AmtDeltaker.StatusAarsak? {
@@ -32,22 +28,23 @@ import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 		}
 	}
 
-	private fun utledMedArenaStatus(arenaStatus: TiltakDeltaker.Status): AmtDeltaker.StatusAarsak {
-		return when (arenaStatus) {
-			TiltakDeltaker.Status.IKKEM -> AmtDeltaker.StatusAarsak.IKKE_MOTT
-			TiltakDeltaker.Status.GJENN_AVB -> AmtDeltaker.StatusAarsak.AVLYST_KONTRAKT
-			TiltakDeltaker.Status.GJENN_AVL -> AmtDeltaker.StatusAarsak.AVLYST_KONTRAKT
-			TiltakDeltaker.Status.AVSLAG -> AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
-			else -> AmtDeltaker.StatusAarsak.ANNET
-		}
-	}
-
 	private fun utledMedArenaAarsak(statusAarsakKode: TiltakDeltaker.StatusAarsak?): AmtDeltaker.StatusAarsak? {
 		return when (statusAarsakKode) {
 			TiltakDeltaker.StatusAarsak.SYK -> AmtDeltaker.StatusAarsak.SYK
 			TiltakDeltaker.StatusAarsak.BEGA -> AmtDeltaker.StatusAarsak.FATT_JOBB
 			TiltakDeltaker.StatusAarsak.FTOAT -> AmtDeltaker.StatusAarsak.TRENGER_ANNEN_STOTTE
 			else -> null
+		}
+	}
+
+	private fun utledMedArenaStatus(arenaStatus: TiltakDeltaker.Status): AmtDeltaker.StatusAarsak? {
+		return when (arenaStatus) {
+			TiltakDeltaker.Status.FULLF -> null
+			TiltakDeltaker.Status.IKKEM -> AmtDeltaker.StatusAarsak.IKKE_MOTT
+			TiltakDeltaker.Status.GJENN_AVB -> AmtDeltaker.StatusAarsak.AVLYST_KONTRAKT
+			TiltakDeltaker.Status.GJENN_AVL -> AmtDeltaker.StatusAarsak.AVLYST_KONTRAKT
+			TiltakDeltaker.Status.AVSLAG -> AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
+			else -> AmtDeltaker.StatusAarsak.ANNET
 		}
 	}
 }
