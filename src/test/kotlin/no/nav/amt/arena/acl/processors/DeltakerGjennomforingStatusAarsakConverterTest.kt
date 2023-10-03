@@ -22,6 +22,18 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 	}
 
 	@Test
+	fun `convert() - ingen årsak brukes hvis deltaker har status fullført og årsak ikke kan mappes direkte`() {
+		val actual = ArenaDeltakerAarsakConverter.convert(
+			TiltakDeltaker.Status.FULLF,
+			AmtDeltaker.Status.HAR_SLUTTET,
+			TiltakDeltaker.StatusAarsak.UTV,
+			erGjennomforingAvsluttet
+		)
+
+		actual shouldBe null
+	}
+
+	@Test
 	fun `convert() - ANNET brukes når årsak ikke kan mappes direkte`() {
 		val actual = ArenaDeltakerAarsakConverter.convert(
 			TiltakDeltaker.Status.IKKAKTUELL,
