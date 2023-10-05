@@ -18,11 +18,6 @@ val SUPPORTED_TILTAK = setOf(
 	"GRUFAGYRKE"
 )
 
-val KURS_TILTAK = setOf(
-	"JOBBK",
-	"GRUPPEAMO",
-	"GRUFAGYRKE"
-)
 @Service
 class GjennomforingService(
 	private val gjennomforingRepository: GjennomforingRepository,

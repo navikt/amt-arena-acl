@@ -50,7 +50,7 @@ class MulighetsrommetApiClientImplTest : FunSpec({
 		returnedId shouldBe null
 	}
 
-	test("hentGjennomforingArenaData - skal lage riktig request og parse respons") {
+	test("hentGjennomforing - skal lage riktig request og parse respons") {
 		val id = UUID.randomUUID()
 		val startDato = LocalDate.now()
 		val virksomhetsnummer = "8530254"
@@ -68,19 +68,21 @@ class MulighetsrommetApiClientImplTest : FunSpec({
 						"status": "GJENNOMFORES",
 						"startDato": "$startDato",
 						"sluttDato": null,
-						"virksomhetsnummer": "$virksomhetsnummer"
+						"virksomhetsnummer": "$virksomhetsnummer",
+						"oppstart": "LOPENDE"
 					}
 				""".trimIndent()
 			)
 		)
 
-		val gjennomforingArenaData = client.hentGjennomforing(id)
+		val gjennomforing = client.hentGjennomforing(id)
 
 		val request = server.latestRequest()
 
-		gjennomforingArenaData.virksomhetsnummer shouldBe virksomhetsnummer
-		gjennomforingArenaData.status shouldBe Gjennomforing.Status.GJENNOMFORES
-		gjennomforingArenaData.startDato shouldBe startDato
+		gjennomforing.virksomhetsnummer shouldBe virksomhetsnummer
+		gjennomforing.status shouldBe Gjennomforing.Status.GJENNOMFORES
+		gjennomforing.startDato shouldBe startDato
+		gjennomforing.erKurs() shouldBe false
 
 		request.path shouldBe "/api/v1/tiltaksgjennomforinger/$id"
 		request.method shouldBe "GET"

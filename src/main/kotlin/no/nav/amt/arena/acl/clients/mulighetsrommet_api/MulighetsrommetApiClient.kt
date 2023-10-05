@@ -1,8 +1,7 @@
 package no.nav.amt.arena.acl.clients.mulighetsrommet_api
 
-import no.nav.amt.arena.acl.services.KURS_TILTAK
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 interface MulighetsrommetApiClient {
 
@@ -19,8 +18,13 @@ data class Gjennomforing (
 	val startDato: LocalDate,
 	val sluttDato: LocalDate? = null,
 	val status: Status,
-	val virksomhetsnummer: String
+	val virksomhetsnummer: String,
+	val oppstart: Oppstartstype
 ) {
+	enum class Oppstartstype {
+		LOPENDE,
+		FELLES
+	}
 
 	data class Tiltakstype(
 		val id: UUID,
@@ -41,7 +45,7 @@ data class Gjennomforing (
 
 	}
 
-	fun erKurs() : Boolean {
-		return KURS_TILTAK.contains(tiltakstype.arenaKode)
+	fun erKurs(): Boolean {
+		return oppstart == Oppstartstype.FELLES
 	}
 }

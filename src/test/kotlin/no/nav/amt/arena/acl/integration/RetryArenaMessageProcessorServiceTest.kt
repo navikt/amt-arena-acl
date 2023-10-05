@@ -87,7 +87,8 @@ class RetryArenaMessageProcessorServiceTest : IntegrationTestBase() {
 			startDato = LocalDate.now(),
 			sluttDato = LocalDate.now().plusDays(5),
 			status = Gjennomforing.Status.GJENNOMFORES,
-			virksomhetsnummer = "999888777"
+			virksomhetsnummer = "999888777",
+			oppstart = Gjennomforing.Oppstartstype.LOPENDE
 		)
 		mockArenaOrdsProxyHttpServer.mockHentFnr(deltaker.PERSON_ID!!, (1..Long.MAX_VALUE).random().toString())
 		mockMulighetsrommetApiServer.mockHentGjennomforingData(gjennomforingIdMR, gjennomforingData)
