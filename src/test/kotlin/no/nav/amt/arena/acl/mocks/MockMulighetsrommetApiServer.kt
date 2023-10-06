@@ -30,7 +30,8 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 				"status": "GJENNOMFORES",
 				"startDato": "${gjennomforingData?.startDato}",
 				"sluttDato": "${gjennomforingData?.sluttDato}",
-				"virksomhetsnummer": "${gjennomforingData?.virksomhetsnummer}"
+				"virksomhetsnummer": "${gjennomforingData?.virksomhetsnummer}",
+				"oppstart": "LOPENDE"
 			}
 		""".trimIndent()
 

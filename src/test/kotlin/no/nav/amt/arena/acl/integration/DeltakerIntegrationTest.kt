@@ -67,7 +67,8 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 	 	startDato = LocalDate.now(),
 		sluttDato = LocalDate.now().plusDays(3),
 		status = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Status.GJENNOMFORES,
-		virksomhetsnummer = "999888777"
+		virksomhetsnummer = "999888777",
+		oppstart = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Oppstartstype.LOPENDE
 	)
 
 	val fnr = "123456789"
