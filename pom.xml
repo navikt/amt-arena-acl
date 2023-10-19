@@ -23,7 +23,7 @@
         <kotlin.version>1.9.10</kotlin.version>
         <java.version>17</java.version>
 
-        <common.version>3.2023.09.13_04.55-a8ff452fbd94</common.version>
+        <common.version>3.2023.10.18_13.28-58db82ecb1a5</common.version>
         <kotest.version>5.7.2</kotest.version>
         <testcontainers.version>1.19.1</testcontainers.version>
         <okhttp.version>4.12.0</okhttp.version>
@@ -108,12 +108,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-logging</artifactId>
-        </dependency>
-        <!-- overstyrer sårbar dependency-->
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20231013</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
