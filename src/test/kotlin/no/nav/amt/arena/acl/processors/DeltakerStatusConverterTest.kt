@@ -435,7 +435,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 		).convert().navn shouldBe AVBRUTT
 	}
 
-	"convert - GODKJENT_TILTAKSPLASS på kurstiltak - returnerer HAR_SLUTTET om man er ferdig samme dag som kurset" {
+	"convert - GODKJENT_TILTAKSPLASS på kurstiltak - returnerer FULLFORT om man er ferdig samme dag som kurset" {
 		// kurs start -> deltaker start -> deltaker slutt = kurs slutt
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.TILBUD,
@@ -446,7 +446,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().minusDays(3),
 			true
-		).convert().navn shouldBe HAR_SLUTTET
+		).convert().navn shouldBe FULLFORT
 	}
 
 	"convert - GODKJENT_TILTAKSPLASS på kurstiltak - VENTER_PA_OPPSTART" {
@@ -462,7 +462,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 		).convert().navn shouldBe VENTER_PA_OPPSTART
 	}
 
-	"convert - FULLF samme dag som kurset er ferdig - blir HAR_SLUTTET" {
+	"convert - FULLF samme dag som kurset er ferdig - blir FULLFORT" {
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.FULLF,
 			deltakerRegistrertDato = now,
@@ -472,7 +472,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(3),
 			true
-		).convert().navn shouldBe HAR_SLUTTET
+		).convert().navn shouldBe FULLFORT
 	}
 
 	"convert - FULLF før kurset er ferdig - blir AVBRUTT" {
@@ -485,7 +485,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(3),
 			true
-		).convert().navn shouldBe HAR_SLUTTET
+		).convert().navn shouldBe AVBRUTT
 	}
 
 	"convert - DELAVB før kurset er ferdig - blir AVBRUTT" {
@@ -514,7 +514,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 		).convert().navn shouldBe AVBRUTT
 	}
 
-	"convert - FULLF kurs varer en dag - blir HAR_SLUTTET" {
+	"convert - FULLF kurs varer en dag - blir FULLFORT" {
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.FULLF,
 			deltakerRegistrertDato = now,
@@ -524,6 +524,6 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(1),
 			true
-		).convert().navn shouldBe HAR_SLUTTET
+		).convert().navn shouldBe FULLFORT
 	}
 })
