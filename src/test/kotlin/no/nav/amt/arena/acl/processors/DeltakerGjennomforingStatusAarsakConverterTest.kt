@@ -34,6 +34,18 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 	}
 
 	@Test
+	fun `convert() - arsak IKKE MOTT brukes hvis deltaker har status IKKEM`() {
+		val actual = ArenaDeltakerAarsakConverter.convert(
+			TiltakDeltaker.Status.IKKEM,
+			AmtDeltaker.Status.FULLFORT,
+			TiltakDeltaker.StatusAarsak.BEGA,
+			erGjennomforingAvsluttet
+		)
+
+		actual shouldBe AmtDeltaker.StatusAarsak.IKKE_MOTT
+	}
+
+	@Test
 	fun `convert() - ANNET brukes når årsak ikke kan mappes direkte`() {
 		val actual = ArenaDeltakerAarsakConverter.convert(
 			TiltakDeltaker.Status.IKKAKTUELL,
