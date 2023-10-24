@@ -475,7 +475,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 		).convert().navn shouldBe FULLFORT
 	}
 
-	"convert - FULLF før kurset er ferdig - blir AVBRUTT" {
+	"convert - FULLF før kurset er ferdig - blir FULLFORT" {
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.FULLF,
 			deltakerRegistrertDato = now,
@@ -485,7 +485,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(3),
 			true
-		).convert().navn shouldBe AVBRUTT
+		).convert().navn shouldBe FULLFORT
 	}
 
 	"convert - DELAVB før kurset er ferdig - blir AVBRUTT" {

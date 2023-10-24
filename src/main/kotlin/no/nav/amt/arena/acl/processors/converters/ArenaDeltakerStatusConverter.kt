@@ -102,11 +102,7 @@ class ArenaDeltakerStatusConverter(
 		if (statusEndretEtterStartDato()) {
 			val dato = if (sluttDatoHaddePassert()) deltakerSluttdato?.atStartOfDay() else datoStatusEndring
 			return if (erKurs) {
-				if (sluttetForTidlig()) {
-					DeltakerStatus(AmtDeltaker.Status.AVBRUTT, dato)
-				} else {
-					DeltakerStatus(AmtDeltaker.Status.FULLFORT, dato)
-				}
+				DeltakerStatus(AmtDeltaker.Status.FULLFORT, dato)
 			} else {
 				DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, dato)
 			}
