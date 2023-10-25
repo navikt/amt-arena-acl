@@ -79,7 +79,11 @@ class ArenaDeltakerStatusConverter(
 
 	private fun utledGjennomforendeStatus(): DeltakerStatus {
 		if (startDatoHarPassert() && sluttDatoHarPassert())
-			return DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, deltakerSluttdato?.atStartOfDay())
+			return if (erKurs) {
+				DeltakerStatus(AmtDeltaker.Status.FULLFORT, deltakerSluttdato?.atStartOfDay())
+			} else {
+				DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, deltakerSluttdato?.atStartOfDay())
+			}
 		else if (starterIDag() || startDatoHarPassert())
 			return DeltakerStatus(AmtDeltaker.Status.DELTAR, deltakerStartdato?.atStartOfDay())
 		else return DeltakerStatus(AmtDeltaker.Status.VENTER_PA_OPPSTART, datoStatusEndring)
@@ -97,7 +101,11 @@ class ArenaDeltakerStatusConverter(
 	private fun utledAvsluttendeStatus(): DeltakerStatus {
 		if (statusEndretEtterStartDato()) {
 			val dato = if (sluttDatoHaddePassert()) deltakerSluttdato?.atStartOfDay() else datoStatusEndring
-			return DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, dato)
+			return if (erKurs) {
+				DeltakerStatus(AmtDeltaker.Status.FULLFORT, dato)
+			} else {
+				DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, dato)
+			}
 		} else {
 			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
 		}

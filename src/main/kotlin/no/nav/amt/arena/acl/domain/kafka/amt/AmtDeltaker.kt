@@ -21,7 +21,7 @@ data class AmtDeltaker(
 
 	enum class Status {
 		VENTER_PA_OPPSTART, DELTAR, HAR_SLUTTET, IKKE_AKTUELL, FEILREGISTRERT, PABEGYNT_REGISTRERING,
-		SOKT_INN, VURDERES, VENTELISTE, AVBRUTT // kurs statuser
+		SOKT_INN, VURDERES, VENTELISTE, AVBRUTT, FULLFORT // kurs statuser
 	}
 
 	enum class StatusAarsak {
@@ -40,6 +40,7 @@ fun AmtDeltaker.Status.erAvsluttende() : Boolean{
 		AmtDeltaker.Status.IKKE_AKTUELL,
 		AmtDeltaker.Status.HAR_SLUTTET,
 		AmtDeltaker.Status.FEILREGISTRERT,
-		AmtDeltaker.Status.AVBRUTT
+		AmtDeltaker.Status.AVBRUTT,
+		AmtDeltaker.Status.FULLFORT
 	)
 }
