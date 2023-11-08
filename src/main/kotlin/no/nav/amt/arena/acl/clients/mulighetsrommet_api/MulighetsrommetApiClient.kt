@@ -33,6 +33,7 @@ data class Gjennomforing (
 	)
 
 	enum class Status {
+	  	PLANLAGT,
 		GJENNOMFORES,
 		AVBRUTT,
 		AVLYST,
