@@ -15,10 +15,10 @@ private val now = LocalDateTime.now()
 class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 	val erGjennomforingAvsluttet = false
 
-	"status - AKTUELL - returnerer PABEGYNT" {
+	"status - AKTUELL - returnerer SOKT_INN" {
 		val status = ArenaDeltakerStatusConverter(TiltakDeltaker.Status.AKTUELL, now, null, null, null, erGjennomforingAvsluttet, LocalDate.now(), false).convert()
 
-		status.navn shouldBe PABEGYNT_REGISTRERING
+		status.navn shouldBe SOKT_INN
 	}
 
 	"status - AVSLAG og mangler startdato - returnerer IKKE_AKTUELL" {
@@ -268,7 +268,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe IKKE_AKTUELL
 	}
-	"status - INFOMOETE - returnerer PABEGYNT" {
+	"status - INFOMOETE - returnerer VURDERES" {
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.INFOMOETE,
 			now,
@@ -276,7 +276,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			null,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
-		).convert().navn shouldBe PABEGYNT_REGISTRERING
+		).convert().navn shouldBe VURDERES
 	}
 	"status - JATAKK - returnerer VENTER_PÅ_OPPSTART" {
 		ArenaDeltakerStatusConverter(
@@ -388,7 +388,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe DELTAR
 	}
-	"status - PABEGYNT - returnerer VENTER_PÅ_OPPSTART" {
+	"status - VENTELISTE - returnerer VENTELISTE" {
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.VENTELISTE,
 			now,
@@ -396,7 +396,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			null,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
-		).convert().navn shouldBe PABEGYNT_REGISTRERING
+		).convert().navn shouldBe VENTELISTE
 	}
 
 	"convert - VENTELISTE på kurstiltak - returnerer VENTELISTE" {

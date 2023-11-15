@@ -20,8 +20,8 @@ class ArenaDeltakerStatusConverter(
 
 	fun convert(): DeltakerStatus {
 		val status =
-			if (erKurs) convertKursStatuser()
-			else if (arenaStatus.erSoktInn()) DeltakerStatus(AmtDeltaker.Status.PABEGYNT_REGISTRERING, datoStatusEndring)
+			if (arenaStatus.erSoktInn()) utledSoktInnStatus()
+			else if (erKurs) convertKursStatuser()
 			else if (arenaStatus.erGjennomforende()) utledGjennomforendeStatus()
 			else if (arenaStatus.erAvsluttende()) utledAvsluttendeStatus()
 			else if (arenaStatus.erIkkeAktuell()) utledIkkeAkuelleStatus()
