@@ -25,7 +25,7 @@
 
         <common.version>3.2023.10.18_13.28-58db82ecb1a5</common.version>
         <kotest.version>5.8.0</kotest.version>
-        <testcontainers.version>1.19.2</testcontainers.version>
+        <testcontainers.version>1.19.3</testcontainers.version>
         <okhttp.version>4.12.0</okhttp.version>
         <nimbus.version>11.6</nimbus.version>
         <token-support.version>3.1.8</token-support.version>
