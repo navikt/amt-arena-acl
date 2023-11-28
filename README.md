@@ -14,7 +14,6 @@ WITH max_ids AS (
     select max(id) as max
     from arena_data
     where arena_table_name = 'SIAMO.TILTAKDELTAKER'
-      and (operation_type = 'CREATED' OR operation_type ='MODIFIED')
       and ingest_status = 'HANDLED'
     group by arena_id
 )
@@ -31,14 +30,12 @@ WITH max_ids AS (
     select arena_id, max(id) as id
     from arena_data
     where arena_table_name = 'SIAMO.TILTAKDELTAKER'
-      and (operation_type = 'CREATED' OR operation_type ='MODIFIED')
       and ingest_status = 'HANDLED'
     group by arena_id
 ), max_ingest AS (
     select distinct on (arena_id) arena_id, id
     from arena_data
     where arena_table_name = 'SIAMO.TILTAKDELTAKER'
-      and (operation_type = 'CREATED' OR operation_type ='MODIFIED')
       and ingest_status = 'HANDLED'
     order by arena_id, ingested_timestamp desc
 ), to_update AS (
