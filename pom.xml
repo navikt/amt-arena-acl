@@ -27,7 +27,7 @@
         <kotest.version>5.8.0</kotest.version>
         <testcontainers.version>1.19.3</testcontainers.version>
         <okhttp.version>4.12.0</okhttp.version>
-        <nimbus.version>11.8</nimbus.version>
+        <nimbus.version>11.9</nimbus.version>
         <token-support.version>3.2.0</token-support.version>
         <schedlock.version>5.10.2</schedlock.version>
         <logstashencoder.version>7.4</logstashencoder.version>
