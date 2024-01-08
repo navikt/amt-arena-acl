@@ -1,5 +1,7 @@
 package no.nav.amt.arena.acl.integration
 
+import io.getunleash.FakeUnleash
+import io.getunleash.Unleash
 import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
@@ -143,5 +145,13 @@ open class IntegrationTestConfiguration {
 	@Bean
 	open fun kafkaAmtIntegrationConsumer(properties: KafkaProperties): KafkaAmtIntegrationConsumer {
 		return KafkaAmtIntegrationConsumer(properties, consumerTopic)
+	}
+
+	@Bean
+	open fun unleashClient(
+	): Unleash {
+		val fakeUnleash = FakeUnleash()
+		fakeUnleash.enableAll()
+		return fakeUnleash
 	}
 }
