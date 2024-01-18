@@ -1,8 +1,10 @@
 package no.nav.amt.arena.acl.integration
 
+import io.kotest.matchers.date.shouldBeAfter
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.Gjennomforing
+import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertInput
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
@@ -29,7 +31,7 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.UUID
 
 @TestExecutionListeners(
 	listeners = [DirtyContextBeforeAndAfterClassTestExecutionListener::class],
@@ -260,6 +262,38 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 			it.dagerPerUke shouldBe 2.5f
 		}
 	}
+
+	@Test
+	fun `ingest deltaker - siste melding for samme deltaker var behandlet for mindre enn 500ms siden - venter litt før den behandles`() {
+		val deltaker = baseDeltaker.copy(TILTAKDELTAKER_ID = 0)
+		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
+		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
+
+		val ingestedTimestamp = LocalDateTime.now()
+
+		arenaDataRepository.upsert(ArenaDataUpsertInput(
+			arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+			arenaId = deltaker.TILTAKDELTAKER_ID.toString(),
+			operation = AmtOperation.CREATED,
+			operationPosition = "66",
+			operationTimestamp = LocalDateTime.now().minusDays(1),
+			ingestStatus = IngestStatus.HANDLED,
+			ingestedTimestamp = ingestedTimestamp,
+		))
+
+		kafkaMessageSender.publiserArenaDeltaker(
+			deltaker.TILTAKDELTAKER_ID,
+			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(deltaker, opPos = "67", opType = "U"))
+		)
+
+		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
+			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.MODIFIED, "67")
+
+			arenaData!!.ingestedTimestamp!! shouldBeAfter ingestedTimestamp.plus(Duration.ofMillis(500))
+		}
+
+	}
+
 
 	@Test
 	fun `slett deltaker - deltaker blir slettet`() {
