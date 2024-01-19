@@ -49,7 +49,6 @@ open class DeltakerProcessor(
 		val gjennomforing = getGjennomforing(arenaGjennomforingId)
 		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
 
-		//Hvis det finnes en eldre melding på deltaker som ikke er håndtert så skal meldingen få status RETRY
 		val deltakerData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
 
 		if (skalRetryes(deltakerData, message)) {
@@ -74,6 +73,8 @@ open class DeltakerProcessor(
 	}
 
 	private fun skalVente(deltakerData: List<ArenaDataDbo>): Boolean {
+		// Når flere meldinger for samme deltaker sendes så raskt samtidig til amt-tiltak og andre
+		// så øker det sjansen for at en eller flere race-condtions inntreffer...
 		val sisteMelding = deltakerData.findLast { it.ingestStatus == IngestStatus.HANDLED }
 		return sisteMelding
 			?.ingestedTimestamp
