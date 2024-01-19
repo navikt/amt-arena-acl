@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.processors
 import ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
+import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
@@ -23,6 +24,8 @@ import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.tryRun
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.time.Duration
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
@@ -46,13 +49,15 @@ open class DeltakerProcessor(
 		val gjennomforing = getGjennomforing(arenaGjennomforingId)
 		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
 
-		//Hvis det finnes en eldre melding på deltaker som ikke er håndtert så skal meldingen få status RETRY
-		arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
-			.filter { it.operationPosition < message.operationPosition }
-			.firstOrNull { it.ingestStatus in listOf(IngestStatus.RETRY, IngestStatus.FAILED, IngestStatus.WAITING) }
-			?.let {
-				throw DependencyNotIngestedException("Forrige melding på deltaker med id=$arenaDeltakerId er ikke håndtert enda")
-			}
+		val deltakerData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
+
+		if (skalRetryes(deltakerData, message)) {
+			throw DependencyNotIngestedException("Forrige melding på deltaker med id=$arenaDeltakerId er ikke håndtert enda")
+		}
+
+		if (skalVente(deltakerData)) {
+			Thread.sleep(500)
+		}
 
 		val deltakerKafkaMessage = AmtKafkaMessageDto(
 			type = PayloadType.DELTAKER,
@@ -65,6 +70,26 @@ open class DeltakerProcessor(
 
 		log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
 		metrics.publishMetrics(message)
+	}
+
+	private fun skalVente(deltakerData: List<ArenaDataDbo>): Boolean {
+		// Når flere meldinger for samme deltaker sendes så raskt samtidig til amt-tiltak og andre
+		// så øker det sjansen for at en eller flere race-condtions inntreffer...
+		val sisteMelding = deltakerData.findLast { it.ingestStatus == IngestStatus.HANDLED }
+		return sisteMelding
+			?.ingestedTimestamp
+			?.isAfter(LocalDateTime.now().minus(Duration.ofMillis(500))) == true
+	}
+
+	private fun skalRetryes(
+		deltakerData: List<ArenaDataDbo>,
+		message: ArenaDeltakerKafkaMessage,
+	): Boolean {
+		// Hvis det finnes en eldre melding på deltaker som ikke er håndtert så skal meldingen få status RETRY
+		val eldreMeldingVenter = deltakerData
+			.filter { it.operationPosition < message.operationPosition }
+			.firstOrNull { it.ingestStatus in listOf(IngestStatus.RETRY, IngestStatus.FAILED, IngestStatus.WAITING) }
+		return eldreMeldingVenter != null
 	}
 
 	private fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
