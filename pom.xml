@@ -34,7 +34,7 @@
         <mockk.version>1.13.9</mockk.version>
         <unleash.version>9.2.0</unleash.version>
 
-        <logback.version>1.4.14</logback.version>
+        <postgresql.version>42.7.2</postgresql.version>
     </properties>
 
     <repositories>
