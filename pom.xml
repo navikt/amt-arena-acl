@@ -31,7 +31,7 @@
         <token-support.version>4.1.3</token-support.version>
         <schedlock.version>5.11.0</schedlock.version>
         <logstashencoder.version>7.4</logstashencoder.version>
-        <mockk.version>1.13.9</mockk.version>
+        <mockk.version>1.13.10</mockk.version>
         <unleash.version>9.2.0</unleash.version>
 
         <postgresql.version>42.7.2</postgresql.version>
