@@ -76,3 +76,12 @@ spec:
         databases:
           - name: amt-arena-acl
             envVarPrefix: DB
+
+  observability:
+      autoInstrumentation:
+        enabled: true
+        runtime: java
+      logging:
+        destinations:
+          - id: elastic
+          - id: loki
