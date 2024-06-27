@@ -46,6 +46,10 @@ open class DeltakerProcessor(
 		val arenaDeltakerId = arenaDeltakerRaw.TILTAKDELTAKER_ID.toString()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
 
+		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
+			throw IgnoredException("Ignorerer deltaker som har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
+		}
+
 		val gjennomforing = getGjennomforing(arenaGjennomforingId)
 		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
 
