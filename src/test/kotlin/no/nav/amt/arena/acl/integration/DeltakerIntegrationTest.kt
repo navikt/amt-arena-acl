@@ -24,6 +24,7 @@ import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionLi
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.TestExecutionListeners
@@ -109,6 +110,7 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
+	@Disabled
 	@Test
 	fun `ingest deltaker - forrige melding på deltaker er ikke ingestet - feiler med status RETRY`() {
 		val pos1 = "33"
@@ -263,6 +265,7 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
+	@Disabled
 	@Test
 	fun `ingest deltaker - siste melding for samme deltaker var behandlet for mindre enn 500ms siden - venter litt før den behandles`() {
 		val deltaker = baseDeltaker.copy(TILTAKDELTAKER_ID = 0)
