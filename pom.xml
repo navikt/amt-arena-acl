@@ -32,7 +32,7 @@
         <schedlock.version>5.14.0</schedlock.version>
         <logstashencoder.version>8.0</logstashencoder.version>
         <mockk.version>1.13.12</mockk.version>
-        <unleash.version>9.2.3</unleash.version>
+        <unleash.version>9.2.4</unleash.version>
 
         <postgresql.version>42.7.2</postgresql.version>
     </properties>
