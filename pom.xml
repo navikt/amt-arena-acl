@@ -30,7 +30,7 @@
         <nimbus.version>11.14</nimbus.version>
         <token-support.version>5.0.1</token-support.version>
         <schedlock.version>5.14.0</schedlock.version>
-        <logstashencoder.version>7.4</logstashencoder.version>
+        <logstashencoder.version>8.0</logstashencoder.version>
         <mockk.version>1.13.12</mockk.version>
         <unleash.version>9.2.3</unleash.version>
 
