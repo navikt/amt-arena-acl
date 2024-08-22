@@ -18,4 +18,7 @@ class KafkaMessageSender(
 		kafkaProducer.sendSync(ProducerRecord(kafkaTopicProperties.arenaTiltakDeltakerTopic, arenaDeltakerId.toString(), jsonMessage))
 	}
 
+	fun publiserArenaHistDeltaker(arenaDeltakerId: Long, jsonMessage: String) {
+		kafkaProducer.sendSync(ProducerRecord(kafkaTopicProperties.arenaHistTiltakDeltakerTopic, arenaDeltakerId.toString(), jsonMessage))
+	}
 }

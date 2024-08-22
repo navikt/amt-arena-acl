@@ -28,6 +28,7 @@ class KafkaMessageConsumer(
 
 		val configs = listOf(
 			kafkaTopicProperties.arenaTiltakDeltakerTopic,
+			kafkaTopicProperties.arenaHistTiltakDeltakerTopic,
 			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
 			kafkaTopicProperties.amtTopic,
 		).map(::createTopicConfig)
@@ -76,6 +77,7 @@ class KafkaMessageConsumer(
 	private fun mapKafkaTopic(topic: Topic): String {
 		return when(topic) {
 			Topic.ARENA_TILTAK_DELTAKER -> kafkaTopicProperties.arenaTiltakDeltakerTopic
+			Topic.ARENA_HIST_TILTAK_DELTAKER -> kafkaTopicProperties.arenaHistTiltakDeltakerTopic
 			Topic.ARENA_TILTAK_GJENNOMFORING -> kafkaTopicProperties.arenaTiltakGjennomforingTopic
 			Topic.AMT_TILTAK -> kafkaTopicProperties.amtTopic
 		}
@@ -83,6 +85,7 @@ class KafkaMessageConsumer(
 
 	enum class Topic {
 		ARENA_TILTAK_DELTAKER,
+		ARENA_HIST_TILTAK_DELTAKER,
 		ARENA_TILTAK_GJENNOMFORING,
 		AMT_TILTAK,
 	}
