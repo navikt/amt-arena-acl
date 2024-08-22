@@ -29,9 +29,10 @@ object KafkaMessageCreator {
 	fun opprettArenaDeltaker(
 		arenaDeltaker: ArenaDeltaker,
 		opType: String = "I",
-		opPos: String? = null
+		opPos: String? = null,
+		tableName: String = ARENA_DELTAKER_TABLE_NAME
 	): ArenaKafkaMessageDto {
-		return arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_DELTAKER_TABLE_NAME, opPos)
+		return arenaKafkaMessageDto(opType, arenaDeltaker, tableName, opPos)
 	}
 	fun opprettArenaGjennomforingMessage(
 		data: ArenaGjennomforing,

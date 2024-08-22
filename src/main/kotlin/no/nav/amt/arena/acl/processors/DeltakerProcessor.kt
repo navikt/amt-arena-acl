@@ -121,7 +121,7 @@ open class DeltakerProcessor(
 		)
 	}
 
-	private fun getGjennomforing(arenaGjennomforingId: String): Gjennomforing {
+	fun getGjennomforing(arenaGjennomforingId: String): Gjennomforing {
 		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 

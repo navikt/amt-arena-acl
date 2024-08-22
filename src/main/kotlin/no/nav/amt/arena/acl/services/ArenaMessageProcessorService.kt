@@ -11,9 +11,11 @@ import no.nav.amt.arena.acl.exceptions.*
 import no.nav.amt.arena.acl.processors.ArenaMessageProcessor
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.GjennomforingProcessor
+import no.nav.amt.arena.acl.processors.HistDeltakerProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DateUtils.parseArenaDateTime
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonNode
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service
 open class ArenaMessageProcessorService(
 	private val gjennomforingProcessor: GjennomforingProcessor,
 	private val deltakerProcessor: DeltakerProcessor,
+	private val histDeltakerProcessor: HistDeltakerProcessor,
 	private val arenaDataRepository: ArenaDataRepository,
 	private val meterRegistry: MeterRegistry
 ) {
@@ -46,6 +49,7 @@ open class ArenaMessageProcessorService(
 			when (messageDto.table) {
 				ARENA_GJENNOMFORING_TABLE_NAME -> process(messageDto, gjennomforingProcessor) { it.TILTAKGJENNOMFORING_ID.toString() }
 				ARENA_DELTAKER_TABLE_NAME -> process(messageDto, deltakerProcessor) { it.TILTAKDELTAKER_ID.toString() }
+				ARENA_HIST_DELTAKER_TABLE_NAME -> process(messageDto, histDeltakerProcessor) { it.TILTAKDELTAKER_ID.toString() }
 				else -> throw IllegalArgumentException("Kan ikke håndtere melding fra ukjent arena tabell: ${messageDto.table}")
 			}
 		}
