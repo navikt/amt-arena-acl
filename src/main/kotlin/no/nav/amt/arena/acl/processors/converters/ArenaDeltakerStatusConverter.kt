@@ -21,6 +21,7 @@ class ArenaDeltakerStatusConverter(
 	fun convert(): DeltakerStatus {
 		val status =
 			if (arenaStatus.erSoktInn()) utledSoktInnStatus()
+			else if (arenaStatus.erFeilregistrert()) utledFeilregistrertStatus()
 			else if (erKurs) convertKursStatuser()
 			else if (arenaStatus.erGjennomforende()) utledGjennomforendeStatus()
 			else if (arenaStatus.erAvsluttende()) utledAvsluttendeStatus()
@@ -127,6 +128,9 @@ class ArenaDeltakerStatusConverter(
 		else return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
 	}
 
+	private fun utledFeilregistrertStatus(): DeltakerStatus =
+		DeltakerStatus(AmtDeltaker.Status.FEILREGISTRERT, datoStatusEndring)
+
 
 	private fun TiltakDeltaker.Status.erAvsluttende(): Boolean {
 		return this in listOf(
@@ -162,4 +166,7 @@ class ArenaDeltakerStatusConverter(
 		)
 	}
 
+	private fun TiltakDeltaker.Status.erFeilregistrert(): Boolean {
+		return this == TiltakDeltaker.Status.FEILREG
+	}
 }
