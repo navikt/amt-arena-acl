@@ -75,6 +75,7 @@ open class DeltakerProcessor(
 			log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
 		} else {
 			log.info("Mottatt delete-melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId, blir ikke behandlet")
+			throw IgnoredException("Ignorerer delete-melding")
 		}
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
 
