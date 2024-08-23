@@ -96,7 +96,8 @@ open class DeltakerProcessor(
 		return eldreMeldingVenter != null
 	}
 
-	private fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
+	// skal gjøres private igjen etter engangsjobb
+	fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
 		val arenaDeltaker = arenaDeltakerRaw
 			.tryRun { it.mapTiltakDeltaker() }
 			.getOrThrow()
@@ -116,7 +117,8 @@ open class DeltakerProcessor(
 		)
 	}
 
-	private fun getGjennomforing(arenaGjennomforingId: String): Gjennomforing {
+	// skal gjøres private igjen etter engangsjobb
+	fun getGjennomforing(arenaGjennomforingId: String): Gjennomforing {
 		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
