@@ -21,6 +21,12 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 		status.navn shouldBe SOKT_INN
 	}
 
+	"status - FEILREG - returnerer FEILREGISTRERT" {
+		val status = ArenaDeltakerStatusConverter(TiltakDeltaker.Status.FEILREG, now, null, null, null, erGjennomforingAvsluttet, LocalDate.now(), false).convert()
+
+		status.navn shouldBe FEILREGISTRERT
+	}
+
 	"status - AVSLAG og mangler startdato - returnerer IKKE_AKTUELL" {
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.AVSLAG,
