@@ -8,8 +8,8 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
-import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltaker
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
@@ -181,8 +181,8 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 
 		val pos = "233"
 		kafkaMessageSender.publiserArenaHistDeltaker(
-			baseDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(baseDeltaker, opPos = pos, tableName = ARENA_HIST_DELTAKER_TABLE_NAME))
+			baseDeltaker.HIST_TILTAKDELTAKER_ID,
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos))
 		)
 		AsyncUtils.eventually {
 			val arenaData = arenaDataRepository.get(ARENA_HIST_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
@@ -208,11 +208,10 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.TILTAKGJENNOMFORING_ID,
 			toJsonString(
-				KafkaMessageCreator.opprettArenaDeltaker(
+				KafkaMessageCreator.opprettArenaHistDeltaker(
 					arenaDeltaker = baseDeltaker,
 					opPos = pos,
-					opType = "D",
-					tableName = ARENA_HIST_DELTAKER_TABLE_NAME
+					opType = "D"
 				)
 			)
 		)
@@ -239,7 +238,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		val pos = "42"
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.TILTAKGJENNOMFORING_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = baseDeltaker, opPos = pos, tableName = ARENA_HIST_DELTAKER_TABLE_NAME))
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(arenaDeltaker = baseDeltaker, opPos = pos))
 		)
 
 		AsyncUtils.eventually {
@@ -261,8 +260,8 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 
 		val pos = "77"
 		kafkaMessageSender.publiserArenaHistDeltaker(
-			baseDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = baseDeltaker, opPos = pos, tableName = ARENA_HIST_DELTAKER_TABLE_NAME))
+			baseDeltaker.HIST_TILTAKDELTAKER_ID,
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(arenaDeltaker = baseDeltaker, opPos = pos))
 		)
 
 		AsyncUtils.eventually {
@@ -284,8 +283,8 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		)
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 		kafkaMessageSender.publiserArenaHistDeltaker(
-			baseDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(baseDeltaker, opPos = pos, tableName = ARENA_HIST_DELTAKER_TABLE_NAME))
+			baseDeltaker.HIST_TILTAKDELTAKER_ID,
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos))
 		)
 
 		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
@@ -298,7 +297,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
-	private fun AmtDeltaker.validate(baseDeltaker: ArenaDeltaker) {
+	private fun AmtDeltaker.validate(baseDeltaker: ArenaHistDeltaker) {
 		dagerPerUke shouldBe baseDeltaker.ANTALL_DAGER_PR_UKE
 		innsokBegrunnelse shouldBe baseDeltaker.BEGRUNNELSE_BESTILLING
 		prosentDeltid shouldBe baseDeltaker.PROSENT_DELTID
@@ -307,7 +306,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		registrertDato shouldBe parseDateTime(baseDeltaker.REG_DATO)
 	}
 
-	private fun createDeltaker() = KafkaMessageCreator.baseDeltaker(
+	private fun createDeltaker() = KafkaMessageCreator.baseHistDeltaker(
 		startDato = LocalDate.now().plusDays(1),
 		sluttDato = LocalDate.now().plusMonths(6),
 	)
@@ -323,10 +322,10 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
-	private fun ArenaDeltaker.publiserOgValiderOutput(customAssertions: (payload: AmtDeltaker) -> Unit) {
+	private fun ArenaHistDeltaker.publiserOgValiderOutput(customAssertions: (payload: AmtDeltaker) -> Unit) {
 		kafkaMessageSender.publiserArenaHistDeltaker(
-			TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(this, tableName = ARENA_HIST_DELTAKER_TABLE_NAME))
+			HIST_TILTAKDELTAKER_ID,
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(this))
 		)
 
 		AsyncUtils.eventually {

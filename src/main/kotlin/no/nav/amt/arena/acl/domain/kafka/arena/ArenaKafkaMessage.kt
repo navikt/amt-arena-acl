@@ -25,3 +25,5 @@ data class ArenaKafkaMessage<D>(
 typealias ArenaGjennomforingKafkaMessage = ArenaKafkaMessage<ArenaGjennomforing>
 
 typealias ArenaDeltakerKafkaMessage = ArenaKafkaMessage<ArenaDeltaker>
+
+typealias ArenaHistDeltakerKafkaMessage = ArenaKafkaMessage<ArenaHistDeltaker>

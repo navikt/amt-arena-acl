@@ -8,11 +8,10 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
-import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
-import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltaker
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltakerKafkaMessage
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.exceptions.ValidationException
-import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.utils.tryRun
@@ -25,17 +24,16 @@ import java.util.UUID
 open class HistDeltakerProcessor(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val ordsClient: ArenaOrdsProxyClient,
-	private val metrics: DeltakerMetricHandler,
 	private val kafkaProducerService: KafkaProducerService,
 	private val deltakerProcessor: DeltakerProcessor,
 	private val amtTiltakClient: AmtTiltakClient
-) : ArenaMessageProcessor<ArenaDeltakerKafkaMessage> {
+) : ArenaMessageProcessor<ArenaHistDeltakerKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	override fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
+	override fun handleArenaMessage(message: ArenaHistDeltakerKafkaMessage) {
 		val arenaDeltakerRaw = message.getData()
-		val arenaDeltakerId = arenaDeltakerRaw.TILTAKDELTAKER_ID.toString()
+		val arenaDeltakerId = arenaDeltakerRaw.HIST_TILTAKDELTAKER_ID.toString()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
 
 		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
@@ -59,11 +57,9 @@ open class HistDeltakerProcessor(
 			log.info("Melding for hist-deltaker id=${deltaker.id} arenaHistId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
 		}
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
-
-		metrics.publishMetrics(message)
 	}
 
-	private fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
+	private fun createDeltaker(arenaDeltakerRaw: ArenaHistDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
 		val arenaDeltaker = arenaDeltakerRaw
 			.tryRun { it.mapTiltakDeltaker() }
 			.getOrThrow()
@@ -78,7 +74,7 @@ open class HistDeltakerProcessor(
 			sluttdato = arenaDeltaker.datoTil
 		)
 		if (deltakerIdFraAmtTiltak != null) {
-			throw IgnoredException("Hist-deltaker med arenaid ${arenaDeltakerRaw.TILTAKDELTAKER_ID} finnes i amt-tiltak med id $deltakerIdFraAmtTiltak")
+			throw IgnoredException("Hist-deltaker med arenaid ${arenaDeltakerRaw.HIST_TILTAKDELTAKER_ID} finnes i amt-tiltak med id $deltakerIdFraAmtTiltak")
 		}
 		return arenaDeltaker.constructDeltaker(
 			amtDeltakerId = UUID.randomUUID(),

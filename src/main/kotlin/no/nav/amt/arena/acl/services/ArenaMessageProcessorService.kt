@@ -49,7 +49,7 @@ open class ArenaMessageProcessorService(
 			when (messageDto.table) {
 				ARENA_GJENNOMFORING_TABLE_NAME -> process(messageDto, gjennomforingProcessor) { it.TILTAKGJENNOMFORING_ID.toString() }
 				ARENA_DELTAKER_TABLE_NAME -> process(messageDto, deltakerProcessor) { it.TILTAKDELTAKER_ID.toString() }
-				ARENA_HIST_DELTAKER_TABLE_NAME -> process(messageDto, histDeltakerProcessor) { it.TILTAKDELTAKER_ID.toString() }
+				ARENA_HIST_DELTAKER_TABLE_NAME -> process(messageDto, histDeltakerProcessor) { it.HIST_TILTAKDELTAKER_ID.toString() }
 				else -> throw IllegalArgumentException("Kan ikke håndtere melding fra ukjent arena tabell: ${messageDto.table}")
 			}
 		}
@@ -111,6 +111,7 @@ open class ArenaMessageProcessorService(
 		return when(arenaTableName) {
 			ARENA_GJENNOMFORING_TABLE_NAME -> "gjennomforing"
 			ARENA_DELTAKER_TABLE_NAME -> "deltaker"
+			ARENA_HIST_DELTAKER_TABLE_NAME -> "histdeltaker"
 			else -> "unknown"
 		}
 	}

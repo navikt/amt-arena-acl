@@ -2,10 +2,12 @@ package no.nav.amt.arena.acl.integration.kafka
 
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
 import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonNode
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import java.time.LocalDate
@@ -29,11 +31,19 @@ object KafkaMessageCreator {
 	fun opprettArenaDeltaker(
 		arenaDeltaker: ArenaDeltaker,
 		opType: String = "I",
-		opPos: String? = null,
-		tableName: String = ARENA_DELTAKER_TABLE_NAME
+		opPos: String? = null
 	): ArenaKafkaMessageDto {
-		return arenaKafkaMessageDto(opType, arenaDeltaker, tableName, opPos)
+		return arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_DELTAKER_TABLE_NAME, opPos)
 	}
+
+	fun opprettArenaHistDeltaker(
+		arenaDeltaker: ArenaHistDeltaker,
+		opType: String = "I",
+		opPos: String? = null
+	): ArenaKafkaMessageDto {
+		return arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_HIST_DELTAKER_TABLE_NAME, opPos)
+	}
+
 	fun opprettArenaGjennomforingMessage(
 		data: ArenaGjennomforing,
 		opType: String = "I",
@@ -172,4 +182,50 @@ object KafkaMessageCreator {
 		)
 	}
 
+	fun baseHistDeltaker(
+		arenaDeltakerId: Long = (1..Long.MAX_VALUE).random(),
+		personId: Long = (1..Long.MAX_VALUE).random(),
+		gjennomforingId: Long = (1..Long.MAX_VALUE).random(),
+		deltakerStatusKode: String = "GJENN",
+		statusAarsak: String? = null,
+		startDato: LocalDate? = null,
+		sluttDato: LocalDate? = null,
+		datoStatusEndring: LocalDateTime? = LocalDateTime.now(),
+		registrertDato: LocalDateTime = LocalDateTime.now(),
+		innsokBegrunnelse: String = "Trenger hjelp med jobbsøking"
+	): ArenaHistDeltaker {
+		return ArenaHistDeltaker(
+			HIST_TILTAKDELTAKER_ID = arenaDeltakerId,
+			PERSON_ID = personId,
+			TILTAKGJENNOMFORING_ID = gjennomforingId,
+			DELTAKERSTATUSKODE = deltakerStatusKode,
+			DELTAKERTYPEKODE = GENERIC_STRING,
+			AARSAKVERDIKODE_STATUS = statusAarsak,
+			OPPMOTETYPEKODE = GENERIC_STRING,
+			PRIORITET = GENERIC_INT,
+			BEGRUNNELSE_INNSOKT = GENERIC_STRING,
+			BEGRUNNELSE_PRIORITERING = GENERIC_STRING,
+			REG_DATO = dateFormatter.format(registrertDato),
+			REG_USER = GENERIC_STRING,
+			MOD_DATO = GENERIC_STRING,
+			MOD_USER = GENERIC_STRING,
+			DATO_SVARFRIST = GENERIC_STRING,
+			DATO_FRA = startDato?.let { dateFormatter.format(it.atStartOfDay()) },
+			DATO_TIL = sluttDato?.let { dateFormatter.format(it.atStartOfDay()) },
+			BEGRUNNELSE_STATUS = GENERIC_STRING,
+			PROSENT_DELTID = GENERIC_FLOAT,
+			BRUKERID_STATUSENDRING = GENERIC_STRING,
+			DATO_STATUSENDRING = datoStatusEndring?.let { dateFormatter.format(it) },
+			AKTIVITET_ID = GENERIC_LONG,
+			BRUKERID_ENDRING_PRIORITERING = GENERIC_STRING,
+			DATO_ENDRING_PRIORITERING = GENERIC_STRING,
+			DOKUMENTKODE_SISTE_BREV = GENERIC_STRING,
+			STATUS_INNSOK_PAKKE = GENERIC_STRING,
+			STATUS_OPPTAK_PAKKE = GENERIC_STRING,
+			OPPLYSNINGER_INNSOK = GENERIC_STRING,
+			PARTISJON = GENERIC_INT,
+			BEGRUNNELSE_BESTILLING = innsokBegrunnelse,
+			ANTALL_DAGER_PR_UKE = GENERIC_FLOAT,
+		)
+	}
 }
