@@ -6,7 +6,6 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
-import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.KafkaProducerService
@@ -58,8 +57,8 @@ class InternalController(
 
 		val gjennomforing = try {
 			deltakerProcessor.getGjennomforing(arenaGjennomforingId)
-		} catch (e: IgnoredException) {
-			log.info(e.message)
+		} catch (e: Exception) {
+			log.error(e.message)
 			return
 		}
 		val deltaker = deltakerProcessor.createDeltaker(arenaDeltakerRaw, gjennomforing)
