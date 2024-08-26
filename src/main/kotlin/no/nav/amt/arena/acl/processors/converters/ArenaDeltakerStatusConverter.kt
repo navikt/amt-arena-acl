@@ -131,7 +131,6 @@ class ArenaDeltakerStatusConverter(
 	private fun utledFeilregistrertStatus(): DeltakerStatus =
 		DeltakerStatus(AmtDeltaker.Status.FEILREGISTRERT, datoStatusEndring)
 
-
 	private fun TiltakDeltaker.Status.erAvsluttende(): Boolean {
 		return this in listOf(
 			TiltakDeltaker.Status.DELAVB,

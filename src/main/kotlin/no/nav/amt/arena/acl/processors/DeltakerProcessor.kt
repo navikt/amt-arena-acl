@@ -75,10 +75,9 @@ open class DeltakerProcessor(
 			log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
 		} else {
 			log.info("Mottatt delete-melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId, blir ikke behandlet")
-			throw IgnoredException("Ignorerer delete-melding")
 		}
-		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
 
+		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
 		metrics.publishMetrics(message)
 	}
 
@@ -102,7 +101,8 @@ open class DeltakerProcessor(
 		return eldreMeldingVenter != null
 	}
 
-	private fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
+	// skal gjøres private igjen etter engangsjobb
+	fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
 		val arenaDeltaker = arenaDeltakerRaw
 			.tryRun { it.mapTiltakDeltaker() }
 			.getOrThrow()
