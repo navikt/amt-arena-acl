@@ -58,7 +58,7 @@ class InternalController(
 		val gjennomforing = try {
 			deltakerProcessor.getGjennomforing(arenaGjennomforingId)
 		} catch (e: Exception) {
-			log.error(e.message)
+			log.error("${e.message}, arenaid $arenaDeltakerId")
 			return
 		}
 		val deltaker = deltakerProcessor.createDeltaker(arenaDeltakerRaw, gjennomforing)

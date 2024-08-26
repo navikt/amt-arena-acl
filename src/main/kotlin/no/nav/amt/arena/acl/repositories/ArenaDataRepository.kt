@@ -206,6 +206,7 @@ open class ArenaDataRepository(
 			FROM arena_data
 			WHERE operation_type='DELETED'
 			AND arena_table_name = '$ARENA_DELTAKER_TABLE_NAME'
+			ORDER BY operation_timestamp
 		""".trimIndent()
 
 		return template.query(sql, rowMapper)
