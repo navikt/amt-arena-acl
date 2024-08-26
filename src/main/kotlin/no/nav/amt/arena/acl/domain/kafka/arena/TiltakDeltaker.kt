@@ -35,7 +35,8 @@ data class TiltakDeltaker(
 		VENTELISTE,
 		AKTUELL,
 		JATAKK,
-		INFOMOETE
+		INFOMOETE,
+		FEILREG
 	}
 
 	enum class StatusAarsak {

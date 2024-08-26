@@ -299,7 +299,7 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 
 	@Test
-	fun `slett deltaker - deltaker blir slettet`() {
+	fun `slett deltaker - deltaker blir ikke slettet, melding blir handled`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
@@ -319,6 +319,8 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 		AsyncUtils.eventually {
 			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.DELETED, pos)
 			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
+			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
+			deltakerRecord shouldBe null
 		}
 	}
 

@@ -8,6 +8,7 @@ import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
@@ -63,16 +64,20 @@ open class DeltakerProcessor(
 			Thread.sleep(500)
 		}
 
-		val deltakerKafkaMessage = AmtKafkaMessageDto(
-			type = PayloadType.DELTAKER,
-			operation = message.operationType,
-			payload = deltaker
-		)
+		if (message.operationType != AmtOperation.DELETED) {
+			val deltakerKafkaMessage = AmtKafkaMessageDto(
+				type = PayloadType.DELTAKER,
+				operation = message.operationType,
+				payload = deltaker
+			)
 
-		kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
+			kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
+			log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
+		} else {
+			log.info("Mottatt delete-melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId, blir ikke behandlet")
+		}
+
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
-
-		log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
 		metrics.publishMetrics(message)
 	}
 
@@ -96,7 +101,8 @@ open class DeltakerProcessor(
 		return eldreMeldingVenter != null
 	}
 
-	private fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
+	// skal gjøres private igjen etter engangsjobb
+	fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
 		val arenaDeltaker = arenaDeltakerRaw
 			.tryRun { it.mapTiltakDeltaker() }
 			.getOrThrow()
@@ -116,7 +122,7 @@ open class DeltakerProcessor(
 		)
 	}
 
-	private fun getGjennomforing(arenaGjennomforingId: String): Gjennomforing {
+	fun getGjennomforing(arenaGjennomforingId: String): Gjennomforing {
 		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 

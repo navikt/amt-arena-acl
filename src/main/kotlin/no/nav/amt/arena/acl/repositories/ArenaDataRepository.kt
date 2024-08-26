@@ -200,6 +200,18 @@ open class ArenaDataRepository(
 		return template.query(sql, logRowMapper)
 	}
 
+	fun getDeleteDeltakerRecords(): List<ArenaDataDbo> {
+		val sql = """
+			SELECT *
+			FROM arena_data
+			WHERE operation_type='DELETED'
+			AND arena_table_name = '$ARENA_DELTAKER_TABLE_NAME'
+			ORDER BY operation_timestamp
+		""".trimIndent()
+
+		return template.query(sql, rowMapper)
+	}
+
 	fun getAll(): List<ArenaDataDbo> {
 		val sql = """
 			SELECT *
