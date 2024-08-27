@@ -7,9 +7,11 @@ import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.GjennomforingProcessor
+import no.nav.amt.arena.acl.processors.HistDeltakerProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -21,6 +23,7 @@ open class RetryArenaMessageProcessorService(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val gjennomforingProcessor: GjennomforingProcessor,
 	private val deltakerProcessor: DeltakerProcessor,
+	private val histDeltakerProcessor: HistDeltakerProcessor
 ) {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -40,6 +43,7 @@ open class RetryArenaMessageProcessorService(
 	private fun processMessagesWithStatus(status: IngestStatus, batchSize: Int) {
 		processMessages(ARENA_GJENNOMFORING_TABLE_NAME, status, batchSize)
 		processMessages(ARENA_DELTAKER_TABLE_NAME, status, batchSize)
+		processMessages(ARENA_HIST_DELTAKER_TABLE_NAME, status, batchSize)
 	}
 
 	private fun processMessages(tableName: String, status: IngestStatus, batchSize: Int) {
@@ -69,6 +73,7 @@ open class RetryArenaMessageProcessorService(
 					toArenaKafkaMessage(arenaDataDbo)
 				)
 				ARENA_DELTAKER_TABLE_NAME -> deltakerProcessor.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
+				ARENA_HIST_DELTAKER_TABLE_NAME -> histDeltakerProcessor.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
 			}
 		} catch (e: Exception) {
 			val currentIngestAttempts = arenaDataDbo.ingestAttempts + 1
