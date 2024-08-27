@@ -39,6 +39,9 @@ open class HistDeltakerProcessor(
 		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
 			throw IgnoredException("Ignorerer hist-deltaker som har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
 		}
+		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
+			throw IgnoredException("Ignorerer hist-deltaker som har deltakertypekode ekstern, arenaid $arenaDeltakerId")
+		}
 
 		val gjennomforing = deltakerProcessor.getGjennomforing(arenaGjennomforingId)
 		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
