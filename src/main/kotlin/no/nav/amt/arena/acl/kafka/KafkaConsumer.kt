@@ -24,8 +24,7 @@ open class KafkaConsumer(
 	init {
 		val topics = listOf(
 			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
-			kafkaTopicProperties.arenaTiltakDeltakerTopic,
-			kafkaTopicProperties.arenaHistTiltakDeltakerTopic,
+			kafkaTopicProperties.arenaTiltakDeltakerTopic
 		)
 
 		val topicConfigs = topics.map { topic ->

@@ -21,7 +21,9 @@ import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionListener
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
+import org.junit.Ignore
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.TestExecutionListeners
@@ -35,6 +37,7 @@ import java.util.UUID
 	listeners = [DirtyContextBeforeAndAfterClassTestExecutionListener::class],
 	mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
 )
+@Disabled
 class HistDeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Autowired
@@ -89,6 +92,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		mockMulighetsrommetApiServer.mockHentGjennomforingData(gjennomforingIdMR, gjennomforingMRData)
 	}
 
+	@Ignore
 	@Test
 	fun `ingest deltaker - ingen deltakelser i amt-tiltak - publiserer deltaker`() {
 		val gjennomforingArenaId = baseDeltaker.TILTAKGJENNOMFORING_ID.toString()
@@ -114,6 +118,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
+	@Ignore
 	@Test
 	fun `ingest deltaker - har deltakelse i amt-tiltak, annen gjennomforing - publiserer deltaker`() {
 		val gjennomforingArenaId = baseDeltaker.TILTAKGJENNOMFORING_ID.toString()
@@ -139,6 +144,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
+	@Ignore
 	@Test
 	fun `ingest deltaker - har deltakelse i amt-tiltak, samme gjennomforing, andre datoer - publiserer deltaker`() {
 		val gjennomforingArenaId = baseDeltaker.TILTAKGJENNOMFORING_ID.toString()
@@ -164,6 +170,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
+	@Ignore
 	@Test
 	fun `ingest deltaker - har deltakelse i amt-tiltak, samme gjennomforing og datoer - publiserer ikke deltaker`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
@@ -192,6 +199,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
+	@Ignore
 	@Test
 	fun `ingest deltaker - slettemelding - deltaker blir ikke slettet, melding blir ignored`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
@@ -224,6 +232,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
+	@Ignore
 	@Test
 	fun `ingest deltaker - ikke stottet tiltak - skal ignoreres`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
@@ -247,6 +256,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
+	@Ignore
 	@Test
 	fun `ingest deltaker - gjennomforing er ugyldig - deltaker far status WAITING`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
@@ -270,7 +280,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 
-
+	@Ignore
 	@Test
 	fun `ingest deltaker - uthenting av fnr fra arena feiler - status RETRY`() {
 		val pos = "33"
