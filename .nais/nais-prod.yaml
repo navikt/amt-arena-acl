@@ -36,6 +36,7 @@ spec:
       rules:
         - application: mulighetsrommet-api
           namespace: team-mulighetsrommet
+        - application: amt-tiltak
       external:
         - host: amt-arena-ords-proxy.prod-fss-pub.nais.io
         - host: amt-unleash-api.nav.cloud.nais.io
@@ -57,6 +58,10 @@ spec:
       value: api://prod-gcp.team-mulighetsrommet.mulighetsrommet-api/.default
     - name: MULIGHETSROMMET_API_URL
       value: http://mulighetsrommet-api.team-mulighetsrommet.svc.cluster.local
+    - name: AMTTILTAK_SCOPE
+      value: api://prod-gcp.amt.amt-tiltak/.default
+    - name: AMTTILTAK_URL
+      value: http://amt-tiltak
 
     # Kafka topics
     - name: AMT_TOPIC
@@ -65,6 +70,8 @@ spec:
       value: teamarenanais.aapen-arena-tiltakgjennomforingendret-v1-p
     - name: ARENA_TILTAK_DELTAKER_TOPIC
       value: teamarenanais.aapen-arena-tiltakdeltakerendret-v1-p
+    - name: ARENA_HIST_TILTAK_DELTAKER_TOPIC
+      value: teamarenanais.aapen-arena-histtiltakdeltakerendret-v1-p
 
   gcp:
     sqlInstances:

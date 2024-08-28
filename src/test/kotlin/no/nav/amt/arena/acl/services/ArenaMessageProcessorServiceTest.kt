@@ -14,6 +14,7 @@ import io.mockk.verify
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.GjennomforingProcessor
+import no.nav.amt.arena.acl.processors.HistDeltakerProcessor
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -23,10 +24,11 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 
 	lateinit var arenaDataRepository: ArenaDataRepository
 
-
 	lateinit var gjennomforingProcessor: GjennomforingProcessor
 
 	lateinit var deltakerProcessor: DeltakerProcessor
+
+	lateinit var histDeltakerProcessor: HistDeltakerProcessor
 
 	lateinit var meterRegistry: MeterRegistry
 
@@ -39,12 +41,14 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		arenaDataRepository = mockk()
 		gjennomforingProcessor = mockk()
 		deltakerProcessor = mockk()
+		histDeltakerProcessor = mockk()
 
 		meterRegistry = SimpleMeterRegistry()
 
 		messageProcessor = ArenaMessageProcessorService(
 			gjennomforingProcessor = gjennomforingProcessor,
 			deltakerProcessor = deltakerProcessor,
+			histDeltakerProcessor = histDeltakerProcessor,
 			arenaDataRepository = arenaDataRepository,
 			meterRegistry = meterRegistry
 		)
@@ -66,6 +70,25 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 
 		verify(exactly = 1) {
 			deltakerProcessor.handleArenaMessage(any())
+		}
+	}
+
+	"should handle arena hist deltaker message" {
+		val histTiltakdeltakereJsonFileContent =
+			javaClass.classLoader.getResource("data/arena-histtiltakdeltakerendret-v1.json").readText()
+		val histTiltakdeltakere: List<JsonNode> = fromJsonString(histTiltakdeltakereJsonFileContent)
+		val histDeltakerJson = histTiltakdeltakere.toList()[0].toString()
+
+		every {
+			histDeltakerProcessor.handleArenaMessage(any())
+		} returns Unit
+
+		messageProcessor.handleArenaGoldenGateRecord(
+			ConsumerRecord("test", 1, 1, "123456", histDeltakerJson)
+		)
+
+		verify(exactly = 1) {
+			histDeltakerProcessor.handleArenaMessage(any())
 		}
 	}
 

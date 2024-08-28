@@ -6,5 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class KafkaTopicProperties(
 	var arenaTiltakGjennomforingTopic: String = "",
 	var arenaTiltakDeltakerTopic: String = "",
+	var arenaHistTiltakDeltakerTopic: String = "",
 	var amtTopic: String = "",
 )
