@@ -6,6 +6,7 @@ import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.dto.LogStatusCountDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
@@ -207,6 +208,17 @@ open class ArenaDataRepository(
 			WHERE operation_type='DELETED'
 			AND arena_table_name = '$ARENA_DELTAKER_TABLE_NAME'
 			ORDER BY operation_timestamp
+		""".trimIndent()
+
+		return template.query(sql, rowMapper)
+	}
+
+	fun getHandledHistDeltakerRecords(): List<ArenaDataDbo> {
+		val sql = """
+			SELECT *
+			FROM arena_data
+			WHERE ingest_status='HANDLED'
+			AND arena_table_name = '$ARENA_HIST_DELTAKER_TABLE_NAME'
 		""".trimIndent()
 
 		return template.query(sql, rowMapper)
