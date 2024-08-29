@@ -1,6 +1,7 @@
 package no.nav.amt.arena.acl.mocks
 
 import no.nav.amt.arena.acl.clients.amttiltak.DeltakerDto
+import no.nav.amt.arena.acl.clients.amttiltak.DeltakerStatusDto
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import okhttp3.mockwebserver.MockResponse
 import java.time.LocalDate
@@ -13,6 +14,7 @@ class MockAmtTiltakServer : MockHttpServer() {
 		gjennomforingId: UUID,
 		startdato: LocalDate?,
 		sluttdato: LocalDate?,
+		status: DeltakerStatusDto = DeltakerStatusDto.FULLFORT,
 		responseCode: Int = 200
 	) {
 		val body = deltakerId?.let {
@@ -24,7 +26,8 @@ class MockAmtTiltakServer : MockHttpServer() {
 				  "id": "$gjennomforingId"
 				},
 				"startDato": "$startdato",
-				"sluttDato": "$sluttdato"
+				"sluttDato": "$sluttdato",
+				"status": "${status.name}"
 			  }
 			]
 		""".trimIndent()

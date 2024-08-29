@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.services
 import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
@@ -38,4 +39,16 @@ open class ArenaDataIdTranslationService(
 		return deltakerId
 	}
 
+	fun lagreHistDeltakerId(
+		amtDeltakerId: UUID,
+		histDeltakerArenaId: String
+	) {
+		arenaDataIdTranslationRepository.insert(
+			ArenaDataIdTranslationDbo(
+				amtId = amtDeltakerId,
+				arenaTableName = ARENA_HIST_DELTAKER_TABLE_NAME,
+				arenaId = histDeltakerArenaId
+			)
+		)
+	}
 }
