@@ -31,6 +31,8 @@ open class HistDeltakerProcessor(
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
+	// OBS: Hvis denne skal brukes på nytt må man legge til noe som lagrer amt-id i arenaDataIdTranslationRepository
+	// hvis den ikke finnes fra før, siden aktivitetskort-publisher henter arenaid for å slå opp aktivitetsid
 	override fun handleArenaMessage(message: ArenaHistDeltakerKafkaMessage) {
 		val arenaDeltakerRaw = message.getData()
 		val arenaDeltakerId = arenaDeltakerRaw.HIST_TILTAKDELTAKER_ID.toString()

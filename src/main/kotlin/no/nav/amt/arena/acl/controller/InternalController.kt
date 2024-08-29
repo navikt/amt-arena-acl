@@ -8,6 +8,7 @@ import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
+import no.nav.amt.arena.acl.domain.kafka.amt.erAvsluttende
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltaker
 import no.nav.amt.arena.acl.exceptions.ValidationException
@@ -109,8 +110,8 @@ class InternalController(
 		return deltakelser.find { it.gjennomforing.id == gjennomforingId && it.startDato == startdato && it.sluttDato == sluttdato }?.id
 	}
 
-	@GetMapping("/rekonstruer-slettede-deltakere")
-	fun rekonstruerSlettedeDeltakere(
+	@GetMapping("/slett-deltakere")
+	fun slettDeltakere(
 		request: HttpServletRequest,
 	) {
 		if (!isInternal(request)) {
@@ -144,14 +145,17 @@ class InternalController(
 		}
 		val deltaker = deltakerProcessor.createDeltaker(arenaDeltakerRaw, gjennomforing)
 
-		val deltakerKafkaMessage = AmtKafkaMessageDto(
-			type = PayloadType.DELTAKER,
-			operation = AmtOperation.CREATED,
-			payload = deltaker
-		)
-		kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
-
-		log.info("Melding for tidligere slettet deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
+		if (deltaker.status.erAvsluttende()) {
+			log.info("Deltaker ${deltaker.id}, arenaId $arenaDeltakerId har avsluttende status, sletter ikke")
+		} else {
+			val deltakerKafkaMessage = AmtKafkaMessageDto(
+				type = PayloadType.DELTAKER,
+				operation = AmtOperation.DELETED,
+				payload = deltaker
+			)
+			kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
+			log.info("Melding for slettet deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} status=${deltaker.status.name} er sendt")
+		}
 	}
 
 	private fun isInternal(request: HttpServletRequest): Boolean {
