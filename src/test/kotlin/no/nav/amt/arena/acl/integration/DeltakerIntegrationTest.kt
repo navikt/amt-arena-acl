@@ -4,6 +4,7 @@ import io.kotest.matchers.date.shouldBeAfter
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.Gjennomforing
+import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertInput
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
@@ -16,10 +17,12 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.integration.utils.AsyncUtils
+import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionListener
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
@@ -45,6 +48,9 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Autowired
 	lateinit var arenaDataRepository: ArenaDataRepository
+
+	@Autowired
+	lateinit var arenaDataIdTranslationRepository: ArenaDataIdTranslationRepository
 
 	@Autowired
 	lateinit var gjennomforingService: GjennomforingService
@@ -297,16 +303,18 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	}
 
-
 	@Test
-	fun `slett deltaker - deltaker blir ikke slettet, melding blir handled`() {
+	fun `slett deltaker - hist-deltaker finnes - deltaker blir ikke slettet, melding blir handled`() {
+		val amtId = UUID.randomUUID()
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
+		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(amtId, ARENA_DELTAKER_TABLE_NAME, baseDeltaker.TILTAKDELTAKER_ID.toString()))
+		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(amtId, ARENA_HIST_DELTAKER_TABLE_NAME, "123"))
 
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 
 		val pos = "42"
 		kafkaMessageSender.publiserArenaDeltaker(
-			baseDeltaker.TILTAKGJENNOMFORING_ID,
+			baseDeltaker.TILTAKDELTAKER_ID,
 			toJsonString(
 				KafkaMessageCreator.opprettArenaDeltaker(
 					arenaDeltaker = baseDeltaker,
@@ -321,6 +329,80 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
 			deltakerRecord shouldBe null
+		}
+	}
+
+	@Test
+	fun `slett deltaker - hist-deltaker finnes ikke - melding blir retry`() {
+		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
+
+		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
+
+		val pos = "443"
+		kafkaMessageSender.publiserArenaDeltaker(
+			baseDeltaker.TILTAKDELTAKER_ID,
+			toJsonString(
+				KafkaMessageCreator.opprettArenaDeltaker(
+					arenaDeltaker = baseDeltaker,
+					opPos = pos,
+					opType = "D"
+				)
+			)
+		)
+
+		AsyncUtils.eventually {
+			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.DELETED, pos)
+			arenaData!!.ingestStatus shouldBe IngestStatus.RETRY
+			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
+			deltakerRecord shouldBe null
+		}
+	}
+
+	@Test
+	fun `slett deltaker - hist-deltaker finnes ikke, retryet tre ganger - deltaker blir feilregistrert, melding blir handled`() {
+		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
+
+		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
+
+		val pos = "73"
+		arenaDataRepository.upsert(ArenaDataUpsertInput(
+			arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+			arenaId = baseDeltaker.TILTAKDELTAKER_ID.toString(),
+			operation = AmtOperation.DELETED,
+			operationPosition = pos,
+			operationTimestamp = LocalDateTime.now().minusDays(1),
+			ingestStatus = IngestStatus.RETRY,
+			ingestedTimestamp = null,
+		))
+		val arenaDataId = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.DELETED, pos)?.id ?: throw RuntimeException()
+		arenaDataRepository.updateIngestAttempts(arenaDataId, 3, null)
+
+		kafkaMessageSender.publiserArenaDeltaker(
+			baseDeltaker.TILTAKDELTAKER_ID,
+			toJsonString(
+				KafkaMessageCreator.opprettArenaDeltaker(
+					arenaDeltaker = baseDeltaker,
+					opPos = pos,
+					opType = "D"
+				)
+			)
+		)
+
+		AsyncUtils.eventually {
+			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.DELETED, pos)
+			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
+			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
+			deltakerRecord shouldNotBe null
+
+			val deltakerResult = fromJsonString<AmtKafkaMessageDto<AmtDeltaker>>(deltakerRecord!!.value())
+			deltakerResult.type shouldBe PayloadType.DELTAKER
+			deltakerResult.operation shouldBe AmtOperation.MODIFIED
+
+			val payload = deltakerResult.payload!!
+			payload.personIdent shouldBe fnr
+			payload.gjennomforingId shouldBe gjennomforingIdMR
+			payload.status shouldBe AmtDeltaker.Status.FEILREGISTRERT
+			payload.innsokBegrunnelse shouldBe null
 		}
 	}
 
@@ -382,5 +464,3 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 		}
 	}
 }
-
-

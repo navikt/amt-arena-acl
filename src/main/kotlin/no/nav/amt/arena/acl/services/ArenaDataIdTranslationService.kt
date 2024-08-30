@@ -19,6 +19,10 @@ open class ArenaDataIdTranslationService(
 		return arenaDataIdTranslationRepository.get(id)?.arenaId
 	}
 
+	fun hentArenaHistId(id: UUID): String? {
+		return arenaDataIdTranslationRepository.getArenaId(ARENA_HIST_DELTAKER_TABLE_NAME, id)?.arenaId
+	}
+
 	fun hentEllerOpprettNyDeltakerId(deltakerArenaId: String): UUID {
 		val deltakerId = arenaDataIdTranslationRepository.get(ARENA_DELTAKER_TABLE_NAME, deltakerArenaId)?.amtId
 

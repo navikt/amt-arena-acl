@@ -68,6 +68,23 @@ open class ArenaDataIdTranslationRepository(
 			.firstOrNull()
 	}
 
+	fun getArenaId(table: String, amtId: UUID): ArenaDataIdTranslationDbo? {
+		val sql = """
+			SELECT *
+				FROM arena_data_id_translation
+				WHERE arena_table_name = :arena_table_name
+				  AND amt_id = :amt_id
+		""".trimIndent()
+
+		val parameters = sqlParameters(
+			"arena_table_name" to table,
+			"amt_id" to amtId
+		)
+
+		return template.query(sql, parameters, rowMapper)
+			.firstOrNull()
+	}
+
 	private fun ArenaDataIdTranslationDbo.asParameterSource() = sqlParameters(
 		"amt_id" to amtId,
 		"arena_table_name" to arenaTableName,

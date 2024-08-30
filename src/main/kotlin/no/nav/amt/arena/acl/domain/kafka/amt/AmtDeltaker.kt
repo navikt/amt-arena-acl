@@ -33,6 +33,15 @@ data class AmtDeltaker(
 		IKKE_MOTT,
 		ANNET
 	}
+
+	fun toFeilregistrertDeltaker() =
+		this.copy(
+			status = Status.FEILREGISTRERT,
+			statusAarsak = null,
+			dagerPerUke = null,
+			prosentDeltid = null,
+			innsokBegrunnelse = null
+		)
 }
 
 fun AmtDeltaker.Status.erAvsluttende() : Boolean{
