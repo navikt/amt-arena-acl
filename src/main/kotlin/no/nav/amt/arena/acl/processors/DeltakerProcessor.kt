@@ -50,6 +50,9 @@ open class DeltakerProcessor(
 		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
 			throw IgnoredException("Ignorerer deltaker som har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
 		}
+		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
+			throw IgnoredException("Ignorerer deltaker som har deltakertypekode ekstern, arenaid $arenaDeltakerId")
+		}
 
 		val gjennomforing = getGjennomforing(arenaGjennomforingId)
 		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
@@ -64,21 +67,28 @@ open class DeltakerProcessor(
 			Thread.sleep(500)
 		}
 
-		if (message.operationType != AmtOperation.DELETED) {
-			val deltakerKafkaMessage = AmtKafkaMessageDto(
-				type = PayloadType.DELTAKER,
-				operation = message.operationType,
-				payload = deltaker
-			)
-
-			kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
-			log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
+		if (message.operationType == AmtOperation.DELETED) {
+			handleDeleteMessage(deltaker, arenaDeltakerId, message, deltakerData)
 		} else {
-			log.info("Mottatt delete-melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId, blir ikke behandlet")
+			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId)
 		}
-
-		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
 		metrics.publishMetrics(message)
+	}
+
+	private fun sendMessageAndUpdateIngestStatus(
+		message: ArenaDeltakerKafkaMessage,
+		deltaker: AmtDeltaker,
+		arenaDeltakerId: String,
+		operation: AmtOperation = message.operationType
+	) {
+		val deltakerKafkaMessage = AmtKafkaMessageDto(
+			type = PayloadType.DELTAKER,
+			operation = operation,
+			payload = deltaker
+		)
+		kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
+		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
+		log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
 	}
 
 	private fun skalVente(deltakerData: List<ArenaDataDbo>): Boolean {
@@ -101,8 +111,41 @@ open class DeltakerProcessor(
 		return eldreMeldingVenter != null
 	}
 
-	// skal gjøres private igjen etter engangsjobb
-	fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
+	private fun handleDeleteMessage(
+		amtDeltaker: AmtDeltaker,
+		arenaDeltakerId: String,
+		message: ArenaDeltakerKafkaMessage,
+		deltakerData: List<ArenaDataDbo>
+	) {
+		// Hvis deltakeren er flyttet til hist-tabellen betyr det at deltakeren deltar på samme gjennomføring flere ganger,
+		// og den eldre deltakelsen skal ikke slettes.
+		val arenaHistId = arenaDataIdTranslationService.hentArenaHistId(amtDeltaker.id)
+		if (arenaHistId != null) {
+			log.info("Mottatt delete-melding for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, blir ikke behandlet fordi det finnes hist-melding på samme deltaker")
+			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
+		} else {
+			if (getRetryAttempts(deltakerData, message) < 2) {
+				log.info("Fant ikke hist-deltaker for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, venter litt..")
+				throw DependencyNotIngestedException("Fant ikke hist-deltaker for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId")
+			} else {
+				sendMessageAndUpdateIngestStatus(
+					message,
+					amtDeltaker.toFeilregistrertDeltaker(),
+					arenaDeltakerId,
+					AmtOperation.MODIFIED
+				)
+			}
+		}
+	}
+
+	private fun getRetryAttempts(
+		deltakerData: List<ArenaDataDbo>,
+		message: ArenaDeltakerKafkaMessage,
+	): Int {
+		return deltakerData.find { it.operationPosition == message.operationPosition }?.ingestAttempts ?: 0
+	}
+
+	private fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
 		val arenaDeltaker = arenaDeltakerRaw
 			.tryRun { it.mapTiltakDeltaker() }
 			.getOrThrow()

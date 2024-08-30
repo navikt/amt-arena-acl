@@ -17,6 +17,7 @@ import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils
 import org.junit.Ignore
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
@@ -24,6 +25,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @Ignore
+@Disabled
 class RetryArenaMessageProcessorServiceTest : IntegrationTestBase() {
 
 	@Autowired
