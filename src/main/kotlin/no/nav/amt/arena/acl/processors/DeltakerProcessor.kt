@@ -50,6 +50,9 @@ open class DeltakerProcessor(
 		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
 			throw IgnoredException("Ignorerer deltaker som har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
 		}
+		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
+			throw IgnoredException("Ignorerer deltaker som har deltakertypekode ekstern, arenaid $arenaDeltakerId")
+		}
 
 		val gjennomforing = getGjennomforing(arenaGjennomforingId)
 		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
