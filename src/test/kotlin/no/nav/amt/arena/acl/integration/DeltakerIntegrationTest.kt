@@ -4,6 +4,7 @@ import io.kotest.matchers.date.shouldBeAfter
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.Gjennomforing
+import no.nav.amt.arena.acl.domain.db.ArenaDataHistIdTranslationDbo
 import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertInput
 import no.nav.amt.arena.acl.domain.db.IngestStatus
@@ -17,12 +18,12 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.integration.utils.AsyncUtils
+import no.nav.amt.arena.acl.repositories.ArenaDataHistIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
-import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionListener
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
@@ -51,6 +52,9 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Autowired
 	lateinit var arenaDataIdTranslationRepository: ArenaDataIdTranslationRepository
+
+	@Autowired
+	lateinit var arenaDataHistIdTranslationRepository: ArenaDataHistIdTranslationRepository
 
 	@Autowired
 	lateinit var gjennomforingService: GjennomforingService
@@ -308,7 +312,7 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 		val amtId = UUID.randomUUID()
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(amtId, ARENA_DELTAKER_TABLE_NAME, baseDeltaker.TILTAKDELTAKER_ID.toString()))
-		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(amtId, ARENA_HIST_DELTAKER_TABLE_NAME, "123"))
+		arenaDataHistIdTranslationRepository.insert(ArenaDataHistIdTranslationDbo(amtId, "123", baseDeltaker.TILTAKDELTAKER_ID.toString()))
 
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 

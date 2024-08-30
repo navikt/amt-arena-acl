@@ -15,7 +15,7 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.integration.utils.AsyncUtils
-import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
+import no.nav.amt.arena.acl.repositories.ArenaDataHistIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
@@ -46,7 +46,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 	lateinit var arenaDataRepository: ArenaDataRepository
 
 	@Autowired
-	lateinit var arenaDataIdTranslationRepository: ArenaDataIdTranslationRepository
+	lateinit var arenaDataHistIdTranslationRepository: ArenaDataHistIdTranslationRepository
 
 	@Autowired
 	lateinit var gjennomforingService: GjennomforingService
@@ -121,8 +121,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
 			deltakerRecord shouldBe null
 		}
-		arenaDataIdTranslationRepository.get(
-			ARENA_HIST_DELTAKER_TABLE_NAME,
+		arenaDataHistIdTranslationRepository.get(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID.toString()
 		)?.amtId shouldBe amtTiltakDeltakerId
 	}
@@ -152,8 +151,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			val gjennomforing = gjennomforingService.get(gjennomforingArenaId)
 			gjennomforing!!.id shouldBe gjennomforingIdMR
 		}
-		arenaDataIdTranslationRepository.get(
-			ARENA_HIST_DELTAKER_TABLE_NAME,
+		arenaDataHistIdTranslationRepository.get(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID.toString()
 		)?.amtId shouldBe amtTiltakDeltakerId
 	}
