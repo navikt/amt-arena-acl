@@ -142,8 +142,7 @@ open class DeltakerProcessor(
 		return deltakerData.find { it.operationPosition == message.operationPosition }?.ingestAttempts ?: 0
 	}
 
-	// skal gjøres private igjen etter engangsjobb
-	fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
+	private fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
 		val arenaDeltaker = arenaDeltakerRaw
 			.tryRun { it.mapTiltakDeltaker() }
 			.getOrThrow()
