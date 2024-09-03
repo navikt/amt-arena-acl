@@ -73,7 +73,10 @@ data class ArenaDeltaker(
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
 			regDato = regDato,
-			innsokBegrunnelse = BEGRUNNELSE_BESTILLING
+
+			// I tiltaksarrangor-bff så er det ikke mulig å slette bestillingsteksten ved å sette den til null,
+			// så for å fjerne tekst som finnes må man sette en tom string i steden for null
+			innsokBegrunnelse = BEGRUNNELSE_BESTILLING ?: ""
 		)
 	}
 
