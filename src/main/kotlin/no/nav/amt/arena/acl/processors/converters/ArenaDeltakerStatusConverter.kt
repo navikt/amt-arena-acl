@@ -15,12 +15,13 @@ class ArenaDeltakerStatusConverter(
 	val datoStatusEndring: LocalDateTime?,
 	val erGjennomforingAvsluttet: Boolean,
 	val gjennomforingSluttdato: LocalDate?,
-	val erKurs: Boolean
+	val erKurs: Boolean,
+	val tiltakstype: String
 ) {
 
 	fun convert(): DeltakerStatus {
 		val status =
-			if (arenaStatus.erUgyldigForInntakstype()) DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, LocalDateTime.now())
+			if (arenaStatus.erUgyldigForTiltaksstype()) DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, LocalDateTime.now())
 			else if (arenaStatus.erSoktInn()) utledSoktInnStatus()
 			else if (arenaStatus.erFeilregistrert()) utledFeilregistrertStatus()
 			else if (erKurs) convertKursStatuser()
@@ -163,8 +164,8 @@ class ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.INFOMOETE
 		)
 	}
-	private fun TiltakDeltaker.Status.erUgyldigForInntakstype(): Boolean {
-		return this == TiltakDeltaker.Status.AKTUELL && !erKurs
+	private fun TiltakDeltaker.Status.erUgyldigForTiltaksstype(): Boolean {
+		return this == TiltakDeltaker.Status.AKTUELL && tiltakstype == "ARBFORB"
 	}
 
 	private fun TiltakDeltaker.Status.erFeilregistrert(): Boolean {
