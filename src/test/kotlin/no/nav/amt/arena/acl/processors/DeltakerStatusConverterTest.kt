@@ -2,7 +2,16 @@ package no.nav.amt.arena.acl.processors
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.*
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.AVBRUTT
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.DELTAR
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.FEILREGISTRERT
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.FULLFORT
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.HAR_SLUTTET
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.IKKE_AKTUELL
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.SOKT_INN
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.VENTELISTE
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.VENTER_PA_OPPSTART
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker.Status.VURDERES
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
 import java.time.LocalDate
@@ -15,10 +24,16 @@ private val now = LocalDateTime.now()
 class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 	val erGjennomforingAvsluttet = false
 
-	"status - AKTUELL - returnerer SOKT_INN" {
-		val status = ArenaDeltakerStatusConverter(TiltakDeltaker.Status.AKTUELL, now, null, null, null, erGjennomforingAvsluttet, LocalDate.now(), false).convert()
+	"status - AKTUELL - kurs - returnerer SOKT_INN" {
+		val status = ArenaDeltakerStatusConverter(TiltakDeltaker.Status.AKTUELL, now, null, null, null, erGjennomforingAvsluttet, LocalDate.now(), true).convert()
 
 		status.navn shouldBe SOKT_INN
+	}
+
+	"status - AKTUELL - ikke kurs - returnerer SOKT_INN" {
+		val status = ArenaDeltakerStatusConverter(TiltakDeltaker.Status.AKTUELL, now, null, null, null, erGjennomforingAvsluttet, LocalDate.now(), false).convert()
+
+		status.navn shouldBe IKKE_AKTUELL
 	}
 
 	"status - FEILREG - returnerer FEILREGISTRERT" {
