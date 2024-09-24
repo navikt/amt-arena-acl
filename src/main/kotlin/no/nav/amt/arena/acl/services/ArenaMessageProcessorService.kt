@@ -7,7 +7,12 @@ import no.nav.amt.arena.acl.domain.db.toUpsertInput
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
-import no.nav.amt.arena.acl.exceptions.*
+import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
+import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
+import no.nav.amt.arena.acl.exceptions.ExternalSourceSystemException
+import no.nav.amt.arena.acl.exceptions.IgnoredException
+import no.nav.amt.arena.acl.exceptions.OperationNotImplementedException
+import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.processors.ArenaMessageProcessor
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.GjennomforingProcessor
@@ -87,6 +92,10 @@ open class ArenaMessageProcessorService(
 				is OperationNotImplementedException -> {
 					log.info("Operation not supported for $arenaId in table $arenaTableName: '${e.message}'")
 					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.FAILED, note = e.message))
+				}
+				is ExternalSourceSystemException -> {
+					log.info("$arenaId in table $arenaTableName was created by a external source system: '${e.message}'")
+					arenaDataRepository.upsert(msg.toUpsertInput(arenaId, ingestStatus = IngestStatus.EXTERNAL_SOURCE, note = e.message))
 				}
 				else -> {
 					log.error("$arenaId in table $arenaTableName: ${e.message}", e)

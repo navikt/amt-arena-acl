@@ -10,7 +10,8 @@ enum class IngestStatus {
 	FAILED,
 	IGNORED,
 	INVALID,
-	WAITING
+	WAITING,
+	EXTERNAL_SOURCE
 }
 
 data class ArenaDataDbo(
