@@ -11,6 +11,7 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltakerKafkaMessage
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
+import no.nav.amt.arena.acl.exceptions.ExternalSourceSystemException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
@@ -38,19 +39,19 @@ open class HistDeltakerProcessor(
 		val arenaDeltakerRaw = message.getData()
 		val arenaDeltakerId = arenaDeltakerRaw.HIST_TILTAKDELTAKER_ID.toString()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
+		val gjennomforing = deltakerProcessor.getGjennomforing(arenaGjennomforingId)
 
 		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
-			throw IgnoredException("Ignorerer hist-deltaker som har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
+			throw ExternalSourceSystemException("Ignorerer hist-deltaker som har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
 		}
 		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
-			throw IgnoredException("Ignorerer hist-deltaker som har deltakertypekode ekstern, arenaid $arenaDeltakerId")
+			throw ExternalSourceSystemException("Ignorerer hist-deltaker som har deltakertypekode ekstern, arenaid $arenaDeltakerId")
 		}
 
 		if (message.operationType != AmtOperation.CREATED) {
 			log.info("Mottatt melding for hist-deltaker arenaHistId=$arenaDeltakerId op=${message.operationType}, blir ikke behandlet")
 			throw IgnoredException("Ignorerer hist-deltaker som har operation type ${message.operationType}")
 		} else {
-			val gjennomforing = deltakerProcessor.getGjennomforing(arenaGjennomforingId)
 			val arenaDeltaker = arenaDeltakerRaw
 				.tryRun { it.mapTiltakDeltaker() }
 				.getOrThrow()
