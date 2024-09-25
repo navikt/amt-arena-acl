@@ -50,10 +50,10 @@ open class DeltakerProcessor(
 		val gjennomforing = getGjennomforing(arenaGjennomforingId)
 
 		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
-			throw ExternalSourceSystemException("Ignorerer deltaker som har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
+			throw ExternalSourceSystemException("Deltaker har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
 		}
 		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
-			throw ExternalSourceSystemException("Ignorerer deltaker som har deltakertypekode ekstern, arenaid $arenaDeltakerId")
+			throw ExternalSourceSystemException("Deltaker har deltakertypekode ekstern, arenaid $arenaDeltakerId")
 		}
 
 		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)

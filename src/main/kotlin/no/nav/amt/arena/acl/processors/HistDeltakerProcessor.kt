@@ -42,10 +42,10 @@ open class HistDeltakerProcessor(
 		val gjennomforing = deltakerProcessor.getGjennomforing(arenaGjennomforingId)
 
 		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
-			throw ExternalSourceSystemException("Ignorerer hist-deltaker som har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
+			throw ExternalSourceSystemException("hist-deltaker har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
 		}
 		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
-			throw ExternalSourceSystemException("Ignorerer hist-deltaker som har deltakertypekode ekstern, arenaid $arenaDeltakerId")
+			throw ExternalSourceSystemException("hist-deltaker har deltakertypekode ekstern, arenaid $arenaDeltakerId")
 		}
 
 		if (message.operationType != AmtOperation.CREATED) {
