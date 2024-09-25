@@ -14,6 +14,7 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
+import no.nav.amt.arena.acl.exceptions.ExternalSourceSystemException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
@@ -46,17 +47,16 @@ open class DeltakerProcessor(
 		val arenaDeltakerRaw = message.getData()
 		val arenaDeltakerId = arenaDeltakerRaw.TILTAKDELTAKER_ID.toString()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
+		val gjennomforing = getGjennomforing(arenaGjennomforingId)
 
 		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
-			throw IgnoredException("Ignorerer deltaker som har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
+			throw ExternalSourceSystemException("Deltaker har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
 		}
 		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
-			throw IgnoredException("Ignorerer deltaker som har deltakertypekode ekstern, arenaid $arenaDeltakerId")
+			throw ExternalSourceSystemException("Deltaker har deltakertypekode ekstern, arenaid $arenaDeltakerId")
 		}
 
-		val gjennomforing = getGjennomforing(arenaGjennomforingId)
 		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
-
 		val deltakerData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
 
 		if (skalRetryes(deltakerData, message)) {
