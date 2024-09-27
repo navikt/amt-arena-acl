@@ -49,12 +49,7 @@ open class DeltakerProcessor(
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
 		val gjennomforing = getGjennomforing(arenaGjennomforingId)
 
-		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
-			throw ExternalSourceSystemException("Deltaker har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
-		}
-		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
-			throw ExternalSourceSystemException("Deltaker har deltakertypekode ekstern, arenaid $arenaDeltakerId")
-		}
+		externalDeltakerGuard(arenaDeltakerRaw)
 
 		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
 		val deltakerData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
@@ -75,6 +70,26 @@ open class DeltakerProcessor(
 		metrics.publishMetrics(message)
 	}
 
+	private fun externalDeltakerGuard(arenaDeltakerRaw: ArenaDeltaker) {
+		val arenaDeltakerId = arenaDeltakerRaw.TILTAKDELTAKER_ID.toString()
+		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
+			val eksternId = UUID.fromString(arenaDeltakerRaw.EKSTERN_ID)
+
+			val arenaId = arenaDataIdTranslationService.hentArenaId(UUID.fromString(arenaDeltakerRaw.EKSTERN_ID))
+			if (arenaId == null) {
+				arenaDataIdTranslationService.opprettIdTranslation(arenaDeltakerId, eksternId)
+			}
+			else if (arenaId != arenaDeltakerId) {
+				throw ValidationException("Fikk arenadeltaker med id $arenaDeltakerId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
+			}
+
+			throw ExternalSourceSystemException("Deltaker har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
+		}
+		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
+			throw ExternalSourceSystemException("Deltaker har deltakertypekode ekstern, arenaid $arenaDeltakerId")
+		}
+
+	}
 	private fun sendMessageAndUpdateIngestStatus(
 		message: ArenaDeltakerKafkaMessage,
 		deltaker: AmtDeltaker,

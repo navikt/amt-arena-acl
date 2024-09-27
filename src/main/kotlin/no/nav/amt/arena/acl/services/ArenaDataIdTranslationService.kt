@@ -17,7 +17,7 @@ open class ArenaDataIdTranslationService(
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	fun hentArenaId(id: UUID): String? {
+	fun hentArenaIdEllerHistId(id: UUID): String? {
 		return arenaDataIdTranslationRepository.get(id)?.arenaId
 			?: arenaDataHistIdTranslationRepository.get(id)?.arenaHistId
 	}
@@ -26,24 +26,39 @@ open class ArenaDataIdTranslationService(
 		return arenaDataHistIdTranslationRepository.get(id)?.arenaHistId
 	}
 
+	fun hentArenaId(id: UUID): String? {
+		return arenaDataIdTranslationRepository.get(id)?.arenaId
+	}
+
 	fun hentEllerOpprettNyDeltakerId(deltakerArenaId: String): UUID {
 		val deltakerId = arenaDataIdTranslationRepository.get(ARENA_DELTAKER_TABLE_NAME, deltakerArenaId)?.amtId
 
 		if (deltakerId == null) {
-			val nyDeltakerIdId = UUID.randomUUID()
+			val nyDeltakerId = UUID.randomUUID()
 			arenaDataIdTranslationRepository.insert(
 				ArenaDataIdTranslationDbo(
-					amtId = nyDeltakerIdId,
+					amtId = nyDeltakerId,
 					arenaTableName = ARENA_DELTAKER_TABLE_NAME,
 					arenaId = deltakerArenaId
 				)
 			)
 
-			log.info("Opprettet ny id for deltaker, id=$nyDeltakerIdId arenaId=$deltakerArenaId")
-			return nyDeltakerIdId
+			log.info("Opprettet ny id for deltaker, id=$nyDeltakerId arenaId=$deltakerArenaId")
+			return nyDeltakerId
 		}
 
 		return deltakerId
+	}
+
+	fun opprettIdTranslation(arenaId: String, amtId: UUID) {
+		arenaDataIdTranslationRepository.insert(
+			ArenaDataIdTranslationDbo(
+			amtId = amtId,
+			arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+			arenaId = arenaId
+		))
+		log.info("Opprettet ny id for deltaker, id=$amtId arenaId=$arenaId")
+
 	}
 
 	fun lagreHistDeltakerId(
