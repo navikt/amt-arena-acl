@@ -39,6 +39,8 @@ jobs:
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
     outputs:
       image: ${{ steps.docker-build-push.outputs.image }}
+      telemetry: ${{ steps.docker-build-push.outputs.telemetry }}
+
 
   deploy-dev:
     name: Deploy application to dev
@@ -55,6 +57,7 @@ jobs:
           CLUSTER: dev-gcp
           RESOURCE: .nais/nais-dev.yaml
           VAR: image=${{ needs.test-build-and-push.outputs.image }}
+          TELEMETRY: ${{ needs.test-build-and-push.outputs.telemetry }}
 
   deploy-prod:
     name: Deploy application to production
@@ -72,3 +75,4 @@ jobs:
           CLUSTER: prod-gcp
           RESOURCE: .nais/nais-prod.yaml
           VAR: image=${{ needs.test-build-and-push.outputs.image }}
+          TELEMETRY: ${{ needs.test-build-and-push.outputs.telemetry }}
