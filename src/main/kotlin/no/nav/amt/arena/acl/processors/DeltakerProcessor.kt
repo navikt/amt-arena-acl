@@ -63,15 +63,18 @@ open class DeltakerProcessor(
 		if (skalVente(deltakerData)) {
 			Thread.sleep(500)
 		}
+		log.info("Prosesserer melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId op=${message.operationType} er sendt")
 
 		if (message.operationType == AmtOperation.DELETED) {
 			handleDeleteMessage(deltaker, arenaDeltakerId, message, deltakerData)
 		} else {
 			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId)
+			log.info("Lagrer deltaker med id=${deltaker.id}")
 			deltakerRepository.upsert(arenaDeltakerRaw.toDbo())
 
 		}
 		metrics.publishMetrics(message)
+		log.info("Deltaker med id=${deltaker.id} ferdig prosessert")
 	}
 
 	private fun externalDeltakerGuard(arenaDeltakerRaw: ArenaDeltaker) {
