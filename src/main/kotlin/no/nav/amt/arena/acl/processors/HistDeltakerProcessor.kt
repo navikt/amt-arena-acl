@@ -9,6 +9,7 @@ import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
+import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltakerKafkaMessage
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.exceptions.ExternalSourceSystemException
@@ -41,39 +42,55 @@ open class HistDeltakerProcessor(
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
 		val gjennomforing = deltakerProcessor.getGjennomforing(arenaGjennomforingId)
 
-		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
-			throw ExternalSourceSystemException("hist-deltaker har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
-		}
-		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
-			throw ExternalSourceSystemException("hist-deltaker har deltakertypekode ekstern, arenaid $arenaDeltakerId")
-		}
+		externalDeltakerGuard(arenaDeltakerRaw)
 
 		if (message.operationType != AmtOperation.CREATED) {
 			log.info("Mottatt melding for hist-deltaker arenaHistId=$arenaDeltakerId op=${message.operationType}, blir ikke behandlet")
 			throw IgnoredException("Ignorerer hist-deltaker som har operation type ${message.operationType}")
 		} else {
-			val arenaDeltaker = arenaDeltakerRaw
+			val histDeltaker = arenaDeltakerRaw
 				.tryRun { it.mapTiltakDeltaker() }
 				.getOrThrow()
 
-			val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
-				?: throw ValidationException("Arena mangler personlig ident for personId=${arenaDeltaker.personId}")
+			val personIdent = ordsClient.hentFnr(histDeltaker.personId)
+				?: throw ValidationException("Arena mangler personlig ident for personId=${histDeltaker.personId}")
 
 			val deltakerFraAmtTiltak = getAmtDeltaker(
 				personIdent = personIdent,
 				gjennomforingId = gjennomforing.id,
-				startdato = arenaDeltaker.datoFra,
-				sluttdato = arenaDeltaker.datoTil
+				startdato = histDeltaker.datoFra,
+				sluttdato = histDeltaker.datoTil,
 			) ?: throw ValidationException("Fant ikke amt-deltaker for hist-deltaker med arenaid $arenaDeltakerId")
 
 			arenaDataIdTranslationService.lagreHistDeltakerId(amtDeltakerId = deltakerFraAmtTiltak.id, histDeltakerArenaId = arenaDeltakerId)
 
 			if (deltakerFraAmtTiltak.status == DeltakerStatusDto.FEILREGISTRERT) {
 				log.info("amt-deltaker ${deltakerFraAmtTiltak.id} er feilregistrert, gjenoppretter")
-				gjenopprettFeilregistrertDeltaker(arenaDeltaker, deltakerFraAmtTiltak.id, gjennomforing, personIdent)
+				gjenopprettFeilregistrertDeltaker(histDeltaker, deltakerFraAmtTiltak.id, gjennomforing, personIdent)
 			}
 			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
 		}
+	}
+
+	private fun externalDeltakerGuard(arenaDeltakerRaw: ArenaHistDeltaker) {
+		val deltakerHistId = arenaDeltakerRaw.HIST_TILTAKDELTAKER_ID.toString()
+		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
+			val eksternId = UUID.fromString(arenaDeltakerRaw.EKSTERN_ID)
+
+			val arenaId = arenaDataIdTranslationService.hentArenaHistId(eksternId)
+			if (arenaId == null) {
+				arenaDataIdTranslationService.lagreHistDeltakerId(amtDeltakerId = eksternId, histDeltakerArenaId = deltakerHistId)
+			}
+			else if (arenaId != deltakerHistId) {
+				throw ValidationException("Fikk arenadeltaker med id $deltakerHistId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
+			}
+
+			throw ExternalSourceSystemException("hist-deltaker har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
+		}
+		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
+			throw ExternalSourceSystemException("hist-deltaker har deltakertypekode ekstern, arenaid $deltakerHistId")
+		}
+
 	}
 
 	private fun gjenopprettFeilregistrertDeltaker(

@@ -10,7 +10,7 @@ import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import java.util.*
+import java.util.UUID
 
 class ArenaDataIdTranslationRepositoryTest : FunSpec({
 

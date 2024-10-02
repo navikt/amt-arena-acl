@@ -75,7 +75,7 @@ open class DeltakerProcessor(
 		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
 			val eksternId = UUID.fromString(arenaDeltakerRaw.EKSTERN_ID)
 
-			val arenaId = arenaDataIdTranslationService.hentArenaId(UUID.fromString(arenaDeltakerRaw.EKSTERN_ID))
+			val arenaId = arenaDataIdTranslationService.hentArenaId(eksternId)
 			if (arenaId == null) {
 				arenaDataIdTranslationService.opprettIdTranslation(arenaDeltakerId, eksternId)
 			}
