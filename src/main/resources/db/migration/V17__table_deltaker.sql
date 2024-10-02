@@ -8,10 +8,10 @@ CREATE TABLE deltaker
     dato_til            date,
     reg_dato            timestamp with time zone not null,
     mod_dato            timestamp with time zone not null,
-    status              varchar not null,
+    status              varchar(16) not null,
     dato_statusendring  timestamp with time zone not null,
     ekstern_id          uuid,
-    arena_source_table  varchar not null,
+    arena_source_table  varchar(16) not null,
     created_at          timestamp with time zone default current_timestamp,
     modified_at         timestamp with time zone default current_timestamp,
 
