@@ -15,5 +15,5 @@ data class DeltakerInsertDbo(
 	val status: String?,
 	val datoStatusEndring: LocalDateTime?,
 	val arenaSourceTable: String,
-	val eksternId: UUID,
+	val eksternId: UUID?,
 )

@@ -61,7 +61,6 @@ class DeltakerRepository(
 				:eksternId,
 				:arenaSourceTable
 			) ON CONFLICT(arena_id, arena_source_table) DO UPDATE SET
-				arena_id = :arenaId,
 				person_id = :personId,
 				gjennomforing_id = :gjennomforingId,
 				dato_fra = :datoFra,
@@ -71,7 +70,6 @@ class DeltakerRepository(
 				status = :status,
 				dato_statusendring = :datoStatusEndring,
 				ekstern_id = :eksternId,
-				arena_source_table = :arenaSourceTable,
 				modified_at = CURRENT_TIMESTAMP
 		""".trimIndent()
 		val parameters = sqlParameters(
@@ -85,8 +83,8 @@ class DeltakerRepository(
 			"modDato" to deltakerDbo.modDato,
 			"status" to deltakerDbo.status,
 			"datoStatusEndring" to deltakerDbo.datoStatusEndring,
-			"eksternId" to deltakerDbo.eksternId,
 			"arenaSourceTable" to deltakerDbo.arenaSourceTable,
+			"eksternId" to deltakerDbo.eksternId,
 		)
 		template.update(sql, parameters)
 	}

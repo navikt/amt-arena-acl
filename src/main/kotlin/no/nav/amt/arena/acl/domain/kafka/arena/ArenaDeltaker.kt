@@ -94,7 +94,7 @@ data class ArenaDeltaker(
 		status = DELTAKERSTATUSKODE,
 		datoStatusEndring = DATO_STATUSENDRING?.asValidatedLocalDateTime("DATO_STATUSENDRING"),
 		arenaSourceTable = ARENA_DELTAKER_TABLE_NAME,
-		eksternId = UUID.fromString(EKSTERN_ID),
+		eksternId = EKSTERN_ID?.let { UUID.fromString(EKSTERN_ID)},
 	)
 
 }
