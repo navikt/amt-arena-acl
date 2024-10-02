@@ -19,6 +19,7 @@ import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.repositories.DeltakerRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
@@ -33,6 +34,7 @@ import java.util.UUID
 @Component
 open class DeltakerProcessor(
 	private val arenaDataRepository: ArenaDataRepository,
+	private val deltakerRepository: DeltakerRepository,
 	private val gjennomforingService: GjennomforingService,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val ordsClient: ArenaOrdsProxyClient,
@@ -66,6 +68,8 @@ open class DeltakerProcessor(
 			handleDeleteMessage(deltaker, arenaDeltakerId, message, deltakerData)
 		} else {
 			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId)
+			deltakerRepository.upsert(arenaDeltakerRaw.toDbo())
+
 		}
 		metrics.publishMetrics(message)
 	}

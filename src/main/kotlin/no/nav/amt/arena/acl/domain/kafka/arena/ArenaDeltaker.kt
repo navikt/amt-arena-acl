@@ -1,11 +1,14 @@
 package no.nav.amt.arena.acl.domain.kafka.arena
 
 import no.nav.amt.arena.acl.exceptions.ValidationException
+import no.nav.amt.arena.acl.repositories.DeltakerInsertDbo
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.asValidatedLocalDate
 import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.Month
+import java.util.UUID
 
 // @SONAR_START@
 data class ArenaDeltaker(
@@ -45,7 +48,7 @@ data class ArenaDeltaker(
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	private val placeholderDate = LocalDateTime.of(1970, Month.JANUARY, 1, 0,0)
+	private val placeholderDate = LocalDateTime.of(1970, Month.JANUARY, 1, 0, 0)
 
 	fun mapTiltakDeltaker(): TiltakDeltaker {
 		val tiltakdeltakerId = TILTAKDELTAKER_ID.toString().also {
@@ -57,8 +60,8 @@ data class ArenaDeltaker(
 		}
 
 		val regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO") ?: placeholderDate.also {
-				log.warn("Bruker med arenaId=${tiltakdeltakerId} mangler REG_DATO, bruker placeholder dato istedenfor")
-			}
+			log.warn("Bruker med arenaId=${tiltakdeltakerId} mangler REG_DATO, bruker placeholder dato istedenfor")
+		}
 
 
 		return TiltakDeltaker(
@@ -69,7 +72,7 @@ data class ArenaDeltaker(
 			datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
 			deltakerStatusKode = TiltakDeltaker.Status.valueOf(DELTAKERSTATUSKODE),
 			datoStatusendring = DATO_STATUSENDRING?.asValidatedLocalDateTime("DATO_STATUSENDRING"),
-			statusAarsakKode = AARSAKVERDIKODE_STATUS?.let {TiltakDeltaker.StatusAarsak.valueOf(AARSAKVERDIKODE_STATUS)},
+			statusAarsakKode = AARSAKVERDIKODE_STATUS?.let { TiltakDeltaker.StatusAarsak.valueOf(AARSAKVERDIKODE_STATUS) },
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
 			regDato = regDato,
@@ -79,6 +82,20 @@ data class ArenaDeltaker(
 			innsokBegrunnelse = BEGRUNNELSE_BESTILLING ?: ""
 		)
 	}
+
+	fun toDbo() = DeltakerInsertDbo(
+		arenaId = TILTAKDELTAKER_ID,
+		personId = PERSON_ID,
+		gjennomforingId = TILTAKGJENNOMFORING_ID,
+		datoFra = DATO_FRA?.asValidatedLocalDate("DATO_FRA"),
+		datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
+		regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO"),
+		modDato = MOD_DATO?.asValidatedLocalDateTime("MOD_DATO"),
+		status = DELTAKERSTATUSKODE,
+		datoStatusEndring = DATO_STATUSENDRING?.asValidatedLocalDateTime("DATO_STATUSENDRING"),
+		arenaSourceTable = ARENA_DELTAKER_TABLE_NAME,
+		eksternId = UUID.fromString(EKSTERN_ID),
+	)
 
 }
 // @SONAR_STOP@
