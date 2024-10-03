@@ -19,6 +19,7 @@ import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.repositories.DeltakerRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
@@ -33,6 +34,7 @@ import java.util.UUID
 @Component
 open class DeltakerProcessor(
 	private val arenaDataRepository: ArenaDataRepository,
+	private val deltakerRepository: DeltakerRepository,
 	private val gjennomforingService: GjennomforingService,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val ordsClient: ArenaOrdsProxyClient,
@@ -61,13 +63,18 @@ open class DeltakerProcessor(
 		if (skalVente(deltakerData)) {
 			Thread.sleep(500)
 		}
+		log.info("Prosesserer melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId op=${message.operationType} er sendt")
 
 		if (message.operationType == AmtOperation.DELETED) {
 			handleDeleteMessage(deltaker, arenaDeltakerId, message, deltakerData)
 		} else {
 			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId)
+			log.info("Lagrer deltaker med id=${deltaker.id}")
+			deltakerRepository.upsert(arenaDeltakerRaw.toDbo())
+
 		}
 		metrics.publishMetrics(message)
+		log.info("Deltaker med id=${deltaker.id} ferdig prosessert")
 	}
 
 	private fun externalDeltakerGuard(arenaDeltakerRaw: ArenaDeltaker) {

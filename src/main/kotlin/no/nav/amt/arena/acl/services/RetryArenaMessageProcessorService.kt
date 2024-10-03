@@ -4,6 +4,7 @@ import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
+import no.nav.amt.arena.acl.exceptions.ExternalSourceSystemException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.processors.DeltakerProcessor
 import no.nav.amt.arena.acl.processors.GjennomforingProcessor
@@ -83,6 +84,10 @@ open class RetryArenaMessageProcessorService(
 				log.info("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}'")
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.IGNORED)
 			}
+			if (e is ExternalSourceSystemException) {
+				log.info("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName} was created by a external source system: '${e.message}'")
+				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.EXTERNAL_SOURCE)
+			}
 			else if (e is DependencyNotValidException) {
 				log.error("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}'")
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.WAITING)
@@ -90,7 +95,7 @@ open class RetryArenaMessageProcessorService(
 			else if (arenaDataDbo.ingestStatus == IngestStatus.RETRY && hasReachedMaxRetries) {
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.FAILED)
 			}
-			else log.error("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}'")
+			else log.error("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}', '${e.stackTrace}'")
 
 
 			arenaDataRepository.updateIngestAttempts(arenaDataDbo.id, currentIngestAttempts, e.message)
