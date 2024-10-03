@@ -12,6 +12,7 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
+import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
 import no.nav.amt.arena.acl.exceptions.ExternalSourceSystemException
@@ -53,7 +54,11 @@ open class DeltakerProcessor(
 
 		externalDeltakerGuard(arenaDeltakerRaw)
 
-		val deltaker = createDeltaker(arenaDeltakerRaw, gjennomforing)
+		val arenaDeltaker = arenaDeltakerRaw
+			.tryRun { it.mapTiltakDeltaker() }
+			.getOrThrow()
+
+		val deltaker = createDeltaker(arenaDeltaker, gjennomforing)
 		val deltakerData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
 
 		if (skalRetryes(deltakerData, message)) {
@@ -167,15 +172,11 @@ open class DeltakerProcessor(
 		return deltakerData.find { it.operationPosition == message.operationPosition }?.ingestAttempts ?: 0
 	}
 
-	private fun createDeltaker(arenaDeltakerRaw: ArenaDeltaker, gjennomforing: Gjennomforing): AmtDeltaker {
-		val arenaDeltaker = arenaDeltakerRaw
-			.tryRun { it.mapTiltakDeltaker() }
-			.getOrThrow()
-
+	fun createDeltaker(arenaDeltaker: TiltakDeltaker, gjennomforing: Gjennomforing, sourceTable: String = ARENA_DELTAKER_TABLE_NAME): AmtDeltaker {
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
 			?: throw ValidationException("Arena mangler personlig ident for personId=${arenaDeltaker.personId}")
 
-		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId)
+		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, sourceTable)
 
 		return arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerAmtId,

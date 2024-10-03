@@ -30,8 +30,12 @@ open class ArenaDataIdTranslationService(
 		return arenaDataIdTranslationRepository.get(id)?.arenaId
 	}
 
-	fun hentEllerOpprettNyDeltakerId(deltakerArenaId: String): UUID {
-		val deltakerId = arenaDataIdTranslationRepository.get(ARENA_DELTAKER_TABLE_NAME, deltakerArenaId)?.amtId
+	fun hentAmtId(arenaId: String, table: String = ARENA_DELTAKER_TABLE_NAME): UUID? {
+		return arenaDataIdTranslationRepository.get(table, arenaId)?.amtId
+	}
+
+	fun hentEllerOpprettNyDeltakerId(deltakerArenaId: String, table: String = ARENA_DELTAKER_TABLE_NAME): UUID {
+		val deltakerId = arenaDataIdTranslationRepository.get(table, deltakerArenaId)?.amtId
 
 		if (deltakerId == null) {
 			val nyDeltakerId = UUID.randomUUID()
@@ -50,11 +54,11 @@ open class ArenaDataIdTranslationService(
 		return deltakerId
 	}
 
-	fun opprettIdTranslation(arenaId: String, amtId: UUID) {
+	fun opprettIdTranslation(arenaId: String, amtId: UUID, table: String = ARENA_DELTAKER_TABLE_NAME) {
 		arenaDataIdTranslationRepository.insert(
 			ArenaDataIdTranslationDbo(
 			amtId = amtId,
-			arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+			arenaTableName = table,
 			arenaId = arenaId
 		))
 		log.info("Opprettet ny id for deltaker, id=$amtId arenaId=$arenaId")

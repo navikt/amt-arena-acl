@@ -5,7 +5,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 data class DeltakerDbo(
-	val id: UUID,
 	val arenaId: Long?,
 	val personId: Long?,
 	val gjennomforingId: Long?,
@@ -16,7 +15,7 @@ data class DeltakerDbo(
 	val status: String?,
 	val datoStatusEndring: LocalDateTime,
 	val arenaSourceTable: String,
-	val eksternId: UUID,
+	val eksternId: UUID?,
 	val createdAt: LocalDateTime,
 	val modifiedAt: LocalDateTime,
 )
