@@ -5,6 +5,7 @@ import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.repositories.ArenaDataHistIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -39,15 +40,20 @@ open class ArenaDataIdTranslationService(
 
 		if (deltakerId == null) {
 			val nyDeltakerId = UUID.randomUUID()
-			arenaDataIdTranslationRepository.insert(
-				ArenaDataIdTranslationDbo(
-					amtId = nyDeltakerId,
-					arenaTableName = ARENA_DELTAKER_TABLE_NAME,
-					arenaId = deltakerArenaId
+			if(table == ARENA_DELTAKER_TABLE_NAME) {
+				arenaDataIdTranslationRepository.insert(
+					ArenaDataIdTranslationDbo(
+						amtId = nyDeltakerId,
+						arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+						arenaId = deltakerArenaId
+					)
 				)
-			)
+			}
+			else if (table == ARENA_HIST_DELTAKER_TABLE_NAME) {
+				lagreHistDeltakerId(nyDeltakerId, deltakerArenaId)
+			}
 
-			log.info("Opprettet ny id for deltaker, id=$nyDeltakerId arenaId=$deltakerArenaId")
+			log.info("Opprettet ny id for deltaker, id=$nyDeltakerId arenaId=$deltakerArenaId for table=$table")
 			return nyDeltakerId
 		}
 

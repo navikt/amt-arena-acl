@@ -70,10 +70,7 @@ open class HistDeltakerProcessor(
 			if (eksisterendeDeltaker == null) {
 
 				val nyDeltaker = deltakerProcessor.createDeltaker(histDeltaker, gjennomforing, ARENA_HIST_DELTAKER_TABLE_NAME)
-				arenaDataIdTranslationService.lagreHistDeltakerId(
-					amtDeltakerId = nyDeltaker.id,
-					histDeltakerArenaId = arenaHistDeltakerId
-				)
+
 				nyDeltaker.validerGyldigHistDeltaker()
 				log.info("Fant ingen match for hist-deltaker $arenaHistDeltakerId, oppretter ny og lagrer mapping men sender ikke videre (enda)")
 				// TODO: Deltakeren skal sendes videre på topic men først deploye og relaste for å analysere mappingene
