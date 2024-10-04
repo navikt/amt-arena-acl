@@ -29,6 +29,8 @@ import no.nav.amt.arena.acl.utils.asLocalDateTime
 import no.nav.amt.arena.acl.utils.tryRun
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
@@ -66,7 +68,6 @@ open class HistDeltakerProcessor(
 			val eksisterendeDeltaker = getMatchingDeltaker(arenaDeltakerRaw)
 
 			if (eksisterendeDeltaker == null) {
-				// Kan det hende vi leser hist deltaker før vanlig deltaker?
 
 				val nyDeltaker = deltakerProcessor.createDeltaker(histDeltaker, gjennomforing, ARENA_HIST_DELTAKER_TABLE_NAME)
 				arenaDataIdTranslationService.lagreHistDeltakerId(
@@ -74,8 +75,9 @@ open class HistDeltakerProcessor(
 					histDeltakerArenaId = arenaHistDeltakerId
 				)
 				nyDeltaker.validerGyldigHistDeltaker()
-				// TODO: Deltakeren skal sendes videre på topic men først deploye og relaste for å analysere mappingene
 				log.info("Fant ingen match for hist-deltaker $arenaHistDeltakerId, oppretter ny og lagrer mapping men sender ikke videre (enda)")
+				// TODO: Deltakeren skal sendes videre på topic men først deploye og relaste for å analysere mappingene
+				// sendMessage(nyDeltaker, arenaHistDeltakerId, AmtOperation.CREATED)
 			}
 			else {
 				// TODO: Hvis hist deltakeren vi får matcher, og statusen har blitt endret, så skal vi vel sende avgårde hist statusen?
@@ -121,6 +123,20 @@ open class HistDeltakerProcessor(
 			throw ExternalSourceSystemException("hist-deltaker har deltakertypekode ekstern, arenaid $deltakerHistId")
 		}
 
+	}
+
+	private fun sendMessage(
+		deltaker: AmtDeltaker,
+		arenaDeltakerId: String,
+		operation: AmtOperation
+	) {
+		val deltakerKafkaMessage = AmtKafkaMessageDto(
+			type = PayloadType.DELTAKER,
+			operation = operation,
+			payload = deltaker
+		)
+		kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
+		log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
 	}
 
 	private fun gjenopprettFeilregistrertDeltaker(
@@ -194,8 +210,18 @@ open class HistDeltakerProcessor(
 	}
 
 	private fun AmtDeltaker.validerGyldigHistDeltaker() {
+		fun AmtDeltaker.harNyligSluttet(): Boolean =
+			!LocalDateTime.now().isAfter(statusEndretDato!!.plusDays(40)) &&
+				(sluttDato == null || sluttDato.isAfter(LocalDate.now().minusDays(40)))
+
 		if (!status.erAvsluttende()) {
 			throw IllegalStateException("Hist deltaker har fått status $status")
+		}
+		if (statusEndretDato == null) {
+			throw ValidationException("Kan ikke sende videre hist-deltaker $id fordi den mangler statusEndretDato som vil utledes til LocalDateTime.now()")
+		}
+		if (harNyligSluttet()) {
+			throw ValidationException("Kan ikke sende videre hist-deltaker $id fordi den har nylig sluttet")
 		}
 	}
 
