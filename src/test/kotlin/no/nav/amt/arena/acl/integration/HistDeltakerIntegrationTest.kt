@@ -205,7 +205,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		}
 
 		baseDeltaker.publiserOgValiderOutput {
-			it.status shouldBe AmtDeltaker.Status.IKKE_AKTUELL
+			it.status shouldBe AmtDeltaker.Status.HAR_SLUTTET
 			it.statusAarsak shouldBe null
 
 			val gjennomforing = gjennomforingService.get(gjennomforingArenaId)
@@ -415,8 +415,8 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 
 	private fun createDeltaker() = KafkaMessageCreator.baseHistDeltaker(
 		deltakerStatusKode = TiltakDeltaker.Status.FULLF.name,
-		startDato = LocalDate.now().plusDays(1),
-		sluttDato = LocalDate.now().plusMonths(6),
+		startDato = LocalDate.now().minusMonths(3),
+		sluttDato = LocalDate.now().minusMonths(2),
 	)
 
 	private fun ArenaGjennomforing.publiser(customAssertions: (payload: Gjennomforing?) -> Unit) {
