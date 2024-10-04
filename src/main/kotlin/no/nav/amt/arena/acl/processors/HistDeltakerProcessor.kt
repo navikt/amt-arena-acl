@@ -174,8 +174,8 @@ open class HistDeltakerProcessor(
 	): DeltakerDbo? {
 		val personId = arenaHistDeltaker.PERSON_ID
 			?: throw ValidationException("Kan ikke matche hist deltaker som mangler PERSON_ID")
-		val modDato = arenaHistDeltaker.MOD_DATO?.asLocalDateTime()
-			?: throw ValidationException("Kan ikke matche hist deltaker som mangler MOD_DATO")
+		val datoStatusendring = arenaHistDeltaker.DATO_STATUSENDRING?.asLocalDateTime()
+			?: throw ValidationException("Kan ikke matche hist deltaker som mangler DATO_STATUSENDRING")
 		val datoFra = arenaHistDeltaker.DATO_FRA?.asLocalDate()
 		val datoTil = arenaHistDeltaker.DATO_TIL?.asLocalDate()
 		val arenaDeltakere = deltakerRepository
@@ -184,7 +184,7 @@ open class HistDeltakerProcessor(
 		val matchendeDeltakere = arenaDeltakere
 			.filter { it.datoFra == datoFra }
 			.filter { it.datoTil == datoTil }
-			.filter { it.modDato == modDato }
+			.filter { it.datoStatusEndring == datoStatusendring }
 
 		if (arenaDeltakere.isEmpty()) {
 			log.info("Fant ingen match for hist deltaker med id ${arenaHistDeltaker.HIST_TILTAKDELTAKER_ID} " +
@@ -193,7 +193,7 @@ open class HistDeltakerProcessor(
 		}
 		else if (matchendeDeltakere.isEmpty()) {
 			log.info("Fant ingen match for hist-deltaker med id ${arenaHistDeltaker.HIST_TILTAKDELTAKER_ID}. " +
-				"fradato: $datoFra, tildato: $datoTil, modDato: $modDato" +
+				"fradato: $datoFra, tildato: $datoTil, modDato: $datoStatusendring" +
 				"Personen har ${arenaDeltakere.size} andre deltakelser")
 
 			arenaDeltakere.forEach {
