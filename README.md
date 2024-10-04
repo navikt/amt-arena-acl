@@ -46,3 +46,22 @@ WITH max_ids AS (
 select *
 from to_update
 ```
+
+## Om hist deltakere
+Vi leser hist deltakere fra arena. Dette er deltakere som er historisert fordi det har kommet en ny deltakelse på samme person og samme gjennomføring en gang til.
+
+### case 1
+Vi leser hist topic fra start, alle deltakerene som ligger der skal da **ikke** matche med noen av deltakerene vi har fra før av(fordi vi på forhånd har lest tiltakdeltaker topicen)
+1. Vi har lest en deltaker
+2. Vi mottar en hist_deltaker, denne vil ikke matche med en eksisterende deltaker, denne skal opprettes som ny og sendes videre
+
+
+### case 2
+Vanlig usecase mens vi er i produksjon er at det kommer løpende data fra hist og deltaker topic.
+1. Vi får en deltaker
+2. Deltakeren blir (sannsynligvis) avsluttet(fordi personen ikke kunne delta alikevell) => record på deltaker topic
+3. Deltakeren blir påmeldt igjen etter en stund, fordi personen da har mulighet til å delta igjen
+   => Deltakeren blir historisert i arena, flyttet til hist_tabellen med en ny arenaId
+   => Vi får DELETE record på deltakeren, denne skal kastes av oss
+   => Vi får CREATED record på hist_deltaker, denne skal vi koble til eksisterende deltaker
+   => vi får CREATED record på ny deltaker og samme person, denne skal vi lagre og sende videre
