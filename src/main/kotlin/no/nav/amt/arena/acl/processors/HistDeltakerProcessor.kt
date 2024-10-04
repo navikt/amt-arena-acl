@@ -80,7 +80,6 @@ open class HistDeltakerProcessor(
 				// sendMessage(nyDeltaker, arenaHistDeltakerId, AmtOperation.CREATED)
 			}
 			else {
-				// TODO: Hvis hist deltakeren vi får matcher, og statusen har blitt endret, så skal vi vel sende avgårde hist statusen?
 				log.info("Hist deltaker $arenaHistDeltakerId matcher deltaker ${eksisterendeDeltaker.arenaId}")
 
 				val eksisterendeDeltakerAmtId =
