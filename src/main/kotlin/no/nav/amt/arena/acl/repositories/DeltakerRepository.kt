@@ -1,8 +1,8 @@
 package no.nav.amt.arena.acl.repositories
 
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
-import no.nav.amt.arena.acl.utils.getLocalDate
 import no.nav.amt.arena.acl.utils.getLocalDateTime
+import no.nav.amt.arena.acl.utils.getNullableLocalDate
 import no.nav.amt.arena.acl.utils.getNullableUUID
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -18,8 +18,8 @@ class DeltakerRepository(
 			arenaId = rs.getLong("arena_id"),
 			personId = rs.getLong("person_id"),
 			gjennomforingId = rs.getLong("gjennomforing_id"),
-			datoFra = rs.getLocalDate("dato_fra"),
-			datoTil = rs.getLocalDate("dato_til"),
+			datoFra = rs.getNullableLocalDate("dato_fra"),
+			datoTil = rs.getNullableLocalDate("dato_til"),
 			regDato = rs.getLocalDateTime("reg_dato"),
 			modDato = rs.getLocalDateTime("mod_dato"),
 			status = rs.getString("status"),
