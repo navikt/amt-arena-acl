@@ -5,6 +5,7 @@ import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.repositories.ArenaDataHistIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -30,31 +31,40 @@ open class ArenaDataIdTranslationService(
 		return arenaDataIdTranslationRepository.get(id)?.arenaId
 	}
 
-	fun hentEllerOpprettNyDeltakerId(deltakerArenaId: String): UUID {
-		val deltakerId = arenaDataIdTranslationRepository.get(ARENA_DELTAKER_TABLE_NAME, deltakerArenaId)?.amtId
+	fun hentAmtId(arenaId: String, table: String = ARENA_DELTAKER_TABLE_NAME): UUID? {
+		return arenaDataIdTranslationRepository.get(table, arenaId)?.amtId
+	}
+
+	fun hentEllerOpprettNyDeltakerId(deltakerArenaId: String, table: String = ARENA_DELTAKER_TABLE_NAME): UUID {
+		val deltakerId = arenaDataIdTranslationRepository.get(table, deltakerArenaId)?.amtId
 
 		if (deltakerId == null) {
 			val nyDeltakerId = UUID.randomUUID()
-			arenaDataIdTranslationRepository.insert(
-				ArenaDataIdTranslationDbo(
-					amtId = nyDeltakerId,
-					arenaTableName = ARENA_DELTAKER_TABLE_NAME,
-					arenaId = deltakerArenaId
+			if(table == ARENA_DELTAKER_TABLE_NAME) {
+				arenaDataIdTranslationRepository.insert(
+					ArenaDataIdTranslationDbo(
+						amtId = nyDeltakerId,
+						arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+						arenaId = deltakerArenaId
+					)
 				)
-			)
+			}
+			else if (table == ARENA_HIST_DELTAKER_TABLE_NAME) {
+				lagreHistDeltakerId(nyDeltakerId, deltakerArenaId)
+			}
 
-			log.info("Opprettet ny id for deltaker, id=$nyDeltakerId arenaId=$deltakerArenaId")
+			log.info("Opprettet ny id for deltaker, id=$nyDeltakerId arenaId=$deltakerArenaId for table=$table")
 			return nyDeltakerId
 		}
 
 		return deltakerId
 	}
 
-	fun opprettIdTranslation(arenaId: String, amtId: UUID) {
+	fun opprettIdTranslation(arenaId: String, amtId: UUID, table: String = ARENA_DELTAKER_TABLE_NAME) {
 		arenaDataIdTranslationRepository.insert(
 			ArenaDataIdTranslationDbo(
 			amtId = amtId,
-			arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+			arenaTableName = table,
 			arenaId = arenaId
 		))
 		log.info("Opprettet ny id for deltaker, id=$amtId arenaId=$arenaId")

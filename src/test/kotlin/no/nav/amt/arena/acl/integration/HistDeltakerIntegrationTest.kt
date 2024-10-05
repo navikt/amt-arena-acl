@@ -3,7 +3,9 @@ package no.nav.amt.arena.acl.integration
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.clients.amttiltak.DeltakerStatusDto
+import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.domain.Gjennomforing
+import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
@@ -11,18 +13,25 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltaker
+import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.integration.utils.AsyncUtils
 import no.nav.amt.arena.acl.repositories.ArenaDataHistIdTranslationRepository
+import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
+import no.nav.amt.arena.acl.repositories.DeltakerInsertDbo
+import no.nav.amt.arena.acl.repositories.DeltakerRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
+import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionListener
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
+import no.nav.amt.arena.acl.utils.asLocalDate
+import no.nav.amt.arena.acl.utils.asLocalDateTime
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +55,13 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 	lateinit var arenaDataRepository: ArenaDataRepository
 
 	@Autowired
+	lateinit var deltakerRepository: DeltakerRepository
+
+	@Autowired
 	lateinit var arenaDataHistIdTranslationRepository: ArenaDataHistIdTranslationRepository
+
+	@Autowired
+	lateinit var arenaDataIdTranslationRepository: ArenaDataIdTranslationRepository
 
 	@Autowired
 	lateinit var gjennomforingService: GjennomforingService
@@ -63,13 +78,13 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 	val gjennomforingIdMR = UUID.randomUUID()
 	val gjennomforingMRData = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing(
 		id = gjennomforingIdMR,
-		tiltakstype =  no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Tiltakstype(
+		tiltakstype = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Tiltakstype(
 			id = UUID.randomUUID(),
 			navn = "Navn på tiltak",
 			arenaKode = "INDOPPFAG"
 		),
 		navn = "Navn på gjennomføring",
-	 	startDato = LocalDate.now(),
+		startDato = LocalDate.now(),
 		sluttDato = LocalDate.now().plusDays(3),
 		status = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Status.GJENNOMFORES,
 		virksomhetsnummer = "999888777",
@@ -80,6 +95,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 
 	@BeforeEach
 	fun setup() {
+		DatabaseTestUtils.cleanDatabase(dataSource)
 		setupMocks()
 	}
 
@@ -98,6 +114,28 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 	fun `ingest deltaker - har deltakelse i amt-tiltak, samme gjennomforing og datoer - lagrer id, publiserer ikke deltaker`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 		val amtTiltakDeltakerId = UUID.randomUUID()
+		val matchingDeltakerId = 31223L
+		deltakerRepository.upsert(
+			DeltakerInsertDbo(
+				arenaId = matchingDeltakerId,
+				personId = baseDeltaker.PERSON_ID,
+				gjennomforingId = baseDeltaker.TILTAKGJENNOMFORING_ID,
+				datoFra = baseDeltaker.DATO_FRA?.asLocalDate(),
+				datoTil = baseDeltaker.DATO_TIL?.asLocalDate(),
+				regDato = baseDeltaker.REG_DATO?.asLocalDateTime(),
+				modDato = baseDeltaker.MOD_DATO?.asLocalDateTime(),
+				status = TiltakDeltaker.Status.GJENN.name,
+				datoStatusEndring = baseDeltaker.DATO_STATUSENDRING?.asLocalDateTime(),
+				arenaSourceTable = ARENA_DELTAKER_TABLE_NAME,
+				eksternId = null,
+			)
+		)
+		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(
+			amtId = amtTiltakDeltakerId,
+			arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+			arenaId = matchingDeltakerId.toString()
+		))
+
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = amtTiltakDeltakerId,
 			gjennomforingId = gjennomforingIdMR,
@@ -131,6 +169,28 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 		val gjennomforingArenaId = baseDeltaker.TILTAKGJENNOMFORING_ID.toString()
 		val amtTiltakDeltakerId = UUID.randomUUID()
+		val matchingDeltakerId = 31223L
+		deltakerRepository.upsert(
+			DeltakerInsertDbo(
+				arenaId = matchingDeltakerId,
+				personId = baseDeltaker.PERSON_ID,
+				gjennomforingId = baseDeltaker.TILTAKGJENNOMFORING_ID,
+				datoFra = baseDeltaker.DATO_FRA?.asLocalDate(),
+				datoTil = baseDeltaker.DATO_TIL?.asLocalDate(),
+				regDato = baseDeltaker.REG_DATO?.asLocalDateTime(),
+				modDato = baseDeltaker.MOD_DATO?.asLocalDateTime(),
+				status = TiltakDeltaker.Status.GJENN.name,
+				datoStatusEndring = baseDeltaker.DATO_STATUSENDRING?.asLocalDateTime(),
+				arenaSourceTable = ARENA_DELTAKER_TABLE_NAME,
+				eksternId = null,
+			)
+		)
+		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(
+			amtId = amtTiltakDeltakerId,
+			arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+			arenaId = matchingDeltakerId.toString()
+		))
+
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = amtTiltakDeltakerId,
 			gjennomforingId = gjennomforingIdMR,
@@ -145,7 +205,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		}
 
 		baseDeltaker.publiserOgValiderOutput {
-			it.status shouldBe AmtDeltaker.Status.VENTER_PA_OPPSTART
+			it.status shouldBe AmtDeltaker.Status.HAR_SLUTTET
 			it.statusAarsak shouldBe null
 
 			val gjennomforing = gjennomforingService.get(gjennomforingArenaId)
@@ -157,7 +217,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 	}
 
 	@Test
-	fun `ingest deltaker - ingen deltakelser i amt-tiltak - status INVALID`() {
+	fun `ingest deltaker - ingen deltakelser i amt-tiltak - status HANDLED`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = null,
@@ -178,12 +238,12 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			val arenaData = arenaDataRepository.get(ARENA_HIST_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
 
 			deltakerRecord shouldBe null
-			arenaData!!.ingestStatus shouldBe IngestStatus.INVALID
+			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 	}
 
 	@Test
-	fun `ingest deltaker - har deltakelse i amt-tiltak, annen gjennomforing - status INVALID`() {
+	fun `ingest deltaker - har deltakelse i amt-tiltak, annen gjennomforing - status HANDLED`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = UUID.randomUUID(),
@@ -205,13 +265,13 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			val arenaData = arenaDataRepository.get(ARENA_HIST_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
 
 			deltakerRecord shouldBe null
-			arenaData!!.ingestStatus shouldBe IngestStatus.INVALID
+			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 
 	}
 
 	@Test
-	fun `ingest deltaker - har deltakelse i amt-tiltak, samme gjennomforing, andre datoer - status INVALID`() {
+	fun `ingest deltaker - har deltakelse i amt-tiltak, samme gjennomforing, andre datoer - status HANDLED`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = UUID.randomUUID(),
@@ -232,9 +292,37 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			val arenaData = arenaDataRepository.get(ARENA_HIST_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
 
 			deltakerRecord shouldBe null
-			arenaData!!.ingestStatus shouldBe IngestStatus.INVALID
+			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 
+	}
+
+	@Test
+	fun `ingest deltaker - har deltakelse i amt-tiltak, samme gjennomforing, nye datoer - status INVALID`() {
+		val date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))//"2015-09-07 00:00:00"
+		val deltaker = baseDeltaker.copy(DATO_FRA = date, DATO_TIL = date, DELTAKERSTATUSKODE = TiltakDeltaker.Status.FULLF.name)
+		mockArenaOrdsProxyHttpServer.mockHentFnr(deltaker.PERSON_ID!!, fnr)
+		mockAmtTiltakServer.mockHentDeltakelserForPerson(
+			deltakerId = UUID.randomUUID(),
+			gjennomforingId = gjennomforingIdMR,
+			startdato = LocalDate.now().minusDays(1),
+			sluttdato = LocalDate.now().plusMonths(3)
+		)
+		val pos = "52"
+		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
+
+		kafkaMessageSender.publiserArenaHistDeltaker(
+			deltaker.HIST_TILTAKDELTAKER_ID,
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(deltaker, opPos = pos))
+		)
+
+		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
+			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
+			val arenaData = arenaDataRepository.get(ARENA_HIST_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
+
+			deltakerRecord shouldBe null
+			arenaData!!.ingestStatus shouldBe IngestStatus.INVALID
+		}
 	}
 
 	@Test
@@ -301,7 +389,11 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			startdato = parseDate(baseDeltaker.DATO_FRA),
 			sluttdato = parseDate(baseDeltaker.DATO_TIL)
 		)
-		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), false)
+		gjennomforingService.upsert(
+			baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(),
+			SUPPORTED_TILTAK.first(),
+			false
+		)
 
 		val pos = "77"
 		kafkaMessageSender.publiserArenaHistDeltaker(
@@ -350,8 +442,9 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 	}
 
 	private fun createDeltaker() = KafkaMessageCreator.baseHistDeltaker(
-		startDato = LocalDate.now().plusDays(1),
-		sluttDato = LocalDate.now().plusMonths(6),
+		deltakerStatusKode = TiltakDeltaker.Status.FULLF.name,
+		startDato = LocalDate.now().minusMonths(3),
+		sluttDato = LocalDate.now().minusMonths(2),
 	)
 
 	private fun ArenaGjennomforing.publiser(customAssertions: (payload: Gjennomforing?) -> Unit) {

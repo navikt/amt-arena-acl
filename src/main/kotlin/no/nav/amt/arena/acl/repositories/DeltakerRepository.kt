@@ -3,7 +3,7 @@ package no.nav.amt.arena.acl.repositories
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
 import no.nav.amt.arena.acl.utils.getLocalDate
 import no.nav.amt.arena.acl.utils.getLocalDateTime
-import no.nav.amt.arena.acl.utils.getUUID
+import no.nav.amt.arena.acl.utils.getNullableUUID
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Component
@@ -15,7 +15,6 @@ class DeltakerRepository(
 ) {
 	private val rowMapper = RowMapper { rs, _ ->
 		DeltakerDbo(
-			id = rs.getUUID("id"),
 			arenaId = rs.getLong("arena_id"),
 			personId = rs.getLong("person_id"),
 			gjennomforingId = rs.getLong("gjennomforing_id"),
@@ -25,7 +24,7 @@ class DeltakerRepository(
 			modDato = rs.getLocalDateTime("mod_dato"),
 			status = rs.getString("status"),
 			datoStatusEndring = rs.getLocalDateTime("dato_statusendring"),
-			eksternId = rs.getUUID("ekstern_id"),
+			eksternId = rs.getNullableUUID("ekstern_id"),
 			arenaSourceTable = rs.getString("arena_source_table"),
 			createdAt = rs.getLocalDateTime("created_at"),
 			modifiedAt = rs.getLocalDateTime("modified_at")
@@ -96,6 +95,15 @@ class DeltakerRepository(
 			"arenaTable" to arenaTable,
 		)
 		return template.query(sql, parameters, rowMapper).firstOrNull()
+	}
+
+	fun getDeltakereForPerson(personId: Long, gjennomforingId: Long): List<DeltakerDbo> {
+		val sql = "SELECT * FROM deltaker WHERE person_id = :personId AND gjennomforing_id = :gjennomforingId"
+		val parameters = sqlParameters(
+			"personId" to personId,
+			"gjennomforingId" to gjennomforingId,
+		)
+		return template.query(sql, parameters, rowMapper).toList()
 	}
 
 
