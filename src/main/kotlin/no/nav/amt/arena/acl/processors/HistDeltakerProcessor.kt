@@ -197,8 +197,8 @@ open class HistDeltakerProcessor(
 			}
 			return null
 		} else if (matchendeDeltakere.size == 1) {
-			log.info("hist deltaker med ${arenaHistDeltaker.HIST_TILTAKDELTAKER_ID} matcher med ${arenaDeltakere.first().arenaId}")
-			return arenaDeltakere.first()
+			log.info("hist deltaker med ${arenaHistDeltaker.HIST_TILTAKDELTAKER_ID} matcher med ${matchendeDeltakere.first().arenaId}")
+			return matchendeDeltakere.first()
 		}
 
 		throw OperationNotImplementedException("Fant ${arenaDeltakere.size} deltakere som matcher med hist deltaker ${arenaHistDeltaker.HIST_TILTAKDELTAKER_ID}")
