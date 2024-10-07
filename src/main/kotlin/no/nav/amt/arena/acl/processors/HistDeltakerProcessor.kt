@@ -23,7 +23,6 @@ import no.nav.amt.arena.acl.repositories.DeltakerDbo
 import no.nav.amt.arena.acl.repositories.DeltakerRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.KafkaProducerService
-import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.asLocalDate
 import no.nav.amt.arena.acl.utils.asLocalDateTime
 import no.nav.amt.arena.acl.utils.tryRun
@@ -69,7 +68,7 @@ open class HistDeltakerProcessor(
 
 			if (eksisterendeDeltaker == null) {
 
-				val nyDeltaker = deltakerProcessor.createDeltaker(histDeltaker, gjennomforing, ARENA_HIST_DELTAKER_TABLE_NAME)
+				val nyDeltaker = deltakerProcessor.createDeltaker(histDeltaker, gjennomforing, erHistDeltaker = true)
 
 				nyDeltaker.validerGyldigHistDeltaker()
 				log.info("Fant ingen match for hist-deltaker $arenaHistDeltakerId, oppretter ny og lagrer mapping men sender ikke videre (enda)")
