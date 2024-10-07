@@ -28,8 +28,6 @@ import no.nav.amt.arena.acl.utils.asLocalDateTime
 import no.nav.amt.arena.acl.utils.tryRun
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
@@ -205,18 +203,11 @@ open class HistDeltakerProcessor(
 	}
 
 	private fun AmtDeltaker.validerGyldigHistDeltaker() {
-		fun AmtDeltaker.harNyligSluttet(): Boolean =
-			!LocalDateTime.now().isAfter(statusEndretDato!!.plusDays(40)) &&
-				(sluttDato == null || sluttDato.isAfter(LocalDate.now().minusDays(40)))
-
 		if (!status.erAvsluttende()) {
 			throw IllegalStateException("Hist deltaker har fått status $status")
 		}
 		if (statusEndretDato == null) {
 			throw ValidationException("Kan ikke sende videre hist-deltaker $id fordi den mangler statusEndretDato som vil utledes til LocalDateTime.now()")
-		}
-		if (harNyligSluttet()) {
-			throw ValidationException("Kan ikke sende videre hist-deltaker $id fordi den har nylig sluttet")
 		}
 	}
 
