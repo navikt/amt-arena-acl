@@ -149,7 +149,7 @@ open class DeltakerProcessor(
 		val arenaHistId = arenaDataIdTranslationService.hentArenaHistId(amtDeltaker.id)
 		if (arenaHistId != null) {
 			log.info("Mottatt delete-melding for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, blir ikke behandlet fordi det finnes hist-melding på samme deltaker")
-			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
+			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId, "Slettes ikke fordi deltaker ble historisert"))
 		} else {
 			if (getRetryAttempts(deltakerData, message) < 2) {
 				log.info("Fant ikke hist-deltaker for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, venter litt..")
