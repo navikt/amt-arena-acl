@@ -65,13 +65,13 @@ open class HistDeltakerProcessor(
 			val eksisterendeDeltaker = getMatchingDeltaker(arenaDeltakerRaw)
 
 			if (eksisterendeDeltaker == null) {
-
+				//Her havner vi når vi spiller av topicen fra start
+				//(fordi disse deltakerene er allerede fjernet fra arenas deltaker tabell)
 				val nyDeltaker = deltakerProcessor.createDeltaker(histDeltaker, gjennomforing, erHistDeltaker = true)
 
 				nyDeltaker.validerGyldigHistDeltaker()
 				log.info("Fant ingen match for hist-deltaker $arenaHistDeltakerId, oppretter ny og lagrer mapping men sender ikke videre (enda)")
-				// TODO: Deltakeren skal sendes videre på topic men først deploye og relaste for å analysere mappingene
-				// sendMessage(nyDeltaker, arenaHistDeltakerId, AmtOperation.CREATED)
+				sendMessage(nyDeltaker, arenaHistDeltakerId, AmtOperation.CREATED)
 			}
 			else {
 				log.info("Hist deltaker $arenaHistDeltakerId matcher deltaker ${eksisterendeDeltaker.arenaId}")
