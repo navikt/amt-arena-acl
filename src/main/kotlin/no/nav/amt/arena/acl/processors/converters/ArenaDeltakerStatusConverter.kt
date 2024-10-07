@@ -5,7 +5,7 @@ import no.nav.amt.arena.acl.domain.kafka.amt.erAvsluttende
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UnknownFormatConversionException
 
 class ArenaDeltakerStatusConverter(
 	val arenaStatus: TiltakDeltaker.Status,
@@ -15,12 +15,14 @@ class ArenaDeltakerStatusConverter(
 	val datoStatusEndring: LocalDateTime?,
 	val erGjennomforingAvsluttet: Boolean,
 	val gjennomforingSluttdato: LocalDate?,
-	val erKurs: Boolean
+	val erKurs: Boolean,
+	val tiltakstype: String
 ) {
 
 	fun convert(): DeltakerStatus {
 		val status =
-			if (arenaStatus.erSoktInn()) utledSoktInnStatus()
+			if (arenaStatus.erUgyldigForTiltaksstype()) DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, LocalDateTime.now())
+			else if (arenaStatus.erSoktInn()) utledSoktInnStatus()
 			else if (arenaStatus.erFeilregistrert()) utledFeilregistrertStatus()
 			else if (erKurs) convertKursStatuser()
 			else if (arenaStatus.erGjennomforende()) utledGjennomforendeStatus()
@@ -37,9 +39,7 @@ class ArenaDeltakerStatusConverter(
 	private fun convertKursStatuser() : DeltakerStatus {
 		val status: DeltakerStatus
 
-		if (arenaStatus.erSoktInn()) status = utledSoktInnStatus()
-
-		else if (arenaStatus.erGjennomforende()) {
+		if (arenaStatus.erGjennomforende()) {
 			if (startDatoHarPassert() && sluttDatoHarPassert() && sluttetForTidlig()) {
 				status = DeltakerStatus(AmtDeltaker.Status.AVBRUTT, deltakerSluttdato?.atStartOfDay())
 			}
@@ -163,6 +163,9 @@ class ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.AKTUELL,
 			TiltakDeltaker.Status.INFOMOETE
 		)
+	}
+	private fun TiltakDeltaker.Status.erUgyldigForTiltaksstype(): Boolean {
+		return this == TiltakDeltaker.Status.AKTUELL && tiltakstype == "ARBFORB"
 	}
 
 	private fun TiltakDeltaker.Status.erFeilregistrert(): Boolean {

@@ -5,7 +5,7 @@ import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerAarsakConverter
 import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerStatusConverter
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class TiltakDeltaker(
 	val tiltakdeltakerId: String,
@@ -54,6 +54,7 @@ data class TiltakDeltaker(
 		gjennomforingId: UUID,
 		gjennomforingSluttDato: LocalDate?,
 		erGjennomforingAvsluttet: Boolean,
+		tiltakstype: String,
 		personIdent: String,
 		erKurs: Boolean
 	): AmtDeltaker {
@@ -65,6 +66,7 @@ data class TiltakDeltaker(
 			datoStatusEndring = datoStatusendring,
 			gjennomforingSluttdato = gjennomforingSluttDato,
 			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
+			tiltakstype = tiltakstype,
 			erKurs = erKurs
 		).convert()
 		val statusAarsak = ArenaDeltakerAarsakConverter.convert(

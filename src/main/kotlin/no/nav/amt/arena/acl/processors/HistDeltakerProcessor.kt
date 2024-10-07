@@ -146,6 +146,7 @@ open class HistDeltakerProcessor(
 			gjennomforingId = gjennomforing.id,
 			gjennomforingSluttDato = gjennomforing.sluttDato,
 			erGjennomforingAvsluttet = gjennomforing.erAvsluttet(),
+			tiltakstype = gjennomforing.tiltakstype.arenaKode,
 			erKurs = gjennomforing.erKurs(),
 			personIdent = personIdent,
 		)

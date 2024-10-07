@@ -183,6 +183,7 @@ open class DeltakerProcessor(
 			gjennomforingId = gjennomforing.id,
 			gjennomforingSluttDato = gjennomforing.sluttDato,
 			erGjennomforingAvsluttet = gjennomforing.erAvsluttet(),
+			tiltakstype = gjennomforing.tiltakstype.arenaKode,
 			erKurs = gjennomforing.erKurs(),
 			personIdent = personIdent,
 		)
