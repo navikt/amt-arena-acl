@@ -5,7 +5,6 @@ import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.repositories.ArenaDataHistIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
-import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -35,12 +34,17 @@ open class ArenaDataIdTranslationService(
 		return arenaDataIdTranslationRepository.get(table, arenaId)?.amtId
 	}
 
-	fun hentEllerOpprettNyDeltakerId(deltakerArenaId: String, table: String = ARENA_DELTAKER_TABLE_NAME): UUID {
-		val deltakerId = arenaDataIdTranslationRepository.get(table, deltakerArenaId)?.amtId
+	fun hentEllerOpprettNyDeltakerId(deltakerArenaId: String, erHistDeltaker: Boolean = false): UUID {
+		val deltakerId =
+			if (erHistDeltaker) arenaDataHistIdTranslationRepository.get(deltakerArenaId)?.amtId
+			else arenaDataIdTranslationRepository.get(ARENA_DELTAKER_TABLE_NAME, deltakerArenaId)?.amtId
 
 		if (deltakerId == null) {
 			val nyDeltakerId = UUID.randomUUID()
-			if(table == ARENA_DELTAKER_TABLE_NAME) {
+			if (erHistDeltaker) {
+				lagreHistDeltakerId(nyDeltakerId, deltakerArenaId)
+			}
+			else {
 				arenaDataIdTranslationRepository.insert(
 					ArenaDataIdTranslationDbo(
 						amtId = nyDeltakerId,
@@ -49,11 +53,7 @@ open class ArenaDataIdTranslationService(
 					)
 				)
 			}
-			else if (table == ARENA_HIST_DELTAKER_TABLE_NAME) {
-				lagreHistDeltakerId(nyDeltakerId, deltakerArenaId)
-			}
-
-			log.info("Opprettet ny id for deltaker, id=$nyDeltakerId arenaId=$deltakerArenaId for table=$table")
+			log.info("Opprettet ny id for deltaker, id=$nyDeltakerId arenaId=$deltakerArenaId")
 			return nyDeltakerId
 		}
 

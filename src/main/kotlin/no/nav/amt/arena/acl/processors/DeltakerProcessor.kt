@@ -172,14 +172,14 @@ open class DeltakerProcessor(
 		return deltakerData.find { it.operationPosition == message.operationPosition }?.ingestAttempts ?: 0
 	}
 
-	fun createDeltaker(arenaDeltaker: TiltakDeltaker, gjennomforing: Gjennomforing, sourceTable: String = ARENA_DELTAKER_TABLE_NAME): AmtDeltaker {
+	fun createDeltaker(arenaDeltaker: TiltakDeltaker, gjennomforing: Gjennomforing, erHistDeltaker: Boolean = false): AmtDeltaker {
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
 			?: throw ValidationException("Arena mangler personlig ident for personId=${arenaDeltaker.personId}")
 
-		val deltakerAmtId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, sourceTable)
+		val deltakerId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, erHistDeltaker)
 
 		return arenaDeltaker.constructDeltaker(
-			amtDeltakerId = deltakerAmtId,
+			amtDeltakerId = deltakerId,
 			gjennomforingId = gjennomforing.id,
 			gjennomforingSluttDato = gjennomforing.sluttDato,
 			erGjennomforingAvsluttet = gjennomforing.erAvsluttet(),
