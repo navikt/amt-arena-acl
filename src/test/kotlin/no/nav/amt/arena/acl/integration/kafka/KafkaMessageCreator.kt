@@ -160,7 +160,7 @@ object KafkaMessageCreator {
 			BEGRUNNELSE_PRIORITERING = GENERIC_STRING,
 			REG_DATO = dateFormatter.format(registrertDato),
 			REG_USER = GENERIC_STRING,
-			MOD_DATO = GENERIC_STRING,
+			MOD_DATO = GENERIC_DATE_STRING,
 			MOD_USER = GENERIC_STRING,
 			DATO_SVARFRIST = GENERIC_STRING,
 			DATO_FRA = startDato?.let { dateFormatter.format(it.atStartOfDay()) },
