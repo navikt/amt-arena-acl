@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.kafka
 
+import no.nav.amt.arena.acl.clients.UnleashServiceImpl
 import no.nav.amt.arena.acl.services.ArenaMessageProcessorService
 import no.nav.common.kafka.consumer.KafkaConsumerClient
 import no.nav.common.kafka.consumer.util.KafkaConsumerClientBuilder
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component
 open class KafkaConsumer(
 	kafkaTopicProperties: KafkaTopicProperties,
 	kafkaProperties: KafkaProperties,
+	unleashService: UnleashServiceImpl,
 	private val arenaMessageProcessorService: ArenaMessageProcessorService,
 ) {
 
@@ -22,11 +24,18 @@ open class KafkaConsumer(
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	init {
-		val topics = listOf(
-			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
-			kafkaTopicProperties.arenaTiltakDeltakerTopic,
-			kafkaTopicProperties.arenaHistTiltakDeltakerTopic
-		)
+		val topics =
+			if (unleashService.disableArenaDeltakerConsumer())
+				listOf(
+					kafkaTopicProperties.arenaTiltakGjennomforingTopic,
+					kafkaTopicProperties.arenaHistTiltakDeltakerTopic
+				)
+			else listOf(
+				kafkaTopicProperties.arenaTiltakGjennomforingTopic,
+				kafkaTopicProperties.arenaTiltakDeltakerTopic,
+				kafkaTopicProperties.arenaHistTiltakDeltakerTopic
+			)
+
 
 		val topicConfigs = topics.map { topic ->
 			KafkaConsumerClientBuilder.TopicConfig<String, String>()
