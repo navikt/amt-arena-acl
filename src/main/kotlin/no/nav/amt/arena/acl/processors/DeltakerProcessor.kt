@@ -71,7 +71,7 @@ open class DeltakerProcessor(
 		log.info("Prosesserer melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId op=${message.operationType} er sendt")
 
 		if (message.operationType == AmtOperation.DELETED) {
-			handleDeleteMessage(deltaker, arenaDeltakerId, message, deltakerData)
+			handleDeleteMessage(arenaDeltakerRaw, deltaker, arenaDeltakerId, message, deltakerData)
 		} else {
 			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId)
 			log.info("Lagrer deltaker med id=${deltaker.id}")
@@ -139,6 +139,7 @@ open class DeltakerProcessor(
 	}
 
 	private fun handleDeleteMessage(
+		arenaDeltakerRaw: ArenaDeltaker,
 		amtDeltaker: AmtDeltaker,
 		arenaDeltakerId: String,
 		message: ArenaDeltakerKafkaMessage,
@@ -150,6 +151,7 @@ open class DeltakerProcessor(
 		if (arenaHistId != null) {
 			log.info("Mottatt delete-melding for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, blir ikke behandlet fordi det finnes hist-melding på samme deltaker")
 			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId, "Slettes ikke fordi deltaker ble historisert"))
+			deltakerRepository.upsert(arenaDeltakerRaw.toDbo()) // denne kan fjernes når vi har kjørt igjennom delete meldinger
 		} else {
 			if (getRetryAttempts(deltakerData, message) < 2) {
 				log.info("Fant ikke hist-deltaker for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, venter litt..")
