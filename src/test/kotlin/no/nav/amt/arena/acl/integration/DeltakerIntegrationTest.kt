@@ -42,7 +42,6 @@ import java.util.UUID
 	listeners = [DirtyContextBeforeAndAfterClassTestExecutionListener::class],
 	mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
 )
-@Disabled
 class DeltakerIntegrationTest : IntegrationTestBase() {
 
 	@Autowired
