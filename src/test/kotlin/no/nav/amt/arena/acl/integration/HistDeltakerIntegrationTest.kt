@@ -237,7 +237,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
 			val arenaData = arenaDataRepository.get(ARENA_HIST_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
 
-			deltakerRecord shouldBe null
+			deltakerRecord shouldNotBe null
 			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 	}
@@ -264,14 +264,14 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
 			val arenaData = arenaDataRepository.get(ARENA_HIST_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
 
-			deltakerRecord shouldBe null
+			deltakerRecord shouldNotBe null
 			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 
 	}
 
 	@Test
-	fun `ingest deltaker - har deltakelse i amt-tiltak, samme gjennomforing, andre datoer - status HANDLED`() {
+	fun `ingest deltaker - har deltakelse på samme gjennomforing, andre datoer - status HANDLED`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = UUID.randomUUID(),
@@ -291,38 +291,10 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
 			val arenaData = arenaDataRepository.get(ARENA_HIST_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
 
-			deltakerRecord shouldBe null
+			deltakerRecord shouldNotBe null
 			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 
-	}
-
-	@Test
-	fun `ingest deltaker - har deltakelse i amt-tiltak, samme gjennomforing, nye datoer - status INVALID`() {
-		val date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))//"2015-09-07 00:00:00"
-		val deltaker = baseDeltaker.copy(DATO_FRA = date, DATO_TIL = date, DELTAKERSTATUSKODE = TiltakDeltaker.Status.FULLF.name)
-		mockArenaOrdsProxyHttpServer.mockHentFnr(deltaker.PERSON_ID!!, fnr)
-		mockAmtTiltakServer.mockHentDeltakelserForPerson(
-			deltakerId = UUID.randomUUID(),
-			gjennomforingId = gjennomforingIdMR,
-			startdato = LocalDate.now().minusDays(1),
-			sluttdato = LocalDate.now().plusMonths(3)
-		)
-		val pos = "52"
-		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
-
-		kafkaMessageSender.publiserArenaHistDeltaker(
-			deltaker.HIST_TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(deltaker, opPos = pos))
-		)
-
-		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
-			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
-			val arenaData = arenaDataRepository.get(ARENA_HIST_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
-
-			deltakerRecord shouldBe null
-			arenaData!!.ingestStatus shouldBe IngestStatus.INVALID
-		}
 	}
 
 	@Test

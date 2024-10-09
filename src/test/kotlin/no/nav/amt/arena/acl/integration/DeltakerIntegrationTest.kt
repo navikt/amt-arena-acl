@@ -330,7 +330,7 @@ class DeltakerIntegrationTest : IntegrationTestBase() {
 
 		AsyncUtils.eventually {
 			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.DELETED, pos)
-			arenaData!!.note shouldBe null
+			arenaData!!.note shouldBe "Slettes ikke fordi deltaker ble historisert"
 			arenaData.ingestStatus shouldBe IngestStatus.HANDLED
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
 			deltakerRecord shouldBe null

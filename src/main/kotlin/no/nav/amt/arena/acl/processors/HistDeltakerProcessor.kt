@@ -28,8 +28,6 @@ import no.nav.amt.arena.acl.utils.asLocalDateTime
 import no.nav.amt.arena.acl.utils.tryRun
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
@@ -67,13 +65,13 @@ open class HistDeltakerProcessor(
 			val eksisterendeDeltaker = getMatchingDeltaker(arenaDeltakerRaw)
 
 			if (eksisterendeDeltaker == null) {
-
+				//Her havner vi når vi spiller av topicen fra start
+				//(fordi disse deltakerene er allerede fjernet fra arenas deltaker tabell)
 				val nyDeltaker = deltakerProcessor.createDeltaker(histDeltaker, gjennomforing, erHistDeltaker = true)
 
 				nyDeltaker.validerGyldigHistDeltaker()
 				log.info("Fant ingen match for hist-deltaker $arenaHistDeltakerId, oppretter ny og lagrer mapping men sender ikke videre (enda)")
-				// TODO: Deltakeren skal sendes videre på topic men først deploye og relaste for å analysere mappingene
-				// sendMessage(nyDeltaker, arenaHistDeltakerId, AmtOperation.CREATED)
+				sendMessage(nyDeltaker, arenaHistDeltakerId, AmtOperation.CREATED)
 			}
 			else {
 				log.info("Hist deltaker $arenaHistDeltakerId matcher deltaker ${eksisterendeDeltaker.arenaId}")
@@ -205,18 +203,11 @@ open class HistDeltakerProcessor(
 	}
 
 	private fun AmtDeltaker.validerGyldigHistDeltaker() {
-		fun AmtDeltaker.harNyligSluttet(): Boolean =
-			!LocalDateTime.now().isAfter(statusEndretDato!!.plusDays(40)) &&
-				(sluttDato == null || sluttDato.isAfter(LocalDate.now().minusDays(40)))
-
 		if (!status.erAvsluttende()) {
 			throw IllegalStateException("Hist deltaker har fått status $status")
 		}
 		if (statusEndretDato == null) {
 			throw ValidationException("Kan ikke sende videre hist-deltaker $id fordi den mangler statusEndretDato som vil utledes til LocalDateTime.now()")
-		}
-		if (harNyligSluttet()) {
-			throw ValidationException("Kan ikke sende videre hist-deltaker $id fordi den har nylig sluttet")
 		}
 	}
 
