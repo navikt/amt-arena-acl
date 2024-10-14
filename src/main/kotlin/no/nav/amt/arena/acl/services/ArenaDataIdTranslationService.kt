@@ -17,11 +17,6 @@ open class ArenaDataIdTranslationService(
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	fun hentArenaIdEllerHistId(id: UUID): String? {
-		return arenaDataIdTranslationRepository.get(id)?.arenaId
-			?: arenaDataHistIdTranslationRepository.get(id)?.arenaHistId
-	}
-
 	fun hentArenaHistId(id: UUID): String? {
 		return arenaDataHistIdTranslationRepository.get(id)?.arenaHistId
 	}
