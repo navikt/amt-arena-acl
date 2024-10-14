@@ -19,7 +19,7 @@ class Controller(
 	@ProtectedWithClaims(issuer = Issuer.AZURE_AD)
 	@GetMapping("/translation/{id}")
 	fun hentArenaId(@PathVariable("id") id: UUID): HentArenaIdResponse {
-		return arenaDataIdTranslationService.hentArenaIdEllerHistId(id)
+		return arenaDataIdTranslationService.hentArenaId(id)
 			?.let { HentArenaIdResponse(it) }
 			?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Fant ikke arena id for $id")
 	}
