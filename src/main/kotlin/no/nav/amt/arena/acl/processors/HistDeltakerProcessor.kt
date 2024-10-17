@@ -70,7 +70,7 @@ open class HistDeltakerProcessor(
 				val nyDeltaker = deltakerProcessor.createDeltaker(histDeltaker, gjennomforing, erHistDeltaker = true)
 
 				nyDeltaker.validerGyldigHistDeltaker()
-				log.info("Fant ingen match for hist-deltaker $arenaHistDeltakerId, oppretter ny og lagrer mapping men sender ikke videre (enda)")
+				log.info("Fant ingen match for hist-deltaker $arenaHistDeltakerId, oppretter ny deltaker ${nyDeltaker.id} og lagrer mapping og sender videre")
 				sendMessage(nyDeltaker, arenaHistDeltakerId, AmtOperation.CREATED)
 			}
 			else {
