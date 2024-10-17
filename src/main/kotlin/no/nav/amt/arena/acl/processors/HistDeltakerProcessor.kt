@@ -107,6 +107,7 @@ open class HistDeltakerProcessor(
 					histDeltakerArenaId = deltakerHistId
 				)
 			} else if (arenaId != deltakerHistId) {
+				log.error("Fikk arenadeltaker med id $deltakerHistId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
 				throw ValidationException("Fikk arena hist-deltaker med id $deltakerHistId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
 			}
 

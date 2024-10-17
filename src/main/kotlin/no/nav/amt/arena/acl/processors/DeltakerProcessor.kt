@@ -92,6 +92,7 @@ open class DeltakerProcessor(
 				arenaDataIdTranslationService.opprettIdTranslation(arenaDeltakerId, eksternId)
 			}
 			else if (arenaId != arenaDeltakerId) {
+				log.error("Fikk arenadeltaker med id $arenaDeltakerId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
 				throw ValidationException("Fikk arenadeltaker med id $arenaDeltakerId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
 			}
 
