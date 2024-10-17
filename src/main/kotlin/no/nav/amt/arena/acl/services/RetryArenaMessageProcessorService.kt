@@ -84,7 +84,7 @@ open class RetryArenaMessageProcessorService(
 				log.info("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}'")
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.IGNORED)
 			}
-			if (e is ExternalSourceSystemException) {
+			else if (e is ExternalSourceSystemException) {
 				log.info("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName} was created by a external source system: '${e.message}'")
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.EXTERNAL_SOURCE)
 			}
