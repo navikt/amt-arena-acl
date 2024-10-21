@@ -24,8 +24,24 @@ class Controller(
 			?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Fant ikke arena id for $id")
 	}
 
+	@ProtectedWithClaims(issuer = Issuer.AZURE_AD)
+	@GetMapping("/v2/translation/{id}")
+	fun hentArenaIdV2(@PathVariable("id") id: UUID): HentArenaIdV2Response {
+		val arenaId = arenaDataIdTranslationService.hentArenaId(id)
+		arenaId?.let { return HentArenaIdV2Response(arenaId = it, arenaHistId = null) }
+		val arenaHistId = arenaDataIdTranslationService.hentArenaHistId(id)
+		return HentArenaIdV2Response(
+			arenaId = null,
+			arenaHistId = arenaHistId
+		)
+	}
+
 	data class HentArenaIdResponse(
 		val arenaId: String
 	)
 
+	data class HentArenaIdV2Response(
+		val arenaId: String?,
+		val arenaHistId: String?
+	)
 }
