@@ -2,7 +2,7 @@ package no.nav.amt.arena.acl.domain.kafka.amt
 
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class AmtDeltaker(
 	val id: UUID,
@@ -30,6 +30,7 @@ data class AmtDeltaker(
 		TRENGER_ANNEN_STOTTE,
 		FIKK_IKKE_PLASS,
 		AVLYST_KONTRAKT,
+		SAMARBEIDET_MED_ARRANGOREN_ER_AVBRUTT,
 		IKKE_MOTT,
 		ANNET
 	}

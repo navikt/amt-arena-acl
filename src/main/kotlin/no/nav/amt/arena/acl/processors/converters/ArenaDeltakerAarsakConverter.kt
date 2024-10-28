@@ -49,8 +49,8 @@ object ArenaDeltakerAarsakConverter {
 	private fun utledMedArenaStatus(arenaStatus: TiltakDeltaker.Status): AmtDeltaker.StatusAarsak? {
 		return when (arenaStatus) {
 			TiltakDeltaker.Status.FULLF -> null
-			TiltakDeltaker.Status.GJENN_AVB -> AmtDeltaker.StatusAarsak.AVLYST_KONTRAKT
-			TiltakDeltaker.Status.GJENN_AVL -> AmtDeltaker.StatusAarsak.AVLYST_KONTRAKT
+			TiltakDeltaker.Status.GJENN_AVB -> AmtDeltaker.StatusAarsak.SAMARBEIDET_MED_ARRANGOREN_ER_AVBRUTT
+			TiltakDeltaker.Status.GJENN_AVL -> AmtDeltaker.StatusAarsak.SAMARBEIDET_MED_ARRANGOREN_ER_AVBRUTT
 			TiltakDeltaker.Status.AVSLAG -> AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
 			else -> AmtDeltaker.StatusAarsak.ANNET
 		}
