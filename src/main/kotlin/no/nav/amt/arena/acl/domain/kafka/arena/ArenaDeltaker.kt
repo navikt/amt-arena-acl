@@ -5,9 +5,6 @@ import no.nav.amt.arena.acl.repositories.DeltakerInsertDbo
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.asValidatedLocalDate
 import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
-import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import java.time.Month
 import java.util.UUID
 
 // @SONAR_START@
@@ -22,9 +19,9 @@ data class ArenaDeltaker(
 	val PRIORITET: Int? = null,
 	val BEGRUNNELSE_INNSOKT: String? = null,
 	val BEGRUNNELSE_PRIORITERING: String? = null,
-	val REG_DATO: String? = null,
+	val REG_DATO: String,
 	val REG_USER: String? = null,
-	val MOD_DATO: String? = null,
+	val MOD_DATO: String,
 	val MOD_USER: String? = null,
 	val DATO_SVARFRIST: String? = null,
 	val DATO_FRA: String? = null,
@@ -46,10 +43,6 @@ data class ArenaDeltaker(
 	val EKSTERN_ID: String? = null
 ) {
 
-	private val log = LoggerFactory.getLogger(javaClass)
-
-	private val placeholderDate = LocalDateTime.of(1970, Month.JANUARY, 1, 0, 0)
-
 	fun mapTiltakDeltaker(): TiltakDeltaker {
 		val tiltakdeltakerId = TILTAKDELTAKER_ID.toString().also {
 			if (it == "0") throw ValidationException("TILTAKDELTAKER_ID er 0")
@@ -58,11 +51,6 @@ data class ArenaDeltaker(
 		val tiltakgjennomforingId = TILTAKGJENNOMFORING_ID.toString().also {
 			if (it == "0") throw ValidationException("TILTAKGJENNOMFORING_ID er 0")
 		}
-
-		val regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO") ?: placeholderDate.also {
-			log.warn("Bruker med arenaId=${tiltakdeltakerId} mangler REG_DATO, bruker placeholder dato istedenfor")
-		}
-
 
 		return TiltakDeltaker(
 			tiltakdeltakerId = tiltakdeltakerId,
@@ -75,7 +63,7 @@ data class ArenaDeltaker(
 			statusAarsakKode = AARSAKVERDIKODE_STATUS?.let { TiltakDeltaker.StatusAarsak.valueOf(AARSAKVERDIKODE_STATUS) },
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
-			regDato = regDato,
+			regDato = REG_DATO.asValidatedLocalDateTime("REG_DATO"),
 
 			// I tiltaksarrangor-bff så er det ikke mulig å slette bestillingsteksten ved å sette den til null,
 			// så for å fjerne tekst som finnes må man sette en tom string i steden for null
@@ -89,8 +77,8 @@ data class ArenaDeltaker(
 		gjennomforingId = TILTAKGJENNOMFORING_ID,
 		datoFra = DATO_FRA?.asValidatedLocalDate("DATO_FRA"),
 		datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
-		regDato = REG_DATO?.asValidatedLocalDateTime("REG_DATO"),
-		modDato = MOD_DATO?.asValidatedLocalDateTime("MOD_DATO"),
+		regDato = REG_DATO.asValidatedLocalDateTime("REG_DATO"),
+		modDato = MOD_DATO.asValidatedLocalDateTime("MOD_DATO"),
 		status = DELTAKERSTATUSKODE,
 		datoStatusEndring = DATO_STATUSENDRING?.asValidatedLocalDateTime("DATO_STATUSENDRING"),
 		arenaSourceTable = ARENA_DELTAKER_TABLE_NAME,
