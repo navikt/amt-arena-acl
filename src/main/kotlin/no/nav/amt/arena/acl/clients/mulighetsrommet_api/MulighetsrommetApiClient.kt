@@ -33,12 +33,10 @@ data class Gjennomforing (
 	)
 
 	enum class Status {
-	  	PLANLAGT,
 		GJENNOMFORES,
 		AVBRUTT,
 		AVLYST,
-		AVSLUTTET,
-		APENT_FOR_INNSOK;
+		AVSLUTTET;
 	}
 
 	fun erAvsluttet(): Boolean {
