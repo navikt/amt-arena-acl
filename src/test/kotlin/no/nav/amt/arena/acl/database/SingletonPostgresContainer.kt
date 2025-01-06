@@ -14,7 +14,7 @@ object SingletonPostgresContainer {
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	private val postgresDockerImageName = getPostgresImage()
+	private const val POSTGRES_DOCKER_IMAGE_NAME = "postgres:14-alpine"
 
 	private var postgresContainer: PostgreSQLContainer<Nothing>? = null
 
@@ -62,7 +62,7 @@ object SingletonPostgresContainer {
 	}
 
 	private fun createContainer(): PostgreSQLContainer<Nothing> {
-		val container = PostgreSQLContainer<Nothing>(DockerImageName.parse(postgresDockerImageName).asCompatibleSubstituteFor("postgres"))
+		val container = PostgreSQLContainer<Nothing>(DockerImageName.parse(POSTGRES_DOCKER_IMAGE_NAME).asCompatibleSubstituteFor("postgres"))
 		container.addEnv("TZ", "Europe/Oslo")
 		return container.waitingFor(HostPortWaitStrategy())
 	}
@@ -84,13 +84,6 @@ object SingletonPostgresContainer {
 		})
 	}
 
-	private fun getPostgresImage(): String {
-		val digest = when (System.getProperty("os.arch")) {
-			"aarch64" -> "@sha256:58ddae4817fc2b7ed43ac43c91f3cf146290379b7b615210c33fa62a03645e70"
-			else -> ""
-		}
-		return "postgres:14-alpine$digest"
-	}
 	private fun isValidDataSource(dataSource: DataSource?): Boolean {
 		if (dataSource == null) return false
 
