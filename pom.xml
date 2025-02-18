@@ -29,7 +29,7 @@
         <okhttp.version>4.12.0</okhttp.version>
         <nimbus.version>11.23</nimbus.version>
         <token-support.version>5.0.16</token-support.version>
-        <schedlock.version>6.2.0</schedlock.version>
+        <schedlock.version>6.3.0</schedlock.version>
         <logstashencoder.version>8.0</logstashencoder.version>
         <mockk.version>1.13.16</mockk.version>
         <unleash.version>10.0.1</unleash.version>
