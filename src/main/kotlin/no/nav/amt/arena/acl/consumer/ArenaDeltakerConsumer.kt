@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.processors
+package no.nav.amt.arena.acl.consumer
 
 import ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
@@ -33,7 +33,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
-open class DeltakerProcessor(
+open class ArenaDeltakerConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val deltakerRepository: DeltakerRepository,
 	private val gjennomforingService: GjennomforingService,
@@ -42,7 +42,7 @@ open class DeltakerProcessor(
 	private val metrics: DeltakerMetricHandler,
 	private val kafkaProducerService: KafkaProducerService,
 	private val mulighetsrommetApiClient: MulighetsrommetApiClient
-) : ArenaMessageProcessor<ArenaDeltakerKafkaMessage> {
+) : ArenaMessageConsumer<ArenaDeltakerKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
 

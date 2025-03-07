@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.controller
+package no.nav.amt.arena.acl.api
 
 object Issuer {
 	const val TOKEN_X = "tokenx"

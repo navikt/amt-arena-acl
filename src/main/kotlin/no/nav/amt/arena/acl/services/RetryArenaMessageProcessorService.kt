@@ -6,9 +6,9 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
 import no.nav.amt.arena.acl.exceptions.ExternalSourceSystemException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
-import no.nav.amt.arena.acl.processors.DeltakerProcessor
-import no.nav.amt.arena.acl.processors.GjennomforingProcessor
-import no.nav.amt.arena.acl.processors.HistDeltakerProcessor
+import no.nav.amt.arena.acl.consumer.ArenaDeltakerConsumer
+import no.nav.amt.arena.acl.consumer.GjennomforingConsumer
+import no.nav.amt.arena.acl.consumer.HistDeltakerConsumer
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
@@ -22,9 +22,9 @@ import java.time.Instant
 @Service
 open class RetryArenaMessageProcessorService(
 	private val arenaDataRepository: ArenaDataRepository,
-	private val gjennomforingProcessor: GjennomforingProcessor,
-	private val deltakerProcessor: DeltakerProcessor,
-	private val histDeltakerProcessor: HistDeltakerProcessor
+	private val gjennomforingConsumer: GjennomforingConsumer,
+	private val arenaDeltakerConsumer: ArenaDeltakerConsumer,
+	private val histDeltakerConsumer: HistDeltakerConsumer
 ) {
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -70,11 +70,11 @@ open class RetryArenaMessageProcessorService(
 	private fun process(arenaDataDbo: ArenaDataDbo) {
 		try {
 			when (arenaDataDbo.arenaTableName) {
-				ARENA_GJENNOMFORING_TABLE_NAME -> gjennomforingProcessor.handleArenaMessage(
+				ARENA_GJENNOMFORING_TABLE_NAME -> gjennomforingConsumer.handleArenaMessage(
 					toArenaKafkaMessage(arenaDataDbo)
 				)
-				ARENA_DELTAKER_TABLE_NAME -> deltakerProcessor.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
-				ARENA_HIST_DELTAKER_TABLE_NAME -> histDeltakerProcessor.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
+				ARENA_DELTAKER_TABLE_NAME -> arenaDeltakerConsumer.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
+				ARENA_HIST_DELTAKER_TABLE_NAME -> histDeltakerConsumer.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
 			}
 		} catch (e: Exception) {
 			val currentIngestAttempts = arenaDataDbo.ingestAttempts + 1

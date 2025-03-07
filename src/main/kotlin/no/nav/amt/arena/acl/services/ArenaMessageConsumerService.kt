@@ -13,10 +13,10 @@ import no.nav.amt.arena.acl.exceptions.ExternalSourceSystemException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.exceptions.OperationNotImplementedException
 import no.nav.amt.arena.acl.exceptions.ValidationException
-import no.nav.amt.arena.acl.processors.ArenaMessageProcessor
-import no.nav.amt.arena.acl.processors.DeltakerProcessor
-import no.nav.amt.arena.acl.processors.GjennomforingProcessor
-import no.nav.amt.arena.acl.processors.HistDeltakerProcessor
+import no.nav.amt.arena.acl.consumer.ArenaMessageConsumer
+import no.nav.amt.arena.acl.consumer.ArenaDeltakerConsumer
+import no.nav.amt.arena.acl.consumer.GjennomforingConsumer
+import no.nav.amt.arena.acl.consumer.HistDeltakerConsumer
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
@@ -30,10 +30,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-open class ArenaMessageProcessorService(
-	private val gjennomforingProcessor: GjennomforingProcessor,
-	private val deltakerProcessor: DeltakerProcessor,
-	private val histDeltakerProcessor: HistDeltakerProcessor,
+open class ArenaMessageConsumerService(
+	private val gjennomforingConsumer: GjennomforingConsumer,
+	private val arenaDeltakerConsumer: ArenaDeltakerConsumer,
+	private val histDeltakerConsumer: HistDeltakerConsumer,
 	private val arenaDataRepository: ArenaDataRepository,
 	private val meterRegistry: MeterRegistry
 ) {
@@ -48,13 +48,13 @@ open class ArenaMessageProcessorService(
 	}
 
 	private fun processArenaKafkaMessage(messageDto: ArenaKafkaMessageDto) {
-		val processorName = findProcessorName(messageDto.table)
+		val consumerName = findProcessorName(messageDto.table)
 
-		withTimer(processorName) {
+		withTimer(consumerName) {
 			when (messageDto.table) {
-				ARENA_GJENNOMFORING_TABLE_NAME -> process(messageDto, gjennomforingProcessor) { it.TILTAKGJENNOMFORING_ID.toString() }
-				ARENA_DELTAKER_TABLE_NAME -> process(messageDto, deltakerProcessor) { it.TILTAKDELTAKER_ID.toString() }
-				ARENA_HIST_DELTAKER_TABLE_NAME -> process(messageDto, histDeltakerProcessor) { it.HIST_TILTAKDELTAKER_ID.toString() }
+				ARENA_GJENNOMFORING_TABLE_NAME -> process(messageDto, gjennomforingConsumer) { it.TILTAKGJENNOMFORING_ID.toString() }
+				ARENA_DELTAKER_TABLE_NAME -> process(messageDto, arenaDeltakerConsumer) { it.TILTAKDELTAKER_ID.toString() }
+				ARENA_HIST_DELTAKER_TABLE_NAME -> process(messageDto, histDeltakerConsumer) { it.HIST_TILTAKDELTAKER_ID.toString() }
 				else -> throw IllegalArgumentException("Kan ikke håndtere melding fra ukjent arena tabell: ${messageDto.table}")
 			}
 		}
@@ -62,7 +62,7 @@ open class ArenaMessageProcessorService(
 
 	private inline fun <reified D> process(
 		messageDto: ArenaKafkaMessageDto,
-		processor: ArenaMessageProcessor<ArenaKafkaMessage<D>>,
+		processor: ArenaMessageConsumer<ArenaKafkaMessage<D>>,
 		arenaIdExtractor: (msg: D) -> String
 	) {
 		val msg = toArenaKafkaMessage<D>(messageDto)

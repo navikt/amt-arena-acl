@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.kafka
 
-import no.nav.amt.arena.acl.services.ArenaMessageProcessorService
+import no.nav.amt.arena.acl.services.ArenaMessageConsumerService
 import no.nav.common.kafka.consumer.KafkaConsumerClient
 import no.nav.common.kafka.consumer.util.KafkaConsumerClientBuilder
 import no.nav.common.kafka.consumer.util.deserializer.Deserializers.stringDeserializer
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
 open class KafkaConsumer(
 	kafkaTopicProperties: KafkaTopicProperties,
 	kafkaProperties: KafkaProperties,
-	private val arenaMessageProcessorService: ArenaMessageProcessorService,
+	private val arenaMessageConsumerService: ArenaMessageConsumerService,
 ) {
 
 	private val client: KafkaConsumerClient
@@ -35,7 +35,7 @@ open class KafkaConsumer(
 					topic,
 					stringDeserializer(),
 					stringDeserializer(),
-					arenaMessageProcessorService::handleArenaGoldenGateRecord
+					arenaMessageConsumerService::handleArenaGoldenGateRecord
 				)
 		}
 
