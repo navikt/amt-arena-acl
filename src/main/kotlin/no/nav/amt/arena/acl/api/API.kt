@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.controller
+package no.nav.amt.arena.acl.api
 
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.security.token.support.core.api.ProtectedWithClaims
@@ -12,7 +12,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api")
-class Controller(
+class API(
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService
 ) {
 

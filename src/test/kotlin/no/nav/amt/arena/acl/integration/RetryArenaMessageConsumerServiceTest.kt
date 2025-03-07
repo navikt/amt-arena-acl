@@ -24,7 +24,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Ignore
-class RetryArenaMessageProcessorServiceTest : IntegrationTestBase() {
+class RetryArenaMessageConsumerServiceTest : IntegrationTestBase() {
 
 	@Autowired
 	lateinit var kafkaMessageSender: KafkaMessageSender

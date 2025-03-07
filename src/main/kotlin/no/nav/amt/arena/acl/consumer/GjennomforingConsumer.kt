@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.processors
+package no.nav.amt.arena.acl.consumer
 
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.domain.db.IngestStatus
@@ -12,11 +12,11 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-open class GjennomforingProcessor(
+open class GjennomforingConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val gjennomforingService: GjennomforingService,
 	private val mulighetsrommetApiClient: MulighetsrommetApiClient
-) : ArenaMessageProcessor<ArenaGjennomforingKafkaMessage> {
+) : ArenaMessageConsumer<ArenaGjennomforingKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
 

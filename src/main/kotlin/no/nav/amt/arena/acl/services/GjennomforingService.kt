@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 val SUPPORTED_TILTAK = setOf(
-	"INDOPPFAG",
+	"var",
 	"ARBFORB",
 	"AVKLARAG",
 	"VASV",

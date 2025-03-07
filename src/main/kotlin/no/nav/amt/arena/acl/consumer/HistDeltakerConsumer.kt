@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.processors
+package no.nav.amt.arena.acl.consumer
 
 import ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.clients.amttiltak.AmtTiltakClient
@@ -31,15 +31,15 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-open class HistDeltakerProcessor(
+open class HistDeltakerConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val ordsClient: ArenaOrdsProxyClient,
 	private val kafkaProducerService: KafkaProducerService,
-	private val deltakerProcessor: DeltakerProcessor,
+	private val arenaDeltakerConsumer: ArenaDeltakerConsumer,
 	private val amtTiltakClient: AmtTiltakClient,
 	private val deltakerRepository: DeltakerRepository,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService
-) : ArenaMessageProcessor<ArenaHistDeltakerKafkaMessage> {
+) : ArenaMessageConsumer<ArenaHistDeltakerKafkaMessage> {
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
@@ -47,7 +47,7 @@ open class HistDeltakerProcessor(
 		val arenaDeltakerRaw = message.getData()
 		val arenaHistDeltakerId = arenaDeltakerRaw.HIST_TILTAKDELTAKER_ID.toString()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
-		val gjennomforing = deltakerProcessor.getGjennomforing(arenaGjennomforingId)
+		val gjennomforing = arenaDeltakerConsumer.getGjennomforing(arenaGjennomforingId)
 
 		externalDeltakerGuard(arenaDeltakerRaw)
 
@@ -67,7 +67,7 @@ open class HistDeltakerProcessor(
 			if (eksisterendeDeltaker == null) {
 				//Her havner vi når vi spiller av topicen fra start
 				//(fordi disse deltakerene er allerede fjernet fra arenas deltaker tabell)
-				val nyDeltaker = deltakerProcessor.createDeltaker(histDeltaker, gjennomforing, erHistDeltaker = true)
+				val nyDeltaker = arenaDeltakerConsumer.createDeltaker(histDeltaker, gjennomforing, erHistDeltaker = true)
 
 				nyDeltaker.validerGyldigHistDeltaker()
 				log.info("Fant ingen match for hist-deltaker $arenaHistDeltakerId, oppretter ny deltaker ${nyDeltaker.id} og lagrer mapping og sender videre")

@@ -12,43 +12,43 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
-import no.nav.amt.arena.acl.processors.DeltakerProcessor
-import no.nav.amt.arena.acl.processors.GjennomforingProcessor
-import no.nav.amt.arena.acl.processors.HistDeltakerProcessor
+import no.nav.amt.arena.acl.consumer.ArenaDeltakerConsumer
+import no.nav.amt.arena.acl.consumer.GjennomforingConsumer
+import no.nav.amt.arena.acl.consumer.HistDeltakerConsumer
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 
-class ArenaMessageProcessorServiceTest : StringSpec({
+class ArenaMessageConsumerServiceTest : StringSpec({
 
 	lateinit var arenaDataRepository: ArenaDataRepository
 
-	lateinit var gjennomforingProcessor: GjennomforingProcessor
+	lateinit var gjennomforingConsumer: GjennomforingConsumer
 
-	lateinit var deltakerProcessor: DeltakerProcessor
+	lateinit var arenaDeltakerConsumer: ArenaDeltakerConsumer
 
-	lateinit var histDeltakerProcessor: HistDeltakerProcessor
+	lateinit var histDeltakerProcessor: HistDeltakerConsumer
 
 	lateinit var meterRegistry: MeterRegistry
 
-	lateinit var messageProcessor: ArenaMessageProcessorService
+	lateinit var messageProcessor: ArenaMessageConsumerService
 
 	beforeEach {
 		val rootLogger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 		rootLogger.level = Level.WARN
 
 		arenaDataRepository = mockk()
-		gjennomforingProcessor = mockk()
-		deltakerProcessor = mockk()
+		gjennomforingConsumer = mockk()
+		arenaDeltakerConsumer = mockk()
 		histDeltakerProcessor = mockk()
 
 		meterRegistry = SimpleMeterRegistry()
 
-		messageProcessor = ArenaMessageProcessorService(
-			gjennomforingProcessor = gjennomforingProcessor,
-			deltakerProcessor = deltakerProcessor,
-			histDeltakerProcessor = histDeltakerProcessor,
+		messageProcessor = ArenaMessageConsumerService(
+			gjennomforingConsumer = gjennomforingConsumer,
+			arenaDeltakerConsumer = arenaDeltakerConsumer,
+			histDeltakerConsumer = histDeltakerProcessor,
 			arenaDataRepository = arenaDataRepository,
 			meterRegistry = meterRegistry
 		)
@@ -61,7 +61,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		val deltakerJson = tiltakdeltakere.toList()[0].toString()
 
 		every {
-			deltakerProcessor.handleArenaMessage(any())
+			arenaDeltakerConsumer.handleArenaMessage(any())
 		} returns Unit
 
 		messageProcessor.handleArenaGoldenGateRecord(
@@ -69,7 +69,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		)
 
 		verify(exactly = 1) {
-			deltakerProcessor.handleArenaMessage(any())
+			arenaDeltakerConsumer.handleArenaMessage(any())
 		}
 	}
 
@@ -99,7 +99,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
 		every {
-			gjennomforingProcessor.handleArenaMessage(any())
+			gjennomforingConsumer.handleArenaMessage(any())
 		} returns Unit
 
 		messageProcessor.handleArenaGoldenGateRecord(
@@ -107,7 +107,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		)
 
 		verify(exactly = 1) {
-			gjennomforingProcessor.handleArenaMessage(any())
+			gjennomforingConsumer.handleArenaMessage(any())
 		}
 	}
 
@@ -120,7 +120,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
 		every {
-			gjennomforingProcessor.handleArenaMessage(any())
+			gjennomforingConsumer.handleArenaMessage(any())
 		} returns Unit
 
 		messageProcessor.handleArenaGoldenGateRecord(
@@ -130,7 +130,7 @@ class ArenaMessageProcessorServiceTest : StringSpec({
 		val capturingSlot = CapturingSlot<ArenaGjennomforingKafkaMessage>()
 
 		verify(exactly = 1) {
-			gjennomforingProcessor.handleArenaMessage(capture(capturingSlot))
+			gjennomforingConsumer.handleArenaMessage(capture(capturingSlot))
 		}
 
 		val capturedData = capturingSlot.captured

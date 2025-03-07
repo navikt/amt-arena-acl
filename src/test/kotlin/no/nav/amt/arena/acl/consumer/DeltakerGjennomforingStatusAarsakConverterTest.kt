@@ -1,9 +1,9 @@
-package no.nav.amt.arena.acl.processors
+package no.nav.amt.arena.acl.consumer
 
 import io.kotest.matchers.shouldBe
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
-import no.nav.amt.arena.acl.processors.converters.ArenaDeltakerAarsakConverter
+import no.nav.amt.arena.acl.consumer.converters.ArenaDeltakerAarsakConverter
 import org.junit.jupiter.api.Test
 
 class DeltakerGjennomforingStatusAarsakConverterTest {
