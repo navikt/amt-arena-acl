@@ -32,7 +32,7 @@
         <schedlock.version>6.3.0</schedlock.version>
         <logstashencoder.version>8.0</logstashencoder.version>
         <mockk.version>1.13.17</mockk.version>
-        <unleash.version>10.2.0</unleash.version>
+        <unleash.version>10.2.1</unleash.version>
     </properties>
 
     <repositories>
