@@ -28,7 +28,7 @@
         <testcontainers.version>1.20.6</testcontainers.version>
         <okhttp.version>4.12.0</okhttp.version>
         <nimbus.version>11.23.1</nimbus.version>
-        <token-support.version>5.0.19</token-support.version>
+        <token-support.version>5.0.21</token-support.version>
         <schedlock.version>6.3.0</schedlock.version>
         <logstashencoder.version>8.0</logstashencoder.version>
         <mockk.version>1.13.17</mockk.version>
