@@ -45,8 +45,6 @@ spec:
         - application: amt-aktivitetskort-publisher
   kafka:
     pool: nav-prod
-  secureLogs:
-    enabled: true
   envFrom:
     - secret: amt-arena-acl-unleash-api-token
   env:
