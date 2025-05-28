@@ -21,6 +21,9 @@ data class ArenaKafkaMessageDto(
 	val opTs: String,
 
 	val pos: String,
+
+	// Så lenge nøkkelen finnes når man deserialiserer en ArenaKafkaMessageDto
+	// men er lik `null` så blir before / after satt til `NullNode` *ikke* `null`
 	val before: JsonNode?,
 	val after: JsonNode?
 )

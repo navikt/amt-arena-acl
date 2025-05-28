@@ -2,6 +2,10 @@ package no.nav.amt.arena.acl.services
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
+import no.nav.amt.arena.acl.consumer.ArenaDeltakerConsumer
+import no.nav.amt.arena.acl.consumer.ArenaMessageConsumer
+import no.nav.amt.arena.acl.consumer.GjennomforingConsumer
+import no.nav.amt.arena.acl.consumer.HistDeltakerConsumer
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInput
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
@@ -13,10 +17,6 @@ import no.nav.amt.arena.acl.exceptions.ExternalSourceSystemException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.exceptions.OperationNotImplementedException
 import no.nav.amt.arena.acl.exceptions.ValidationException
-import no.nav.amt.arena.acl.consumer.ArenaMessageConsumer
-import no.nav.amt.arena.acl.consumer.ArenaDeltakerConsumer
-import no.nav.amt.arena.acl.consumer.GjennomforingConsumer
-import no.nav.amt.arena.acl.consumer.HistDeltakerConsumer
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
@@ -111,8 +111,8 @@ open class ArenaMessageConsumerService(
 			operationType = AmtOperation.fromArenaOperationString(messageDto.opType),
 			operationTimestamp = parseArenaDateTime(messageDto.opTs),
 			operationPosition = messageDto.pos,
-			before = messageDto.before?.let { fromJsonNode<D>(it) },
-			after =  messageDto.after?.let { fromJsonNode<D>(it) }
+			before = messageDto.before?.let { fromJsonNode(it) },
+			after =  messageDto.after?.let { fromJsonNode(it) }
 		)
 	}
 
