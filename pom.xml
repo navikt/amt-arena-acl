@@ -13,7 +13,7 @@
     <parent>
         <artifactId>spring-boot-starter-parent</artifactId>
         <groupId>org.springframework.boot</groupId>
-        <version>3.5.0</version>
+        <version>3.5.3</version>
     </parent>
 
     <properties>
@@ -25,10 +25,10 @@
 
         <common.version>3.2024.10.25_13.44-9db48a0dbe67</common.version>
         <kotest.version>5.9.1</kotest.version>
-        <testcontainers.version>1.21.1</testcontainers.version>
+        <testcontainers.version>1.21.2</testcontainers.version>
         <okhttp.version>4.12.0</okhttp.version>
         <nimbus.version>11.26</nimbus.version>
-        <token-support.version>5.0.29</token-support.version>
+        <token-support.version>5.0.30</token-support.version>
         <schedlock.version>6.9.0</schedlock.version>
         <logstashencoder.version>8.1</logstashencoder.version>
         <mockk.version>1.14.2</mockk.version>
