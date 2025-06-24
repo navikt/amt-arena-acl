@@ -20,7 +20,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>21</kotlin.compiler.jvmTarget>
-        <kotlin.version>2.1.21</kotlin.version>
+        <kotlin.version>2.2.0</kotlin.version>
         <java.version>21</java.version>
 
         <common.version>3.2024.10.25_13.44-9db48a0dbe67</common.version>
