@@ -1,8 +1,12 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.springframework.boot)
-    alias(libs.plugins.spring.dependency.management)
-    alias(libs.plugins.kotlin.plugin.spring)
+    val kotlinVersion = "2.2.0"
+    val springBootVersion = "3.5.3"
+    val springDependencyManagementVersion = "1.1.7"
+
+    kotlin("jvm") version kotlinVersion
+    kotlin("plugin.spring") version kotlinVersion
+    id("org.springframework.boot") version springBootVersion
+    id("io.spring.dependency-management") version springDependencyManagementVersion
 }
 
 group = "no.nav.amt.arena-acl"
@@ -14,24 +18,39 @@ repositories {
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
-dependencies {
-    implementation(libs.okhttp)
-    implementation(libs.oauth2.oidc.sdk)
-    implementation(libs.logstash.logback.encoder)
-    implementation(libs.shedlock.provider.jdbc.template)
+val nimbusVersion = "11.26"
+val okhttpVersion = "4.12.0"
+val shedlockVersion = "6.9.0"
+val unleashVersion = "11.0.0"
+val navCommonVersion = "3.2024.10.25_13.44-9db48a0dbe67"
+val navTokenSupportVersion = "5.0.30"
+val logstashEncoderVersion = "8.1"
 
-    implementation(libs.nav.token.validation.spring)
-    implementation(libs.nav.common.log)
-    implementation(libs.nav.common.job)
-    implementation(libs.nav.common.rest)
-    implementation(libs.nav.common.token.client)
-    implementation(libs.nav.common.kafka) {
+val kotestVersion = "5.9.1"
+val mockkVersion = "1.14.4"
+val testcontainersVersion = "1.21.3"
+
+val navCommonModules = setOf("log", "job", "rest", "token-client")
+
+dependencies {
+    implementation("com.squareup.okhttp3:okhttp:$okhttpVersion")
+    implementation("com.nimbusds:oauth2-oidc-sdk:$nimbusVersion")
+    implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
+    implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$shedlockVersion")
+
+    implementation("no.nav.security:token-validation-spring:$navTokenSupportVersion")
+
+    navCommonModules.forEach {
+        implementation("no.nav.common:$it:$navCommonVersion")
+    }
+
+    implementation("no.nav.common:kafka:$navCommonVersion") {
         exclude(group = "org.xerial.snappy", module = "snappy-java")
         exclude(group = "org.apache.avro", module = "avro")
         exclude(group = "io.confluent", module = "kafka-avro-serializer")
     }
 
-    implementation(libs.unleash.client.java)
+    implementation("io.getunleash:unleash-client-java:$unleashVersion")
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -48,11 +67,11 @@ dependencies {
 
     implementation("io.micrometer:micrometer-registry-prometheus")
 
-    testImplementation(libs.kotest.runner.junit5.jvm)
-    testImplementation(libs.mockk)
-    testImplementation(libs.nav.token.validation.spring.test)
-    testImplementation(libs.testcontainers.postgresql)
-    testImplementation(libs.testcontainers.kafka)
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
+    testImplementation("io.mockk:mockk-jvm:$mockkVersion")
+    testImplementation("no.nav.security:token-validation-spring-test:$navTokenSupportVersion")
+    testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
+    testImplementation("org.testcontainers:kafka:$testcontainersVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
