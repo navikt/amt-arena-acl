@@ -19,9 +19,9 @@ repositories {
 }
 
 val nimbusVersion = "11.26"
-val okhttpVersion = "4.12.0"
-val shedlockVersion = "6.9.0"
-val unleashVersion = "11.0.0"
+val okhttpVersion = "5.1.0"
+val shedlockVersion = "6.9.2"
+val unleashVersion = "11.0.2"
 val navCommonVersion = "3.2024.10.25_13.44-9db48a0dbe67"
 val navTokenSupportVersion = "5.0.30"
 val logstashEncoderVersion = "8.1"
@@ -32,8 +32,14 @@ val testcontainersVersion = "1.21.3"
 
 val navCommonModules = setOf("log", "job", "rest", "token-client")
 
+dependencyManagement {
+    dependencies {
+        dependency("com.squareup.okhttp3:okhttp:$okhttpVersion")
+        dependency("com.squareup.okhttp3:mockwebserver:$okhttpVersion")
+    }
+}
+
 dependencies {
-    implementation("com.squareup.okhttp3:okhttp:$okhttpVersion")
     implementation("com.nimbusds:oauth2-oidc-sdk:$nimbusVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$shedlockVersion")
