@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 
 @SpringBootTest(classes = [ArenaDataRepository::class])
 class ArenaDataRepositoryTest(
-	private val dataRepository: ArenaDataRepository,
+	dataRepository: ArenaDataRepository,
 ) : KotestRepositoryTestBase({
 		beforeEach {
 			val rootLogger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger

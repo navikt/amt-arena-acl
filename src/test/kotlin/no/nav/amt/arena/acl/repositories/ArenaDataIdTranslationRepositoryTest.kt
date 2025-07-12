@@ -11,7 +11,7 @@ import java.util.UUID
 
 @SpringBootTest(classes = [ArenaDataIdTranslationRepository::class])
 class ArenaDataIdTranslationRepositoryTest(
-	private val dataIdTranslationRepository: ArenaDataIdTranslationRepository,
+	dataIdTranslationRepository: ArenaDataIdTranslationRepository,
 ) : KotestRepositoryTestBase({
 
 		beforeEach {

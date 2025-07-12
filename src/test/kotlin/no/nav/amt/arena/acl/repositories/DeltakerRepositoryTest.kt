@@ -9,7 +9,7 @@ import java.util.UUID
 
 @SpringBootTest(classes = [DeltakerRepository::class])
 class DeltakerRepositoryTest(
-	private val deltakerRepository: DeltakerRepository,
+	deltakerRepository: DeltakerRepository,
 ) : KotestRepositoryTestBase({
 		test("upsert - skal upserte ny deltaker") {
 			val arenaId = 34234L

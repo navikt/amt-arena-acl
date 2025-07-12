@@ -6,7 +6,7 @@ import java.util.UUID
 
 @SpringBootTest(classes = [GjennomforingRepository::class])
 class GjennomforingRepositoryTest(
-	private val gjennomforingRepository: GjennomforingRepository,
+	gjennomforingRepository: GjennomforingRepository,
 ) : KotestRepositoryTestBase({
 		test("upsert - skal upserte gjennomforing") {
 			val arenaId = "ARENA_ID"
