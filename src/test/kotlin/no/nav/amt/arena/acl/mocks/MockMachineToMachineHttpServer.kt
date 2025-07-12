@@ -4,26 +4,24 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 
 class MockMachineToMachineHttpServer : MockHttpServer() {
-
 	companion object {
-		const val tokenPath = "/token"
+		const val TOKEN_PATH = "/token"
 	}
 
 	init {
 		mockToken()
 	}
 
-	override fun reset() {
-		throw UnsupportedOperationException("Reset skal ikke brukes")
-	}
+	override fun reset(): Unit = throw UnsupportedOperationException("Reset skal ikke brukes")
 
 	private fun mockToken() {
 		val predicate = { req: RecordedRequest ->
-			req.path == tokenPath
+			req.path == TOKEN_PATH
 		}
 
 		// Dette er en falsk request body:
-		val body = """
+		val body =
+			"""
 			{
 			  "token_type" : "Bearer",
 			  "id_token" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
@@ -32,7 +30,7 @@ class MockMachineToMachineHttpServer : MockHttpServer() {
 			  "expires_in" : 31535999,
 			  "scope" : "openid somescope"
 			}
-		""".trimIndent()
+			""".trimIndent()
 
 		val response = MockResponse().setResponseCode(200).setBody(body).setHeader("content-type", "application/json")
 

@@ -37,17 +37,18 @@ data class ArenaHistDeltaker(
 	val PARTISJON: Int? = null,
 	val BEGRUNNELSE_BESTILLING: String? = null,
 	val ANTALL_DAGER_PR_UKE: Float? = null,
-	val EKSTERN_ID: String? = null
+	val EKSTERN_ID: String? = null,
 ) {
-
 	fun mapTiltakDeltaker(): TiltakDeltaker {
-		val tiltakdeltakerId = HIST_TILTAKDELTAKER_ID.toString().also {
-			if (it == "0") throw ValidationException("HIST_TILTAKDELTAKER_ID er 0")
-		}
+		val tiltakdeltakerId =
+			HIST_TILTAKDELTAKER_ID.toString().also {
+				if (it == "0") throw ValidationException("HIST_TILTAKDELTAKER_ID er 0")
+			}
 
-		val tiltakgjennomforingId = TILTAKGJENNOMFORING_ID.toString().also {
-			if (it == "0") throw ValidationException("TILTAKGJENNOMFORING_ID er 0")
-		}
+		val tiltakgjennomforingId =
+			TILTAKGJENNOMFORING_ID.toString().also {
+				if (it == "0") throw ValidationException("TILTAKGJENNOMFORING_ID er 0")
+			}
 
 		return TiltakDeltaker(
 			tiltakdeltakerId = tiltakdeltakerId,
@@ -57,13 +58,12 @@ data class ArenaHistDeltaker(
 			datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
 			deltakerStatusKode = TiltakDeltaker.Status.valueOf(DELTAKERSTATUSKODE),
 			datoStatusendring = DATO_STATUSENDRING?.asValidatedLocalDateTime("DATO_STATUSENDRING"),
-			statusAarsakKode = AARSAKVERDIKODE_STATUS?.let {TiltakDeltaker.StatusAarsak.valueOf(AARSAKVERDIKODE_STATUS)},
+			statusAarsakKode = AARSAKVERDIKODE_STATUS?.let { TiltakDeltaker.StatusAarsak.valueOf(AARSAKVERDIKODE_STATUS) },
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
 			regDato = REG_DATO.asValidatedLocalDateTime("REG_DATO"),
-			innsokBegrunnelse = BEGRUNNELSE_BESTILLING
+			innsokBegrunnelse = BEGRUNNELSE_BESTILLING,
 		)
 	}
-
 }
 // @SONAR_STOP@

@@ -15,7 +15,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 object KafkaMessageCreator {
-
 	private const val GENERIC_STRING = "STRING_NOT_SET"
 	private const val GENERIC_DATE_STRING = "2015-09-07 00:00:00"
 
@@ -31,46 +30,42 @@ object KafkaMessageCreator {
 	fun opprettArenaDeltaker(
 		arenaDeltaker: ArenaDeltaker,
 		opType: String = "I",
-		opPos: String? = null
-	): ArenaKafkaMessageDto {
-		return arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_DELTAKER_TABLE_NAME, opPos)
-	}
+		opPos: String? = null,
+	): ArenaKafkaMessageDto = arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_DELTAKER_TABLE_NAME, opPos)
 
 	fun opprettArenaHistDeltaker(
 		arenaDeltaker: ArenaHistDeltaker,
 		opType: String = "I",
-		opPos: String? = null
-	): ArenaKafkaMessageDto {
-		return arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_HIST_DELTAKER_TABLE_NAME, opPos)
-	}
+		opPos: String? = null,
+	): ArenaKafkaMessageDto = arenaKafkaMessageDto(opType, arenaDeltaker, ARENA_HIST_DELTAKER_TABLE_NAME, opPos)
 
 	fun opprettArenaGjennomforingMessage(
 		data: ArenaGjennomforing,
 		opType: String = "I",
 		opPos: String? = null,
-	): ArenaKafkaMessageDto {
-		return arenaKafkaMessageDto(opType, data, ARENA_GJENNOMFORING_TABLE_NAME, opPos)
-	}
+	): ArenaKafkaMessageDto = arenaKafkaMessageDto(opType, data, ARENA_GJENNOMFORING_TABLE_NAME, opPos)
 
 	private fun <T> arenaKafkaMessageDto(
 		opType: String,
 		arenaData: T,
 		arenaTableName: String,
-		opPos: String? = null
+		opPos: String? = null,
 	): ArenaKafkaMessageDto {
-		val before = when (opType) {
-			"I" -> null
-			"U" -> arenaData
-			"D" -> arenaData
-			else -> throw IllegalArgumentException("Ugyldig op_type $opType")
-		}
+		val before =
+			when (opType) {
+				"I" -> null
+				"U" -> arenaData
+				"D" -> arenaData
+				else -> throw IllegalArgumentException("Ugyldig op_type $opType")
+			}
 
-		val after = when (opType) {
-			"I" -> arenaData
-			"U" -> arenaData
-			"D" -> null
-			else -> throw IllegalArgumentException("Ugyldig op_type $opType")
-		}
+		val after =
+			when (opType) {
+				"I" -> arenaData
+				"U" -> arenaData
+				"D" -> null
+				else -> throw IllegalArgumentException("Ugyldig op_type $opType")
+			}
 
 		return ArenaKafkaMessageDto(
 			table = arenaTableName,
@@ -89,9 +84,9 @@ object KafkaMessageCreator {
 		tiltakstatuskode: String = "GJENNOMFOR",
 		arbgivIdArrangor: Long? = null,
 		datoFra: LocalDateTime? = null,
-		datoTil: LocalDateTime? = null
-	): ArenaGjennomforing {
-		return ArenaGjennomforing(
+		datoTil: LocalDateTime? = null,
+	): ArenaGjennomforing =
+		ArenaGjennomforing(
 			TILTAKGJENNOMFORING_ID = arenaGjennomforingId,
 			SAK_ID = 0,
 			TILTAKSKODE = tiltakskode,
@@ -131,9 +126,8 @@ object KafkaMessageCreator {
 			PROFILELEMENT_ID_OPPL_TILTAK = GENERIC_STRING,
 			DATO_OPPFOLGING_OK = null,
 			PARTISJON = 123,
-			MAALFORM_KRAVBREV = GENERIC_STRING
+			MAALFORM_KRAVBREV = GENERIC_STRING,
 		)
-	}
 
 	fun baseDeltaker(
 		arenaDeltakerId: Long = (1..Long.MAX_VALUE).random(),
@@ -145,9 +139,9 @@ object KafkaMessageCreator {
 		sluttDato: LocalDate? = null,
 		datoStatusEndring: LocalDateTime? = LocalDateTime.now(),
 		registrertDato: LocalDateTime = LocalDateTime.now(),
-		innsokBegrunnelse: String = "Trenger hjelp med jobbsøking"
-	): ArenaDeltaker {
-		return ArenaDeltaker(
+		innsokBegrunnelse: String = "Trenger hjelp med jobbsøking",
+	): ArenaDeltaker =
+		ArenaDeltaker(
 			TILTAKDELTAKER_ID = arenaDeltakerId,
 			PERSON_ID = personId,
 			TILTAKGJENNOMFORING_ID = gjennomforingId,
@@ -180,7 +174,6 @@ object KafkaMessageCreator {
 			BEGRUNNELSE_BESTILLING = innsokBegrunnelse,
 			ANTALL_DAGER_PR_UKE = GENERIC_FLOAT,
 		)
-	}
 
 	fun baseHistDeltaker(
 		arenaDeltakerId: Long = (1..Long.MAX_VALUE).random(),
@@ -192,9 +185,9 @@ object KafkaMessageCreator {
 		sluttDato: LocalDate? = null,
 		datoStatusEndring: LocalDateTime? = LocalDateTime.now(),
 		registrertDato: LocalDateTime = LocalDateTime.now(),
-		innsokBegrunnelse: String = "Trenger hjelp med jobbsøking"
-	): ArenaHistDeltaker {
-		return ArenaHistDeltaker(
+		innsokBegrunnelse: String = "Trenger hjelp med jobbsøking",
+	): ArenaHistDeltaker =
+		ArenaHistDeltaker(
 			HIST_TILTAKDELTAKER_ID = arenaDeltakerId,
 			PERSON_ID = personId,
 			TILTAKGJENNOMFORING_ID = gjennomforingId,
@@ -227,5 +220,4 @@ object KafkaMessageCreator {
 			BEGRUNNELSE_BESTILLING = innsokBegrunnelse,
 			ANTALL_DAGER_PR_UKE = GENERIC_FLOAT,
 		)
-	}
 }

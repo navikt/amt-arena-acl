@@ -12,20 +12,24 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicInteger
 
 @Component
-open class MetricSchedules(
+class MetricSchedules(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val meterRegistry: MeterRegistry,
 ) {
 	private val ingestStatusGaugeName = "amt.arena-acl.ingest.status"
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	private fun createGauge(status: String) = meterRegistry.gauge(
-		ingestStatusGaugeName, Tags.of("status", status), AtomicInteger(0)
-	)
+	private fun createGauge(status: String) =
+		meterRegistry.gauge(
+			ingestStatusGaugeName,
+			Tags.of("status", status),
+			AtomicInteger(0),
+		)
 
-	private var statusGauges: Map<String, AtomicInteger> = IngestStatus.values().associate {
-		it.name to createGauge(it.name)!!
-	}
+	private var statusGauges: Map<String, AtomicInteger> =
+		IngestStatus.values().associate {
+			it.name to createGauge(it.name)!!
+		}
 
 	@Scheduled(fixedDelay = FIVE_MINUTES, initialDelay = ONE_MINUTE)
 	fun logIngestStatus() {
@@ -38,5 +42,4 @@ open class MetricSchedules(
 				?: statusGauges.getValue(status.name).set(0)
 		}
 	}
-
 }

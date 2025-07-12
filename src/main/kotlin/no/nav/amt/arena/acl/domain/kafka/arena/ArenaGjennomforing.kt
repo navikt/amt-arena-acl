@@ -45,7 +45,7 @@ data class ArenaGjennomforing(
 	val PROFILELEMENT_ID_OPPL_TILTAK: String? = null,
 	val DATO_OPPFOLGING_OK: String? = null,
 	val PARTISJON: Long? = null,
-	val MAALFORM_KRAVBREV: String? = null
+	val MAALFORM_KRAVBREV: String? = null,
 ) {
 	fun mapTiltakGjennomforing(): Result<TiltakGjennomforing> {
 		return Result.success(
@@ -53,28 +53,33 @@ data class ArenaGjennomforing(
 				tiltakgjennomforingId = TILTAKGJENNOMFORING_ID.toString(),
 				sakId = SAK_ID ?: return Result.failure(ValidationException("SAK_ID er null")),
 				tiltakskode = TILTAKSKODE,
-				arbgivIdArrangor = ARBGIV_ID_ARRANGOR?.toString()
-					?: return Result.failure(ValidationException("ARBGIV_ID_ARRANGOR er null")),
+				arbgivIdArrangor =
+					ARBGIV_ID_ARRANGOR?.toString()
+						?: return Result.failure(ValidationException("ARBGIV_ID_ARRANGOR er null")),
 				lokaltNavn = LOKALTNAVN ?: return Result.failure(ValidationException("LOKALTNAVN er null")),
-				datoFra = try {
-					DATO_FRA?.asValidatedLocalDate("DATO_FRA")
-				} catch (e: Exception) {
-					return Result.failure(e)
-				},
-				datoTil = try {
-					DATO_TIL?.asValidatedLocalDate("DATO_TIL")
-				} catch (e: Exception) {
-					return Result.failure(e)
-				},
-				tiltakstatusKode = TILTAKSTATUSKODE
-					?: return Result.failure(ValidationException("Forventet at TILTAKSTATUSKODE ikke er null")),
-				regDato = try {
-					REG_DATO?.asValidatedLocalDateTime("REG_DATO")
-						?: return Result.failure(ValidationException("REG_DATO er null"))
-				} catch (e: Exception) {
-					return Result.failure(e)
-				}
-			)
+				datoFra =
+					try {
+						DATO_FRA?.asValidatedLocalDate("DATO_FRA")
+					} catch (e: Exception) {
+						return Result.failure(e)
+					},
+				datoTil =
+					try {
+						DATO_TIL?.asValidatedLocalDate("DATO_TIL")
+					} catch (e: Exception) {
+						return Result.failure(e)
+					},
+				tiltakstatusKode =
+					TILTAKSTATUSKODE
+						?: return Result.failure(ValidationException("Forventet at TILTAKSTATUSKODE ikke er null")),
+				regDato =
+					try {
+						REG_DATO?.asValidatedLocalDateTime("REG_DATO")
+							?: return Result.failure(ValidationException("REG_DATO er null"))
+					} catch (e: Exception) {
+						return Result.failure(e)
+					},
+			),
 		)
 	}
 }

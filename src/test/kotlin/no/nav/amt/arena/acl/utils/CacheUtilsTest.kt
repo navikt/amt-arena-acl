@@ -7,57 +7,63 @@ import no.nav.amt.arena.acl.utils.CacheUtils.tryCacheFirstNotNull
 import no.nav.amt.arena.acl.utils.CacheUtils.tryCacheFirstNullable
 import java.util.concurrent.atomic.AtomicInteger
 
-class CacheUtilsTest : FunSpec({
+class CacheUtilsTest :
+	FunSpec({
 
-    test("skal cache for samme key") {
-		val cache = Caffeine.newBuilder()
-			.maximumSize(5)
-			.build<String, String>()
+		test("skal cache for samme key") {
+			val cache =
+				Caffeine
+					.newBuilder()
+					.maximumSize(5)
+					.build<String, String>()
 
-		val counter = AtomicInteger()
-		val supplier = {
-			counter.incrementAndGet()
-			"value"
+			val counter = AtomicInteger()
+			val supplier = {
+				counter.incrementAndGet()
+				"value"
+			}
+
+			tryCacheFirstNotNull(cache, "key1", supplier)
+			tryCacheFirstNotNull(cache, "key1", supplier)
+
+			counter.get() shouldBe 1
 		}
 
-		tryCacheFirstNotNull(cache, "key1", supplier)
-		tryCacheFirstNotNull(cache, "key1", supplier)
+		test("skal ikke cache for forskjellig keys") {
+			val cache =
+				Caffeine
+					.newBuilder()
+					.maximumSize(5)
+					.build<String, String>()
 
-		counter.get() shouldBe 1
-	}
+			val counter = AtomicInteger()
+			val supplier = {
+				counter.incrementAndGet()
+				"value"
+			}
 
-    test("skal ikke cache for forskjellig keys") {
-		val cache = Caffeine.newBuilder()
-			.maximumSize(5)
-			.build<String, String>()
+			tryCacheFirstNotNull(cache, "key1", supplier)
+			tryCacheFirstNotNull(cache, "key2", supplier)
 
-		val counter = AtomicInteger()
-		val supplier = {
-			counter.incrementAndGet()
-			"value"
+			counter.get() shouldBe 2
 		}
 
-		tryCacheFirstNotNull(cache, "key1", supplier)
-		tryCacheFirstNotNull(cache, "key2", supplier)
+		test("skal ikke cache null") {
+			val cache =
+				Caffeine
+					.newBuilder()
+					.maximumSize(5)
+					.build<String, String>()
 
-		counter.get() shouldBe 2
-	}
+			val counter = AtomicInteger()
+			val supplier = {
+				counter.incrementAndGet()
+				null
+			}
 
-	test("skal ikke cache null") {
-		val cache = Caffeine.newBuilder()
-			.maximumSize(5)
-			.build<String, String>()
+			tryCacheFirstNullable(cache, "key1", supplier)
+			tryCacheFirstNullable(cache, "key1", supplier)
 
-		val counter = AtomicInteger()
-		val supplier = {
-			counter.incrementAndGet()
-			null
+			counter.get() shouldBe 2
 		}
-
-		tryCacheFirstNullable(cache, "key1", supplier)
-		tryCacheFirstNullable(cache, "key1", supplier)
-
-		counter.get() shouldBe 2
-	}
-
-})
+	})

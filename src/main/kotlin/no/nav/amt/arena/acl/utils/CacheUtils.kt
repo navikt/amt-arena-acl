@@ -3,8 +3,11 @@ package no.nav.amt.arena.acl.utils
 import com.github.benmanes.caffeine.cache.Cache
 
 object CacheUtils {
-
-	fun <K : Any, V: Any> tryCacheFirstNullable(cache: Cache<K, V>, key: K, valueSupplier: () -> V?): V? {
+	fun <K : Any, V : Any> tryCacheFirstNullable(
+		cache: Cache<K, V>,
+		key: K,
+		valueSupplier: () -> V?,
+	): V? {
 		val value = cache.getIfPresent(key)
 
 		if (value == null) {
@@ -16,8 +19,12 @@ object CacheUtils {
 		return value
 	}
 
-	fun <K: Any, V: Any> tryCacheFirstNotNull(cache: Cache<K, V>, key: K, valueSupplier: () -> V): V {
-		return tryCacheFirstNullable(cache, key) { valueSupplier.invoke() }!!
-	}
-
+	fun <K : Any, V : Any> tryCacheFirstNotNull(
+		cache: Cache<K, V>,
+		key: K,
+		valueSupplier: () -> V,
+	): V =
+		tryCacheFirstNullable(cache, key) {
+			valueSupplier.invoke()
+		}!!
 }

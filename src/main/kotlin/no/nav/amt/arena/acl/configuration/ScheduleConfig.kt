@@ -12,28 +12,24 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 
 @EnableScheduling
 @Configuration
-open class SheduleConfig {
-
+class ScheduleConfig {
 	@Bean
-	open fun threadPoolTaskScheduler(): ThreadPoolTaskScheduler {
+	fun threadPoolTaskScheduler(): ThreadPoolTaskScheduler {
 		val threadPoolTaskScheduler = ThreadPoolTaskScheduler()
 		threadPoolTaskScheduler.poolSize = 3
 		return threadPoolTaskScheduler
 	}
 
 	@Bean
-	open fun leaderElectionClient(lockProvider: LockProvider): LeaderElectionClient {
-		return ShedLockLeaderElectionClient(lockProvider)
-	}
+	fun leaderElectionClient(lockProvider: LockProvider): LeaderElectionClient = ShedLockLeaderElectionClient(lockProvider)
 
 	@Bean
-	open fun lockProvider(jdbcTemplate: JdbcTemplate): LockProvider {
-		return JdbcTemplateLockProvider(
-			JdbcTemplateLockProvider.Configuration.builder()
+	fun lockProvider(jdbcTemplate: JdbcTemplate): LockProvider =
+		JdbcTemplateLockProvider(
+			JdbcTemplateLockProvider.Configuration
+				.builder()
 				.withJdbcTemplate(jdbcTemplate)
 				.usingDbTime()
-				.build()
+				.build(),
 		)
-	}
-
 }

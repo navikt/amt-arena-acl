@@ -11,23 +11,22 @@ class ArenaOrdsProxyClientImplTest {
 	val server = MockWebServer()
 	val serverUrl = server.url("").toString().removeSuffix("/")
 
-
-
 	@Test
 	fun `hentFnr() skal lage riktig request og parse respons`() {
-		val client = ArenaOrdsProxyClientImpl(
-			arenaOrdsProxyUrl = serverUrl,
-			tokenProvider = { token },
-		)
+		val client =
+			ArenaOrdsProxyClientImpl(
+				arenaOrdsProxyUrl = serverUrl,
+				tokenProvider = { token },
+			)
 
 		server.enqueue(
 			MockResponse().setBody(
 				"""
-					{
-						"fnr": "78900"
-					}
-				""".trimIndent()
-			)
+				{
+					"fnr": "78900"
+				}
+				""".trimIndent(),
+			),
 		)
 		val fnr = client.hentFnr("987654")
 
@@ -41,10 +40,11 @@ class ArenaOrdsProxyClientImplTest {
 
 	@Test
 	fun `hentFnr() skal null hvis stauts er 404`() {
-		val client = ArenaOrdsProxyClientImpl(
-			arenaOrdsProxyUrl = serverUrl,
-			tokenProvider = { token },
-		)
+		val client =
+			ArenaOrdsProxyClientImpl(
+				arenaOrdsProxyUrl = serverUrl,
+				tokenProvider = { token },
+			)
 
 		server.enqueue(MockResponse().setResponseCode(404))
 
@@ -53,21 +53,22 @@ class ArenaOrdsProxyClientImplTest {
 
 	@Test
 	fun `hentVirksomhetsnummer() skal lage riktig request og parse respons`() {
-		val client = ArenaOrdsProxyClientImpl(
-			arenaOrdsProxyUrl = serverUrl,
-			tokenProvider = { token },
-		)
+		val client =
+			ArenaOrdsProxyClientImpl(
+				arenaOrdsProxyUrl = serverUrl,
+				tokenProvider = { token },
+			)
 
 		val virksomhetsnummerBody = "6834920"
 		server.enqueue(
 			MockResponse().setBody(
 				"""
-					{
-						"virksomhetsnummer": "$virksomhetsnummerBody",
-						"organisasjonsnummerMorselskap": "74894532"
-					}
-				""".trimIndent()
-			)
+				{
+					"virksomhetsnummer": "$virksomhetsnummerBody",
+					"organisasjonsnummerMorselskap": "74894532"
+				}
+				""".trimIndent(),
+			),
 		)
 
 		val virksomhetsnummer = client.hentVirksomhetsnummer("1234567")
@@ -77,7 +78,6 @@ class ArenaOrdsProxyClientImplTest {
 		request.path shouldBe "/api/ords/arbeidsgiver?arbeidsgiverId=1234567"
 		request.method shouldBe "GET"
 		request.getHeader("Authorization") shouldBe "Bearer $token"
-
 
 		virksomhetsnummer shouldBe virksomhetsnummerBody
 	}

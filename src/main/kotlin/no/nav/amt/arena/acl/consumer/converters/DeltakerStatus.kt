@@ -5,5 +5,5 @@ import java.time.LocalDateTime
 
 data class DeltakerStatus(
 	val navn: AmtDeltaker.Status,
-	val endretDato: LocalDateTime?
+	val endretDato: LocalDateTime?,
 )
