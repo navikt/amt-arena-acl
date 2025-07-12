@@ -11,7 +11,7 @@ import java.time.format.DateTimeParseException
 fun String.asValidatedLocalDate(fieldName: String): LocalDate {
 	try {
 		return this.asLocalDate()
-	} catch (e: DateTimeParseException) {
+	} catch (_: DateTimeParseException) {
 		throw ValidationException("$fieldName kan ikke parses til LocalDate ($this)")
 	}
 }
@@ -19,19 +19,21 @@ fun String.asValidatedLocalDate(fieldName: String): LocalDate {
 fun String.asValidatedLocalDateTime(fieldName: String): LocalDateTime {
 	try {
 		return this.asLocalDateTime()
-	} catch (e: DateTimeParseException) {
+	} catch (_: DateTimeParseException) {
 		throw ValidationException("$fieldName kan ikke parses til LocalDateTime ($this)")
 	}
 }
 
-fun String.validatedLocalDateTime(fieldName: String, klokkeslett: String?): LocalDateTime? {
+fun String.validatedLocalDateTime(
+	fieldName: String,
+	klokkeslett: String?,
+): LocalDateTime? {
 	try {
 		return this.asLocalDate() withTime klokkeslett.asTime()
-	} catch (e: DateTimeParseException) {
+	} catch (_: DateTimeParseException) {
 		throw ValidationException("$fieldName kan ikke parses til LocalDateTime ($this + $klokkeslett)")
 	}
 }
-
 
 fun String.asLocalDate(): LocalDate {
 	val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -43,11 +45,10 @@ fun String.asLocalDateTime(): LocalDateTime {
 	return LocalDateTime.parse(this, formatter)
 }
 
-fun String.removeNullCharacters(): String {
-	return this
+fun String.removeNullCharacters(): String =
+	this
 		.replace("\u0000", "")
 		.replace("\\u0000", "")
-}
 
 fun String?.asTime(): LocalTime {
 	val log = LoggerFactory.getLogger(String::class.java)
@@ -72,5 +73,4 @@ fun String?.asTime(): LocalTime {
 	return LocalTime.MIDNIGHT
 }
 
-infix fun LocalDate?.withTime(time: LocalTime) =
-	if (this != null) LocalDateTime.of(this, time) else null
+infix fun LocalDate?.withTime(time: LocalTime) = if (this != null) LocalDateTime.of(this, time) else null

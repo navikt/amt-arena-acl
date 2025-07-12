@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit
 open class MockHttpServer(
 	startImmediately: Boolean = false,
 ) {
-
 	private val server = MockWebServer()
 
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -20,16 +19,16 @@ open class MockHttpServer(
 	private val responseHandlers = mutableMapOf<(request: RecordedRequest) -> Boolean, MockResponse>()
 
 	init {
-	    if (startImmediately) {
+		if (startImmediately) {
 			start()
 		}
 	}
 
 	fun start() {
 		try {
-		    server.start()
+			server.start()
 			server.dispatcher = createResponseDispatcher()
-		} catch (e: IllegalArgumentException) {
+		} catch (_: IllegalArgumentException) {
 			log.info("${javaClass.simpleName} is already started")
 		}
 	}
@@ -40,11 +39,12 @@ open class MockHttpServer(
 		flushRequests()
 	}
 
-	fun serverUrl(): String {
-		return server.url("").toString().removeSuffix("/")
-	}
+	fun serverUrl(): String = server.url("").toString().removeSuffix("/")
 
-	fun addResponseHandler(requestMatcher: (req: RecordedRequest) -> Boolean, response: MockResponse) {
+	fun addResponseHandler(
+		requestMatcher: (req: RecordedRequest) -> Boolean,
+		response: MockResponse,
+	) {
 		responseHandlers[requestMatcher] = response
 	}
 
@@ -54,23 +54,28 @@ open class MockHttpServer(
 		matchMethod: String? = null,
 		matchHeaders: Map<String, String>? = null,
 		matchBodyContains: String? = null,
-		response: MockResponse
+		response: MockResponse,
 	) {
 		val requestMatcher = matcher@{ req: RecordedRequest ->
-			if (matchPath != null && req.path != matchPath)
+			if (matchPath != null && req.path != matchPath) {
 				return@matcher false
+			}
 
-			if (matchRegexPath != null && !req.path!!.matches(matchRegexPath))
+			if (matchRegexPath != null && !req.path!!.matches(matchRegexPath)) {
 				return@matcher false
+			}
 
-			if (matchMethod != null && req.method != matchMethod)
+			if (matchMethod != null && req.method != matchMethod) {
 				return@matcher false
+			}
 
-			if (matchHeaders != null && !hasExpectedHeaders(req.headers, matchHeaders))
+			if (matchHeaders != null && !hasExpectedHeaders(req.headers, matchHeaders)) {
 				return@matcher false
+			}
 
-			if (matchBodyContains != null && !req.body.readUtf8().contains(matchBodyContains))
+			if (matchBodyContains != null && !req.body.readUtf8().contains(matchBodyContains)) {
 				return@matcher false
+			}
 
 			true
 		}
@@ -78,23 +83,14 @@ open class MockHttpServer(
 		addResponseHandler(requestMatcher, response)
 	}
 
-	fun latestRequest(): RecordedRequest {
-		return server.takeRequest()
-	}
-
-	fun requestCount(): Int {
-		return server.requestCount - lastRequestCount
-	}
-
-	fun shutdown() {
-		server.shutdown()
-	}
+	fun latestRequest(): RecordedRequest = server.takeRequest()
 
 	private fun createResponseDispatcher(): Dispatcher {
 		return object : Dispatcher() {
 			override fun dispatch(request: RecordedRequest): MockResponse {
-				val response = responseHandlers.entries.find { it.key.invoke(request) }?.value
-					?: throw IllegalStateException("No handler for $request")
+				val response =
+					responseHandlers.entries.find { it.key.invoke(request) }?.value
+						?: throw IllegalStateException("No handler for $request")
 
 				log.info("Responding [${request.path}]: $response")
 
@@ -103,18 +99,24 @@ open class MockHttpServer(
 		}
 	}
 
-	private fun hasExpectedHeaders(requestHeaders: okhttp3.Headers, expectedHeaders: Map<String, String>): Boolean {
+	private fun hasExpectedHeaders(
+		requestHeaders: okhttp3.Headers,
+		expectedHeaders: Map<String, String>,
+	): Boolean {
 		var hasHeaders = true
 
 		expectedHeaders.forEach { (name, value) ->
-			if (requestHeaders[name] != value)
+			if (requestHeaders[name] != value) {
 				hasHeaders = false
+			}
 		}
 
 		return hasHeaders
 	}
 
 	private fun flushRequests() {
-		while (server.takeRequest(1, TimeUnit.NANOSECONDS) != null) {}
+		while (server.takeRequest(1, TimeUnit.NANOSECONDS) != null) {
+			// noop
+		}
 	}
 }

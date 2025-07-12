@@ -4,7 +4,6 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 object DbUtils {
-
 	/**
 	 * A helping function as SQL Timestamp and LocalDateTime does not have the same precision
 	 */
@@ -15,5 +14,4 @@ object DbUtils {
 
 		return this.truncatedTo(ChronoUnit.SECONDS) == other.truncatedTo(ChronoUnit.SECONDS)
 	}
-
 }

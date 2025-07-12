@@ -11,27 +11,19 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.fasterxml.jackson.module.kotlin.treeToValue
 
 object JsonUtils {
+	val objectMapper =
+		jacksonObjectMapper()
+			.registerKotlinModule()
+			.registerModule(JavaTimeModule())
+			.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+			.configure(MapperFeature.USE_STD_BEAN_NAMING, true)
+			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-	val objectMapper = jacksonObjectMapper()
-		.registerKotlinModule()
-		.registerModule(JavaTimeModule())
-		.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-		.configure(MapperFeature.USE_STD_BEAN_NAMING, true)
-		.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+	inline fun <reified T> fromJsonString(jsonStr: String): T = objectMapper.readValue(jsonStr)
 
-	inline fun <reified T> fromJsonString(jsonStr: String): T {
-		return objectMapper.readValue(jsonStr)
-	}
+	fun toJsonString(any: Any): String = objectMapper.writeValueAsString(any)
 
-	fun toJsonString(any: Any): String {
-		return objectMapper.writeValueAsString(any)
-	}
+	fun toJsonNode(jsonStr: String): JsonNode = objectMapper.readTree(jsonStr)
 
-	fun toJsonNode(jsonStr: String): JsonNode {
-		return objectMapper.readTree(jsonStr)
-	}
-
-	inline fun <reified T> fromJsonNode(jsonNode: JsonNode): T {
-		return objectMapper.treeToValue(jsonNode)
-	}
+	inline fun <reified T> fromJsonNode(jsonNode: JsonNode): T = objectMapper.treeToValue(jsonNode)
 }

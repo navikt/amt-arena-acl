@@ -1,8 +1,8 @@
 package no.nav.amt.arena.acl.consumer
 
-import ArenaOrdsProxyClient
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
+import no.nav.amt.arena.acl.clients.mulighetsrommetapi.Gjennomforing
+import no.nav.amt.arena.acl.clients.mulighetsrommetapi.MulighetsrommetApiClient
+import no.nav.amt.arena.acl.clients.ordsproxy.ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
@@ -33,7 +33,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
-open class ArenaDeltakerConsumer(
+class ArenaDeltakerConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val deltakerRepository: DeltakerRepository,
 	private val gjennomforingService: GjennomforingService,
@@ -41,9 +41,8 @@ open class ArenaDeltakerConsumer(
 	private val ordsClient: ArenaOrdsProxyClient,
 	private val metrics: DeltakerMetricHandler,
 	private val kafkaProducerService: KafkaProducerService,
-	private val mulighetsrommetApiClient: MulighetsrommetApiClient
+	private val mulighetsrommetApiClient: MulighetsrommetApiClient,
 ) : ArenaMessageConsumer<ArenaDeltakerKafkaMessage> {
-
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	override fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
@@ -54,9 +53,10 @@ open class ArenaDeltakerConsumer(
 
 		externalDeltakerGuard(arenaDeltakerRaw)
 
-		val arenaDeltaker = arenaDeltakerRaw
-			.tryRun { it.mapTiltakDeltaker() }
-			.getOrThrow()
+		val arenaDeltaker =
+			arenaDeltakerRaw
+				.tryRun { it.mapTiltakDeltaker() }
+				.getOrThrow()
 
 		val deltaker = createDeltaker(arenaDeltaker, gjennomforing)
 		val deltakerData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
@@ -76,7 +76,6 @@ open class ArenaDeltakerConsumer(
 			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId)
 			log.info("Lagrer deltaker med id=${deltaker.id}")
 			deltakerRepository.upsert(arenaDeltakerRaw.toDbo())
-
 		}
 		metrics.publishMetrics(message)
 		log.info("Deltaker med id=${deltaker.id} ferdig prosessert")
@@ -90,10 +89,13 @@ open class ArenaDeltakerConsumer(
 			val arenaId = arenaDataIdTranslationService.hentArenaId(eksternId)
 			if (arenaId == null) {
 				arenaDataIdTranslationService.opprettIdTranslation(arenaDeltakerId, eksternId)
-			}
-			else if (arenaId != arenaDeltakerId) {
-				log.error("Fikk arenadeltaker med id $arenaDeltakerId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
-				throw ValidationException("Fikk arenadeltaker med id $arenaDeltakerId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
+			} else if (arenaId != arenaDeltakerId) {
+				log.error(
+					"Fikk arenadeltaker med id $arenaDeltakerId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId",
+				)
+				throw ValidationException(
+					"Fikk arenadeltaker med id $arenaDeltakerId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId",
+				)
 			}
 
 			throw ExternalSourceSystemException("Deltaker har eksternid ${arenaDeltakerRaw.EKSTERN_ID}")
@@ -101,22 +103,25 @@ open class ArenaDeltakerConsumer(
 		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
 			throw ExternalSourceSystemException("Deltaker har deltakertypekode ekstern, arenaid $arenaDeltakerId")
 		}
-
 	}
+
 	private fun sendMessageAndUpdateIngestStatus(
 		message: ArenaDeltakerKafkaMessage,
 		deltaker: AmtDeltaker,
 		arenaDeltakerId: String,
-		operation: AmtOperation = message.operationType
+		operation: AmtOperation = message.operationType,
 	) {
-		val deltakerKafkaMessage = AmtKafkaMessageDto(
-			type = PayloadType.DELTAKER,
-			operation = operation,
-			payload = deltaker
-		)
+		val deltakerKafkaMessage =
+			AmtKafkaMessageDto(
+				type = PayloadType.DELTAKER,
+				operation = operation,
+				payload = deltaker,
+			)
 		kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
-		log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
+		log.info(
+			"Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt",
+		)
 	}
 
 	private fun skalVente(deltakerData: List<ArenaDataDbo>): Boolean {
@@ -133,9 +138,10 @@ open class ArenaDeltakerConsumer(
 		message: ArenaDeltakerKafkaMessage,
 	): Boolean {
 		// Hvis det finnes en eldre melding på deltaker som ikke er håndtert så skal meldingen få status RETRY
-		val eldreMeldingVenter = deltakerData
-			.filter { it.operationPosition < message.operationPosition }
-			.firstOrNull { it.ingestStatus in listOf(IngestStatus.RETRY, IngestStatus.FAILED, IngestStatus.WAITING) }
+		val eldreMeldingVenter =
+			deltakerData
+				.filter { it.operationPosition < message.operationPosition }
+				.firstOrNull { it.ingestStatus in listOf(IngestStatus.RETRY, IngestStatus.FAILED, IngestStatus.WAITING) }
 		return eldreMeldingVenter != null
 	}
 
@@ -144,14 +150,21 @@ open class ArenaDeltakerConsumer(
 		amtDeltaker: AmtDeltaker,
 		arenaDeltakerId: String,
 		message: ArenaDeltakerKafkaMessage,
-		deltakerData: List<ArenaDataDbo>
+		deltakerData: List<ArenaDataDbo>,
 	) {
 		// Hvis deltakeren er flyttet til hist-tabellen betyr det at deltakeren deltar på samme gjennomføring flere ganger,
 		// og den eldre deltakelsen skal ikke slettes.
 		val arenaHistId = arenaDataIdTranslationService.hentArenaHistId(amtDeltaker.id)
 		if (arenaHistId != null) {
-			log.info("Mottatt delete-melding for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, blir ikke behandlet fordi det finnes hist-melding på samme deltaker")
-			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId, "Slettes ikke fordi deltaker ble historisert"))
+			log.info(
+				"Mottatt delete-melding for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, blir ikke behandlet fordi det finnes hist-melding på samme deltaker",
+			)
+			arenaDataRepository.upsert(
+				message.toUpsertInputWithStatusHandled(
+					arenaDeltakerId,
+					"Slettes ikke fordi deltaker ble historisert",
+				),
+			)
 			deltakerRepository.upsert(arenaDeltakerRaw.toDbo()) // denne kan fjernes når vi har kjørt igjennom delete meldinger
 		} else {
 			if (getRetryAttempts(deltakerData, message) < 2) {
@@ -162,7 +175,7 @@ open class ArenaDeltakerConsumer(
 					message,
 					amtDeltaker.toFeilregistrertDeltaker(),
 					arenaDeltakerId,
-					AmtOperation.MODIFIED
+					AmtOperation.MODIFIED,
 				)
 			}
 		}
@@ -171,15 +184,19 @@ open class ArenaDeltakerConsumer(
 	private fun getRetryAttempts(
 		deltakerData: List<ArenaDataDbo>,
 		message: ArenaDeltakerKafkaMessage,
-	): Int {
-		return deltakerData.find { it.operationPosition == message.operationPosition }?.ingestAttempts ?: 0
-	}
+	): Int = deltakerData.find { it.operationPosition == message.operationPosition }?.ingestAttempts ?: 0
 
-	fun createDeltaker(arenaDeltaker: TiltakDeltaker, gjennomforing: Gjennomforing, erHistDeltaker: Boolean = false): AmtDeltaker {
-		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
-			?: throw ValidationException("Arena mangler personlig ident for personId=${arenaDeltaker.personId}")
+	fun createDeltaker(
+		arenaDeltaker: TiltakDeltaker,
+		gjennomforing: Gjennomforing,
+		erHistDeltaker: Boolean = false,
+	): AmtDeltaker {
+		val personIdent =
+			ordsClient.hentFnr(arenaDeltaker.personId)
+				?: throw ValidationException("Arena mangler personlig ident for personId=${arenaDeltaker.personId}")
 
-		val deltakerId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, erHistDeltaker)
+		val deltakerId =
+			arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, erHistDeltaker)
 
 		return arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerId,
@@ -192,8 +209,9 @@ open class ArenaDeltakerConsumer(
 	}
 
 	fun getGjennomforing(arenaGjennomforingId: String): Gjennomforing {
-		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
+		val gjennomforing =
+			gjennomforingService.get(arenaGjennomforingId)
+				?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
 		if (!gjennomforing.isSupported) {
 			throw IgnoredException("Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
@@ -203,16 +221,15 @@ open class ArenaDeltakerConsumer(
 
 		// id kan være null for våre typer fordi id ikke ble lagret fra starten
 		// og pga en bug se trellokort #877
-		val gjennomforingId = gjennomforing.id?: getGjennomforingId(gjennomforing.arenaId).also {
-			gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
-		}
+		val gjennomforingId =
+			gjennomforing.id ?: getGjennomforingId(gjennomforing.arenaId).also {
+				gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
+			}
 
 		return mulighetsrommetApiClient.hentGjennomforing(gjennomforingId)
 	}
 
-	private fun getGjennomforingId(arenaId: String): UUID {
-		return mulighetsrommetApiClient.hentGjennomforingId(arenaId)
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet")
-	}
-
+	private fun getGjennomforingId(arenaId: String): UUID =
+		mulighetsrommetApiClient.hentGjennomforingId(arenaId)
+			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaId skal bli håndtert av Mulighetsrommet")
 }

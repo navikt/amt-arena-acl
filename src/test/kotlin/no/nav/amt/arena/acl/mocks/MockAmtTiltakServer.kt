@@ -8,30 +8,30 @@ import java.time.LocalDate
 import java.util.UUID
 
 class MockAmtTiltakServer : MockHttpServer() {
-
 	fun mockHentDeltakelserForPerson(
 		deltakerId: UUID?,
 		gjennomforingId: UUID,
 		startdato: LocalDate?,
 		sluttdato: LocalDate?,
 		status: DeltakerStatusDto = DeltakerStatusDto.FULLFORT,
-		responseCode: Int = 200
+		responseCode: Int = 200,
 	) {
-		val body = deltakerId?.let {
-		"""
-			[
-			  {
-				"id": "$deltakerId",
-				"gjennomforing": {
-				  "id": "$gjennomforingId"
-				},
-				"startDato": "$startdato",
-				"sluttDato": "$sluttdato",
-				"status": "${status.name}"
-			  }
-			]
-		""".trimIndent()
-		} ?: toJsonString(emptyList<DeltakerDto>())
+		val body =
+			deltakerId?.let {
+				"""
+				[
+				  {
+					"id": "$deltakerId",
+					"gjennomforing": {
+					  "id": "$gjennomforingId"
+					},
+					"startDato": "$startdato",
+					"sluttDato": "$sluttdato",
+					"status": "${status.name}"
+				  }
+				]
+				""".trimIndent()
+			} ?: toJsonString(emptyList<DeltakerDto>())
 
 		val response = MockResponse().setResponseCode(responseCode).setBody(body)
 		handleRequest(matchPath = "/api/external/deltakelser", response = response)

@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.domain.kafka.arena
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-
 data class TiltakGjennomforing(
 	val tiltakgjennomforingId: String,
 	val sakId: Long,
@@ -13,5 +12,5 @@ data class TiltakGjennomforing(
 	val datoFra: LocalDate?,
 	val datoTil: LocalDate?,
 	val tiltakstatusKode: String,
-	val regDato: LocalDateTime
+	val regDato: LocalDateTime,
 )

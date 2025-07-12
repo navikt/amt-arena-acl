@@ -11,7 +11,7 @@ enum class IngestStatus {
 	IGNORED,
 	INVALID,
 	WAITING,
-	EXTERNAL_SOURCE
+	EXTERNAL_SOURCE,
 }
 
 data class ArenaDataDbo(
@@ -27,5 +27,5 @@ data class ArenaDataDbo(
 	val lastAttempted: LocalDateTime?,
 	val before: String? = null,
 	val after: String? = null,
-	val note: String? = null
+	val note: String? = null,
 )

@@ -7,6 +7,7 @@ plugins {
     kotlin("plugin.spring") version kotlinVersion
     id("org.springframework.boot") version springBootVersion
     id("io.spring.dependency-management") version springDependencyManagementVersion
+    id("org.jlleitschuh.gradle.ktlint") version "13.0.0"
 }
 
 group = "no.nav.amt.arena-acl"
@@ -25,10 +26,14 @@ val unleashVersion = "11.0.2"
 val navCommonVersion = "3.2025.06.23_14.50-3af3985d8555"
 val navTokenSupportVersion = "5.0.30"
 val logstashEncoderVersion = "8.1"
+val ktLintVersion = "1.6.0"
 
 val kotestVersion = "5.9.1"
 val mockkVersion = "1.14.4"
 val testcontainersVersion = "1.21.3"
+val kotestExtensionsSpringVersion = "1.3.0"
+// val springmockkVersion = "4.0.2"
+val kotestExtensionsTestcontainersVersion = "2.0.2"
 
 val navCommonModules = setOf("log", "job", "rest", "token-client")
 
@@ -74,11 +79,17 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
+    testImplementation("io.kotest.extensions:kotest-extensions-testcontainers:$kotestExtensionsTestcontainersVersion")
+    testImplementation("io.kotest.extensions:kotest-extensions-spring:$kotestExtensionsSpringVersion")
     testImplementation("io.mockk:mockk-jvm:$mockkVersion")
     testImplementation("no.nav.security:token-validation-spring-test:$navTokenSupportVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
     testImplementation("org.testcontainers:kafka:$testcontainersVersion")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "com.vaadin.external.google", module = "android-json")
+    }
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    // testImplementation("com.ninja-squad:springmockk:$springmockkVersion")
 }
 
 kotlin {
@@ -86,6 +97,10 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xjsr305=strict")
     }
+}
+
+ktlint {
+    version = ktLintVersion
 }
 
 tasks.jar {
@@ -97,6 +112,7 @@ tasks.test {
         "-Xshare:off",
         "-XX:+EnableDynamicAgentLoading",
         "-Dkotest.framework.classpath.scanning.autoscan.disable=true",
+        "-Dkotest.framework.config.fqn=no.nav.amt.arena.acl.KotestConfig",
     )
     useJUnitPlatform()
 }

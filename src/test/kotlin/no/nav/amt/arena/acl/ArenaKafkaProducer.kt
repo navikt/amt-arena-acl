@@ -7,7 +7,7 @@ import no.nav.common.kafka.util.KafkaPropertiesBuilder
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.util.Properties
 
 fun main() {
 	val producer = ArenaKafkaProducer()
@@ -16,13 +16,15 @@ fun main() {
 }
 
 class ArenaKafkaProducer {
-
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	private val kafkaProducer = KafkaProducerClientImpl<String, String>(getKafkaProperties())
 
-	fun send(jsonFilePath: String, topic: String) {
-		val jsonFileContent = javaClass.classLoader.getResource(jsonFilePath).readText()
+	fun send(
+		jsonFilePath: String,
+		topic: String,
+	) {
+		val jsonFileContent = javaClass.classLoader.getResource(jsonFilePath)!!.readText()
 
 		val data: List<JsonNode> = fromJsonString(jsonFileContent)
 
@@ -34,14 +36,12 @@ class ArenaKafkaProducer {
 		log.info("Sent ${data.size} messages on topic $topic")
 	}
 
-	private fun getKafkaProperties(): Properties {
-		return KafkaPropertiesBuilder.producerBuilder()
+	private fun getKafkaProperties(): Properties =
+		KafkaPropertiesBuilder
+			.producerBuilder()
 			.withBrokerUrl(("localhost:9092"))
 			.withBaseProperties()
 			.withProducerId("amt-arena-acl")
 			.withSerializers(StringSerializer::class.java, StringSerializer::class.java)
 			.build()
-	}
-
 }
-

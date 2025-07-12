@@ -2,8 +2,6 @@ package no.nav.amt.arena.acl.integration
 
 import io.getunleash.FakeUnleash
 import io.getunleash.Unleash
-import no.nav.amt.arena.acl.database.DatabaseTestUtils
-import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.SingletonKafkaProvider
@@ -14,44 +12,27 @@ import no.nav.amt.arena.acl.mocks.MockAmtTiltakServer
 import no.nav.amt.arena.acl.mocks.MockArenaOrdsProxyHttpServer
 import no.nav.amt.arena.acl.mocks.MockMachineToMachineHttpServer
 import no.nav.amt.arena.acl.mocks.MockMulighetsrommetApiServer
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Profile
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import java.time.Duration
-import javax.sql.DataSource
+import org.springframework.test.context.TestConstructor
 
+@ActiveProfiles("integration")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(IntegrationTestConfiguration::class)
-@ActiveProfiles("integration")
-@TestConfiguration("application-integration.properties")
-abstract class IntegrationTestBase {
-
-	@LocalServerPort
-	private var port: Int = 0
-
-	fun serverUrl() = "http://localhost:$port"
-
-	private val client = OkHttpClient.Builder()
-		.callTimeout(Duration.ofMinutes(5))
-		.build()
-
-	@Autowired
-	lateinit var dataSource: DataSource
-
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+abstract class IntegrationTestBase : JUnitRepositoryTestBase() {
 	@Autowired
 	lateinit var kafkaMessageConsumer: KafkaMessageConsumer
 
@@ -62,7 +43,6 @@ abstract class IntegrationTestBase {
 	fun beforeEach() {
 		kafkaConsumer.start()
 		kafkaMessageConsumer.start()
-		DatabaseTestUtils.cleanDatabase(dataSource)
 	}
 
 	@AfterEach
@@ -84,8 +64,9 @@ abstract class IntegrationTestBase {
 
 		@JvmStatic
 		@DynamicPropertySource
+		@Suppress("unused")
 		fun startEnvironment(registry: DynamicPropertyRegistry) {
-            setupEnvironment(registry)
+			setupEnvironment(registry)
 		}
 
 		fun setupEnvironment(registry: DynamicPropertyRegistry) {
@@ -107,55 +88,27 @@ abstract class IntegrationTestBase {
 
 			mockMachineToMachineHttpServer.start()
 			registry.add("nais.env.azureOpenIdConfigTokenEndpoint") {
-				mockMachineToMachineHttpServer.serverUrl() + MockMachineToMachineHttpServer.tokenPath
+				mockMachineToMachineHttpServer.serverUrl() + MockMachineToMachineHttpServer.TOKEN_PATH
 			}
-
-			val container = SingletonPostgresContainer.getContainer()
-
-			registry.add("spring.datasource.url") { container.jdbcUrl }
-			registry.add("spring.datasource.username") { container.username }
-			registry.add("spring.datasource.password") { container.password }
 		}
-	}
-
-	fun sendRequest(
-		method: String,
-		path: String,
-		body: RequestBody? = null,
-		headers: Map<String, String> = emptyMap()
-	): Response {
-		val reqBuilder = Request.Builder()
-			.url("${serverUrl()}$path")
-			.method(method, body)
-
-		headers.forEach {
-			reqBuilder.addHeader(it.key, it.value)
-		}
-
-		return client.newCall(reqBuilder.build()).execute()
 	}
 }
 
 @Profile("integration")
 @TestConfiguration
-open class IntegrationTestConfiguration {
-
+class IntegrationTestConfiguration {
 	@Value("\${app.env.amtTopic}")
 	lateinit var consumerTopic: String
 
 	@Bean
-	open fun kafkaProperties(): KafkaProperties {
-		return SingletonKafkaProvider.getKafkaProperties()
-	}
+	fun kafkaProperties(): KafkaProperties = SingletonKafkaProvider.getKafkaProperties()
 
 	@Bean
-	open fun kafkaAmtIntegrationConsumer(properties: KafkaProperties): KafkaAmtIntegrationConsumer {
-		return KafkaAmtIntegrationConsumer(properties, consumerTopic)
-	}
+	fun kafkaAmtIntegrationConsumer(properties: KafkaProperties): KafkaAmtIntegrationConsumer =
+		KafkaAmtIntegrationConsumer(properties, consumerTopic)
 
 	@Bean
-	open fun unleashClient(
-	): Unleash {
+	fun unleashClient(): Unleash {
 		val fakeUnleash = FakeUnleash()
 		fakeUnleash.enableAll()
 		return fakeUnleash

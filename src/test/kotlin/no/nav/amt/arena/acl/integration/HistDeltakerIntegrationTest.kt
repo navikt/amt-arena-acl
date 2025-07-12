@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.integration
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.clients.amttiltak.DeltakerStatusDto
-import no.nav.amt.arena.acl.database.DatabaseTestUtils
 import no.nav.amt.arena.acl.domain.Gjennomforing
 import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
@@ -27,75 +26,58 @@ import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
-import no.nav.amt.arena.acl.utils.DirtyContextBeforeAndAfterClassTestExecutionListener
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import no.nav.amt.arena.acl.utils.asLocalDate
 import no.nav.amt.arena.acl.utils.asLocalDateTime
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.context.TestExecutionListeners
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-@TestExecutionListeners(
-	listeners = [DirtyContextBeforeAndAfterClassTestExecutionListener::class],
-	mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
-)
-class HistDeltakerIntegrationTest : IntegrationTestBase() {
-
-	@Autowired
-	lateinit var kafkaMessageSender: KafkaMessageSender
-
-	@Autowired
-	lateinit var arenaDataRepository: ArenaDataRepository
-
-	@Autowired
-	lateinit var deltakerRepository: DeltakerRepository
-
-	@Autowired
-	lateinit var arenaDataHistIdTranslationRepository: ArenaDataHistIdTranslationRepository
-
-	@Autowired
-	lateinit var arenaDataIdTranslationRepository: ArenaDataIdTranslationRepository
-
-	@Autowired
-	lateinit var gjennomforingService: GjennomforingService
-
+class HistDeltakerIntegrationTest(
+	private val kafkaMessageSender: KafkaMessageSender,
+	private val arenaDataRepository: ArenaDataRepository,
+	private val deltakerRepository: DeltakerRepository,
+	private val arenaDataHistIdTranslationRepository: ArenaDataHistIdTranslationRepository,
+	private val arenaDataIdTranslationRepository: ArenaDataIdTranslationRepository,
+	private val gjennomforingService: GjennomforingService,
+) : IntegrationTestBase() {
 	val baseDeltaker = createDeltaker()
 
-	val baseGjennomforing = KafkaMessageCreator.baseGjennomforing(
-		arenaGjennomforingId = baseDeltaker.TILTAKGJENNOMFORING_ID,
-		arbgivIdArrangor = 68968L,
-		datoFra = LocalDateTime.now().minusDays(3),
-		datoTil = LocalDateTime.now().plusDays(3),
-	)
+	val baseGjennomforing =
+		KafkaMessageCreator.baseGjennomforing(
+			arenaGjennomforingId = baseDeltaker.TILTAKGJENNOMFORING_ID,
+			arbgivIdArrangor = 68968L,
+			datoFra = LocalDateTime.now().minusDays(3),
+			datoTil = LocalDateTime.now().plusDays(3),
+		)
 
 	val gjennomforingIdMR = UUID.randomUUID()
-	val gjennomforingMRData = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing(
-		id = gjennomforingIdMR,
-		tiltakstype = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Tiltakstype(
-			id = UUID.randomUUID(),
-			navn = "Navn på tiltak",
-			arenaKode = "INDOPPFAG"
-		),
-		navn = "Navn på gjennomføring",
-		startDato = LocalDate.now(),
-		sluttDato = LocalDate.now().plusDays(3),
-		status = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Status.GJENNOMFORES,
-		virksomhetsnummer = "999888777",
-		oppstart = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Oppstartstype.LOPENDE
-	)
+	val gjennomforingMRData =
+		no.nav.amt.arena.acl.clients.mulighetsrommetapi.Gjennomforing(
+			id = gjennomforingIdMR,
+			tiltakstype =
+				no.nav.amt.arena.acl.clients.mulighetsrommetapi.Gjennomforing.Tiltakstype(
+					id = UUID.randomUUID(),
+					navn = "Navn på tiltak",
+					arenaKode = "INDOPPFAG",
+				),
+			navn = "Navn på gjennomføring",
+			startDato = LocalDate.now(),
+			sluttDato = LocalDate.now().plusDays(3),
+			status = no.nav.amt.arena.acl.clients.mulighetsrommetapi.Gjennomforing.Status.GJENNOMFORES,
+			virksomhetsnummer = "999888777",
+			oppstart = no.nav.amt.arena.acl.clients.mulighetsrommetapi.Gjennomforing.Oppstartstype.LOPENDE,
+		)
 
 	val fnr = "123456789"
 
 	@BeforeEach
 	fun setup() {
-		DatabaseTestUtils.cleanDatabase(dataSource)
 		setupMocks()
 	}
 
@@ -105,7 +87,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		mockAmtTiltakServer.reset()
 		mockMulighetsrommetApiServer.mockHentGjennomforingId(
 			baseGjennomforing.TILTAKGJENNOMFORING_ID,
-			gjennomforingIdMR
+			gjennomforingIdMR,
 		)
 		mockMulighetsrommetApiServer.mockHentGjennomforingData(gjennomforingIdMR, gjennomforingMRData)
 	}
@@ -128,19 +110,21 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 				datoStatusEndring = baseDeltaker.DATO_STATUSENDRING?.asLocalDateTime(),
 				arenaSourceTable = ARENA_DELTAKER_TABLE_NAME,
 				eksternId = null,
-			)
+			),
 		)
-		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(
-			amtId = amtTiltakDeltakerId,
-			arenaTableName = ARENA_DELTAKER_TABLE_NAME,
-			arenaId = matchingDeltakerId.toString()
-		))
+		arenaDataIdTranslationRepository.insert(
+			ArenaDataIdTranslationDbo(
+				amtId = amtTiltakDeltakerId,
+				arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+				arenaId = matchingDeltakerId.toString(),
+			),
+		)
 
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = amtTiltakDeltakerId,
 			gjennomforingId = gjennomforingIdMR,
 			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL)
+			sluttdato = parseDate(baseDeltaker.DATO_TIL),
 		)
 
 		baseGjennomforing.publiser {
@@ -151,7 +135,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		val pos = "233"
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos))
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
 		)
 		AsyncUtils.eventually {
 			val arenaData = arenaDataRepository.get(ARENA_HIST_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
@@ -159,9 +143,10 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
 			deltakerRecord shouldBe null
 		}
-		arenaDataHistIdTranslationRepository.get(
-			baseDeltaker.HIST_TILTAKDELTAKER_ID.toString()
-		)?.amtId shouldBe amtTiltakDeltakerId
+		arenaDataHistIdTranslationRepository
+			.get(
+				baseDeltaker.HIST_TILTAKDELTAKER_ID.toString(),
+			)?.amtId shouldBe amtTiltakDeltakerId
 	}
 
 	@Test
@@ -183,20 +168,22 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 				datoStatusEndring = baseDeltaker.DATO_STATUSENDRING?.asLocalDateTime(),
 				arenaSourceTable = ARENA_DELTAKER_TABLE_NAME,
 				eksternId = null,
-			)
+			),
 		)
-		arenaDataIdTranslationRepository.insert(ArenaDataIdTranslationDbo(
-			amtId = amtTiltakDeltakerId,
-			arenaTableName = ARENA_DELTAKER_TABLE_NAME,
-			arenaId = matchingDeltakerId.toString()
-		))
+		arenaDataIdTranslationRepository.insert(
+			ArenaDataIdTranslationDbo(
+				amtId = amtTiltakDeltakerId,
+				arenaTableName = ARENA_DELTAKER_TABLE_NAME,
+				arenaId = matchingDeltakerId.toString(),
+			),
+		)
 
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = amtTiltakDeltakerId,
 			gjennomforingId = gjennomforingIdMR,
 			startdato = parseDate(baseDeltaker.DATO_FRA),
 			sluttdato = parseDate(baseDeltaker.DATO_TIL),
-			status = DeltakerStatusDto.FEILREGISTRERT
+			status = DeltakerStatusDto.FEILREGISTRERT,
 		)
 
 		baseGjennomforing.publiser {
@@ -211,9 +198,10 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			val gjennomforing = gjennomforingService.get(gjennomforingArenaId)
 			gjennomforing!!.id shouldBe gjennomforingIdMR
 		}
-		arenaDataHistIdTranslationRepository.get(
-			baseDeltaker.HIST_TILTAKDELTAKER_ID.toString()
-		)?.amtId shouldBe amtTiltakDeltakerId
+		arenaDataHistIdTranslationRepository
+			.get(
+				baseDeltaker.HIST_TILTAKDELTAKER_ID.toString(),
+			)?.amtId shouldBe amtTiltakDeltakerId
 	}
 
 	@Test
@@ -223,14 +211,14 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			deltakerId = null,
 			gjennomforingId = gjennomforingIdMR,
 			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL)
+			sluttdato = parseDate(baseDeltaker.DATO_TIL),
 		)
 		val pos = "45"
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos))
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
 		)
 
 		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
@@ -249,7 +237,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			deltakerId = UUID.randomUUID(),
 			gjennomforingId = UUID.randomUUID(),
 			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL)
+			sluttdato = parseDate(baseDeltaker.DATO_TIL),
 		)
 
 		val pos = "48"
@@ -257,7 +245,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos))
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
 		)
 
 		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
@@ -267,7 +255,6 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			deltakerRecord shouldNotBe null
 			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
 		}
-
 	}
 
 	@Test
@@ -277,14 +264,14 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			deltakerId = UUID.randomUUID(),
 			gjennomforingId = gjennomforingIdMR,
 			startdato = LocalDate.now().minusDays(1),
-			sluttdato = LocalDate.now().plusMonths(3)
+			sluttdato = LocalDate.now().plusMonths(3),
 		)
 		val pos = "52"
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos))
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
 		)
 
 		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
@@ -294,7 +281,6 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			deltakerRecord shouldNotBe null
 			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
 		}
-
 	}
 
 	@Test
@@ -304,7 +290,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			deltakerId = UUID.randomUUID(),
 			gjennomforingId = gjennomforingIdMR,
 			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL)
+			sluttdato = parseDate(baseDeltaker.DATO_TIL),
 		)
 
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
@@ -316,9 +302,9 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 				KafkaMessageCreator.opprettArenaHistDeltaker(
 					arenaDeltaker = baseDeltaker,
 					opPos = pos,
-					opType = "D"
-				)
-			)
+					opType = "D",
+				),
+			),
 		)
 
 		AsyncUtils.eventually {
@@ -336,14 +322,14 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			deltakerId = UUID.randomUUID(),
 			gjennomforingId = gjennomforingIdMR,
 			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL)
+			sluttdato = parseDate(baseDeltaker.DATO_TIL),
 		)
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), "IKKESTOTTET", true)
 
 		val pos = "42"
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.TILTAKGJENNOMFORING_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(arenaDeltaker = baseDeltaker, opPos = pos))
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
 		)
 
 		AsyncUtils.eventually {
@@ -359,18 +345,18 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			deltakerId = UUID.randomUUID(),
 			gjennomforingId = gjennomforingIdMR,
 			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL)
+			sluttdato = parseDate(baseDeltaker.DATO_TIL),
 		)
 		gjennomforingService.upsert(
 			baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(),
 			SUPPORTED_TILTAK.first(),
-			false
+			false,
 		)
 
 		val pos = "77"
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(arenaDeltaker = baseDeltaker, opPos = pos))
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
 		)
 
 		AsyncUtils.eventually {
@@ -387,12 +373,12 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			deltakerId = UUID.randomUUID(),
 			gjennomforingId = gjennomforingIdMR,
 			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL)
+			sluttdato = parseDate(baseDeltaker.DATO_TIL),
 		)
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos))
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
 		)
 
 		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
@@ -413,16 +399,17 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 		registrertDato shouldBe parseDateTime(baseDeltaker.REG_DATO)
 	}
 
-	private fun createDeltaker() = KafkaMessageCreator.baseHistDeltaker(
-		deltakerStatusKode = TiltakDeltaker.Status.FULLF.name,
-		startDato = LocalDate.now().minusMonths(3),
-		sluttDato = LocalDate.now().minusMonths(2),
-	)
+	private fun createDeltaker() =
+		KafkaMessageCreator.baseHistDeltaker(
+			deltakerStatusKode = TiltakDeltaker.Status.FULLF.name,
+			startDato = LocalDate.now().minusMonths(3),
+			sluttDato = LocalDate.now().minusMonths(2),
+		)
 
 	private fun ArenaGjennomforing.publiser(customAssertions: (payload: Gjennomforing?) -> Unit) {
 		kafkaMessageSender.publiserArenaGjennomforing(
 			TILTAKGJENNOMFORING_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(this))
+			toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(this)),
 		)
 		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
 			val gjennomforingResult = gjennomforingService.get(TILTAKGJENNOMFORING_ID.toString())
@@ -433,7 +420,7 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 	private fun ArenaHistDeltaker.publiserOgValiderOutput(customAssertions: (payload: AmtDeltaker) -> Unit) {
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			HIST_TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(this))
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(this)),
 		)
 
 		AsyncUtils.eventually {
@@ -449,7 +436,6 @@ class HistDeltakerIntegrationTest : IntegrationTestBase() {
 			payload.personIdent shouldBe fnr
 			payload.gjennomforingId shouldBe gjennomforingIdMR
 			customAssertions(payload)
-
 		}
 	}
 

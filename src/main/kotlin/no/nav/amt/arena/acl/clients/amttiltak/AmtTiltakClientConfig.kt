@@ -6,8 +6,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-open class AmtTiltakClientConfig {
-
+class AmtTiltakClientConfig {
 	@Value("\${amt-tiltak.url}")
 	lateinit var url: String
 
@@ -15,11 +14,9 @@ open class AmtTiltakClientConfig {
 	lateinit var scope: String
 
 	@Bean
-	open fun amtTiltakClient(machineToMachineTokenClient: MachineToMachineTokenClient): AmtTiltakClient {
-		return AmtTiltakClientImpl(
+	fun amtTiltakClient(machineToMachineTokenClient: MachineToMachineTokenClient): AmtTiltakClient =
+		AmtTiltakClientImpl(
 			baseUrl = url,
 			tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },
 		)
-	}
-
 }

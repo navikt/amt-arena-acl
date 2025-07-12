@@ -5,5 +5,5 @@ import java.util.UUID
 data class ArenaDataHistIdTranslationDbo(
 	val amtId: UUID,
 	val arenaHistId: String,
-	val arenaId: String?
+	val arenaId: String?,
 )

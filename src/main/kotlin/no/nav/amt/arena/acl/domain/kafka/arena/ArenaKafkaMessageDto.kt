@@ -7,23 +7,19 @@ import com.fasterxml.jackson.databind.JsonNode
 enum class ArenaOperation {
 	I,
 	U,
-	D
+	D,
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ArenaKafkaMessageDto(
 	val table: String,
-
 	@JsonProperty("op_type")
 	val opType: String,
-
 	@JsonProperty("op_ts")
 	val opTs: String,
-
 	val pos: String,
-
 	// Så lenge nøkkelen finnes når man deserialiserer en ArenaKafkaMessageDto
 	// men er lik `null` så blir before / after satt til `NullNode` *ikke* `null`
 	val before: JsonNode?,
-	val after: JsonNode?
+	val after: JsonNode?,
 )

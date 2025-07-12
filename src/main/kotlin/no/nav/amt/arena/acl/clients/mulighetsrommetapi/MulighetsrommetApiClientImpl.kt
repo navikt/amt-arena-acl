@@ -1,24 +1,25 @@
-package no.nav.amt.arena.acl.clients.mulighetsrommet_api
+package no.nav.amt.arena.acl.clients.mulighetsrommetapi
 
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.common.rest.client.RestClient.baseClient
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.util.*
+import java.util.UUID
 import java.util.function.Supplier
 
 class MulighetsrommetApiClientImpl(
-    private val baseUrl: String,
-    private val tokenProvider: Supplier<String>,
-    private val httpClient: OkHttpClient = baseClient(),
+	private val baseUrl: String,
+	private val tokenProvider: Supplier<String>,
+	private val httpClient: OkHttpClient = baseClient(),
 ) : MulighetsrommetApiClient {
-
 	override fun hentGjennomforingId(arenaId: String): UUID? {
-		val request = Request.Builder()
-			.url("$baseUrl/api/v1/tiltaksgjennomforinger/id/$arenaId")
-			.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
-			.get()
-			.build()
+		val request =
+			Request
+				.Builder()
+				.url("$baseUrl/api/v1/tiltaksgjennomforinger/id/$arenaId")
+				.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
+				.get()
+				.build()
 
 		httpClient.newCall(request).execute().use { response ->
 			if (response.code == 404) {
@@ -37,11 +38,13 @@ class MulighetsrommetApiClientImpl(
 	}
 
 	override fun hentGjennomforing(id: UUID): Gjennomforing {
-		val request = Request.Builder()
-			.url("$baseUrl/api/v1/tiltaksgjennomforinger/$id")
-			.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
-			.get()
-			.build()
+		val request =
+			Request
+				.Builder()
+				.url("$baseUrl/api/v1/tiltaksgjennomforinger/$id")
+				.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
+				.get()
+				.build()
 
 		httpClient.newCall(request).execute().use { response ->
 			if (!response.isSuccessful) {
@@ -51,14 +54,12 @@ class MulighetsrommetApiClientImpl(
 			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
 
 			return fromJsonString(body)
-
 		}
 	}
 
-	object HentGjennomforingId{
+	object HentGjennomforingId {
 		data class Response(
-			val id: UUID
+			val id: UUID,
 		)
 	}
-
 }

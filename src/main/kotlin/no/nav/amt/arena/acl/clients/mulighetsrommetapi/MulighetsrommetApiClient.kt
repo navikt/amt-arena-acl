@@ -1,17 +1,15 @@
-package no.nav.amt.arena.acl.clients.mulighetsrommet_api
+package no.nav.amt.arena.acl.clients.mulighetsrommetapi
 
 import java.time.LocalDate
 import java.util.UUID
 
 interface MulighetsrommetApiClient {
-
 	fun hentGjennomforingId(arenaId: String): UUID?
 
 	fun hentGjennomforing(id: UUID): Gjennomforing
-
 }
 
-data class Gjennomforing (
+data class Gjennomforing(
 	val id: UUID,
 	val tiltakstype: Tiltakstype,
 	val navn: String,
@@ -19,32 +17,27 @@ data class Gjennomforing (
 	val sluttDato: LocalDate? = null,
 	val status: Status,
 	val virksomhetsnummer: String,
-	val oppstart: Oppstartstype
+	val oppstart: Oppstartstype,
 ) {
 	enum class Oppstartstype {
 		LOPENDE,
-		FELLES
+		FELLES,
 	}
 
 	data class Tiltakstype(
 		val id: UUID,
 		val navn: String,
-		val arenaKode: String
+		val arenaKode: String,
 	)
 
 	enum class Status {
 		GJENNOMFORES,
 		AVBRUTT,
 		AVLYST,
-		AVSLUTTET;
+		AVSLUTTET,
 	}
 
-	fun erAvsluttet(): Boolean {
-		return status in listOf(Status.AVSLUTTET, Status.AVBRUTT, Status.AVLYST)
+	fun erAvsluttet(): Boolean = status in listOf(Status.AVSLUTTET, Status.AVBRUTT, Status.AVLYST)
 
-	}
-
-	fun erKurs(): Boolean {
-		return oppstart == Oppstartstype.FELLES
-	}
+	fun erKurs(): Boolean = oppstart == Oppstartstype.FELLES
 }
