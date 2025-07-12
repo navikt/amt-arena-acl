@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.integration
 
-import no.nav.amt.arena.acl.database.DatabaseTestUtils
-import no.nav.amt.arena.acl.database.SingletonPostgresContainer
+import no.nav.amt.arena.acl.database.DatabaseTestUtils.cleanDatabase
+import no.nav.amt.arena.acl.database.SingletonPostgresContainer.postgresContainer
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
@@ -27,12 +27,12 @@ abstract class JUnitRepositoryTestBase {
 
 	@AfterEach
 	fun cleanDatabase() {
-		DatabaseTestUtils.cleanDatabase(dataSource)
+		cleanDatabase(dataSource)
 	}
 
 	companion object {
 		@ServiceConnection
 		@Suppress("unused")
-		val container = SingletonPostgresContainer.postgresContainer
+		val container = postgresContainer
 	}
 }

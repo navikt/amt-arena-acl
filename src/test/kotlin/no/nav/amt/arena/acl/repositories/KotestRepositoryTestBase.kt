@@ -2,8 +2,8 @@ package no.nav.amt.arena.acl.repositories
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.extensions.testcontainers.perSpec
-import no.nav.amt.arena.acl.database.DatabaseTestUtils
-import no.nav.amt.arena.acl.database.SingletonPostgresContainer
+import no.nav.amt.arena.acl.database.DatabaseTestUtils.cleanDatabase
+import no.nav.amt.arena.acl.database.SingletonPostgresContainer.postgresContainer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
@@ -19,16 +19,15 @@ abstract class KotestRepositoryTestBase(
 	private lateinit var dataSource: DataSource
 
 	init {
-		listener(SingletonPostgresContainer.postgresContainer.perSpec())
+		listener(container.perSpec())
 
 		afterTest {
-			DatabaseTestUtils.cleanDatabase(dataSource)
+			cleanDatabase(dataSource)
 		}
 	}
 
 	companion object {
 		@ServiceConnection
-		@Suppress("unused")
-		val container = SingletonPostgresContainer.postgresContainer
+		val container = postgresContainer
 	}
 }
