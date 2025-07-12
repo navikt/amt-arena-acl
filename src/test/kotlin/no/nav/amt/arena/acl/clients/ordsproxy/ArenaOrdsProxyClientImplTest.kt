@@ -39,7 +39,7 @@ class ArenaOrdsProxyClientImplTest {
 	}
 
 	@Test
-	fun `hentFnr() skal null hvis stauts er 404`() {
+	fun `hentFnr() skal null hvis status er 404`() {
 		val client =
 			ArenaOrdsProxyClientImpl(
 				arenaOrdsProxyUrl = serverUrl,

@@ -56,7 +56,7 @@ class HistDeltakerIntegrationTest(
 			datoTil = LocalDateTime.now().plusDays(3),
 		)
 
-	val gjennomforingIdMR = UUID.randomUUID()
+	val gjennomforingIdMR: UUID = UUID.randomUUID()
 	val gjennomforingMRData =
 		no.nav.amt.arena.acl.clients.mulighetsrommetapi.Gjennomforing(
 			id = gjennomforingIdMR,

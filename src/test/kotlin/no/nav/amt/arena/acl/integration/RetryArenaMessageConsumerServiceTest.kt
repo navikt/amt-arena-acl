@@ -28,7 +28,7 @@ class RetryArenaMessageConsumerServiceTest(
 	private val gjennomforingService: GjennomforingService,
 ) : IntegrationTestBase() {
 	val gjennomforingArenaId = 5435345L
-	val gjennomforingIdMR = UUID.randomUUID()
+	val gjennomforingIdMR: UUID = UUID.randomUUID()
 
 	@Test
 	fun `processMessages - deltaker har status RETRY pga manglende gjennomføring - får status HANDLED når gjennomføring er ingestet`() {

@@ -32,7 +32,6 @@ val kotestVersion = "5.9.1"
 val mockkVersion = "1.14.4"
 val testcontainersVersion = "1.21.3"
 val kotestExtensionsSpringVersion = "1.3.0"
-// val springmockkVersion = "4.0.2"
 val kotestExtensionsTestcontainersVersion = "2.0.2"
 
 val navCommonModules = setOf("log", "job", "rest", "token-client")
@@ -89,7 +88,6 @@ dependencies {
         exclude(group = "com.vaadin.external.google", module = "android-json")
     }
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
-    // testImplementation("com.ninja-squad:springmockk:$springmockkVersion")
 }
 
 kotlin {
