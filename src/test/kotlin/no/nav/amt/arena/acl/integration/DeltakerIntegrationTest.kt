@@ -27,7 +27,6 @@ import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.time.LocalDate
@@ -106,7 +105,6 @@ class DeltakerIntegrationTest(
 		}
 	}
 
-	@Disabled
 	@Test
 	fun `ingest deltaker - forrige melding på deltaker er ikke ingestet - feiler med status RETRY`() {
 		val pos1 = "33"
@@ -256,7 +254,6 @@ class DeltakerIntegrationTest(
 		}
 	}
 
-	@Disabled
 	@Test
 	fun `ingest deltaker - siste melding for samme deltaker var behandlet for mindre enn 500ms siden - venter litt før den behandles`() {
 		val deltaker = baseDeltaker.copy(TILTAKDELTAKER_ID = 0)
