@@ -4,10 +4,12 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.fasterxml.jackson.databind.JsonNode
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.ints.exactly
 import io.kotest.matchers.shouldBe
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.CapturingSlot
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -23,37 +25,29 @@ import org.slf4j.LoggerFactory
 class ArenaMessageConsumerServiceTest :
 	StringSpec({
 
-		lateinit var arenaDataRepository: ArenaDataRepository
+		val arenaDataRepository: ArenaDataRepository = mockk()
 
-		lateinit var gjennomforingConsumer: GjennomforingConsumer
+		val gjennomforingConsumer: GjennomforingConsumer = mockk()
 
-		lateinit var arenaDeltakerConsumer: ArenaDeltakerConsumer
+		val arenaDeltakerConsumer: ArenaDeltakerConsumer = mockk()
 
-		lateinit var histDeltakerProcessor: HistDeltakerConsumer
+		val histDeltakerProcessor: HistDeltakerConsumer = mockk()
 
-		lateinit var meterRegistry: MeterRegistry
+		val meterRegistry: MeterRegistry = SimpleMeterRegistry()
 
-		lateinit var messageProcessor: ArenaMessageConsumerService
+		val messageProcessor =
+			ArenaMessageConsumerService(
+				gjennomforingConsumer = gjennomforingConsumer,
+				arenaDeltakerConsumer = arenaDeltakerConsumer,
+				histDeltakerConsumer = histDeltakerProcessor,
+				arenaDataRepository = arenaDataRepository,
+				meterRegistry = meterRegistry,
+			)
 
 		beforeEach {
+			clearAllMocks()
 			val rootLogger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 			rootLogger.level = Level.WARN
-
-			arenaDataRepository = mockk()
-			gjennomforingConsumer = mockk()
-			arenaDeltakerConsumer = mockk()
-			histDeltakerProcessor = mockk()
-
-			meterRegistry = SimpleMeterRegistry()
-
-			messageProcessor =
-				ArenaMessageConsumerService(
-					gjennomforingConsumer = gjennomforingConsumer,
-					arenaDeltakerConsumer = arenaDeltakerConsumer,
-					histDeltakerConsumer = histDeltakerProcessor,
-					arenaDataRepository = arenaDataRepository,
-					meterRegistry = meterRegistry,
-				)
 		}
 
 		"should handle arena deltaker message" {
