@@ -39,6 +39,7 @@ class GjennomforingIntegrationTests(
 			gjennomforing.TILTAKGJENNOMFORING_ID,
 			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos)),
 		)
+
 		await().untilAsserted {
 			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
 			assertSoftly(gjennomforingResult.shouldNotBeNull()) {
@@ -111,6 +112,7 @@ class GjennomforingIntegrationTests(
 			gjennomforing.TILTAKGJENNOMFORING_ID,
 			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos)),
 		)
+
 		await().untilAsserted {
 			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
 			assertSoftly(gjennomforingResult.shouldNotBeNull()) {

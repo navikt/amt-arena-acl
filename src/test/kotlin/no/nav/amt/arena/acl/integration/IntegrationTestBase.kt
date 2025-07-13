@@ -1,6 +1,8 @@
 package no.nav.amt.arena.acl.integration
 
+import com.ninjasquad.springmockk.MockkBean
 import io.getunleash.FakeUnleash
+import net.javacrumbs.shedlock.core.LockProvider
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.SingletonKafkaProvider
@@ -38,7 +40,11 @@ abstract class IntegrationTestBase : JUnitRepositoryTestBase() {
 	lateinit var kafkaMessageConsumer: KafkaMessageConsumer
 
 	@Autowired
-	lateinit var kafkaConsumer: KafkaConsumer
+	private lateinit var kafkaConsumer: KafkaConsumer
+
+	@MockkBean(relaxed = true)
+	@Suppress("unused")
+	private lateinit var mockLockProvider: LockProvider
 
 	@BeforeEach
 	fun beforeEach() {

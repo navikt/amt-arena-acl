@@ -75,10 +75,6 @@ class DeltakerIntegrationTest(
 	val fnr = "123456789"
 
 	@BeforeEach
-	fun setup() {
-		setupMocks()
-	}
-
 	fun setupMocks() {
 		mockMulighetsrommetApiServer.reset()
 		mockArenaOrdsProxyHttpServer.reset()
