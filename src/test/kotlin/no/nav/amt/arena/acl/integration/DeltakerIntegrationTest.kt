@@ -1,6 +1,9 @@
 package no.nav.amt.arena.acl.integration
 
+import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.date.shouldBeAfter
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.Gjennomforing
@@ -17,7 +20,6 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
-import no.nav.amt.arena.acl.integration.utils.AsyncUtils
 import no.nav.amt.arena.acl.repositories.ArenaDataHistIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
@@ -26,6 +28,7 @@ import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
@@ -106,7 +109,7 @@ class DeltakerIntegrationTest(
 	}
 
 	@Test
-	fun `ingest deltaker - forrige melding på deltaker er ikke ingestet - feiler med status RETRY`() {
+	fun `ingest deltaker - forrige melding paa deltaker er ikke ingestet - feiler med status RETRY`() {
 		val pos1 = "33"
 		val pos2 = "35"
 
@@ -117,13 +120,20 @@ class DeltakerIntegrationTest(
 			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(baseDeltaker, opPos = pos1)),
 		)
 
-		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
-			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos1)
+		await().untilAsserted {
+			val arenaData =
+				arenaDataRepository.get(
+					tableName = ARENA_DELTAKER_TABLE_NAME,
+					operation = AmtOperation.CREATED,
+					position = pos1,
+				)
+			arenaData.shouldNotBeNull()
+			arenaData.ingestStatus shouldBe IngestStatus.RETRY
 
-			deltakerRecord shouldBe null
-			arenaData!!.ingestStatus shouldBe IngestStatus.RETRY
+			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
+			deltakerRecord.shouldBeNull()
 		}
+
 		setupMocks()
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 		val endretDeltaker = baseDeltaker.copy(DELTAKERSTATUSKODE = "AKTUELL")
@@ -132,13 +142,21 @@ class DeltakerIntegrationTest(
 			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(endretDeltaker, opPos = pos2)),
 		)
 
-		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
-			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos2)
+		await().untilAsserted {
+			val arenaData =
+				arenaDataRepository.get(
+					tableName = ARENA_DELTAKER_TABLE_NAME,
+					operation = AmtOperation.CREATED,
+					position = pos2,
+				)
 
-			deltakerRecord shouldBe null
-			arenaData!!.ingestStatus shouldBe IngestStatus.RETRY
-			arenaData.note shouldBe "Forrige melding på deltaker med id=${baseDeltaker.TILTAKDELTAKER_ID} er ikke håndtert enda"
+			assertSoftly(arenaData.shouldNotBeNull()) {
+				ingestStatus shouldBe IngestStatus.RETRY
+				note shouldBe "Forrige melding på deltaker med id=${baseDeltaker.TILTAKDELTAKER_ID} er ikke håndtert enda"
+			}
+
+			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
+			deltakerRecord.shouldBeNull()
 		}
 	}
 
@@ -153,16 +171,26 @@ class DeltakerIntegrationTest(
 			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
 		)
 
-		AsyncUtils.eventually {
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
-			arenaData!!.ingestStatus shouldBe IngestStatus.IGNORED
+		await().untilAsserted {
+			val arenaData =
+				arenaDataRepository.get(
+					tableName = ARENA_DELTAKER_TABLE_NAME,
+					operation = AmtOperation.CREATED,
+					position = pos,
+				)
+			arenaData.shouldNotBeNull()
+			arenaData.ingestStatus shouldBe IngestStatus.IGNORED
 		}
 	}
 
 	@Test
 	fun `ingest deltaker - gjennomføring er ugyldig - deltaker får status WAITING`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
-		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), false)
+		gjennomforingService.upsert(
+			baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(),
+			SUPPORTED_TILTAK.first(),
+			false,
+		)
 
 		val pos = "77"
 		kafkaMessageSender.publiserArenaDeltaker(
@@ -170,9 +198,15 @@ class DeltakerIntegrationTest(
 			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
 		)
 
-		AsyncUtils.eventually {
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
-			arenaData!!.ingestStatus shouldBe IngestStatus.WAITING
+		await().untilAsserted {
+			val arenaData =
+				arenaDataRepository.get(
+					tableName = ARENA_DELTAKER_TABLE_NAME,
+					operation = AmtOperation.CREATED,
+					position = pos,
+				)
+			arenaData.shouldNotBeNull()
+			arenaData.ingestStatus shouldBe IngestStatus.WAITING
 		}
 	}
 
@@ -208,12 +242,18 @@ class DeltakerIntegrationTest(
 			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(baseDeltaker, opPos = pos)),
 		)
 
-		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
-			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
+		await().untilAsserted {
+			val arenaData =
+				arenaDataRepository.get(
+					tableName = ARENA_DELTAKER_TABLE_NAME,
+					operation = AmtOperation.CREATED,
+					position = pos,
+				)
+			arenaData.shouldNotBeNull()
+			arenaData.ingestStatus shouldBe IngestStatus.RETRY
 
-			deltakerRecord shouldBe null
-			arenaData!!.ingestStatus shouldBe IngestStatus.RETRY
+			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(topic = KafkaMessageConsumer.Topic.AMT_TILTAK)
+			deltakerRecord.shouldBeNull()
 		}
 	}
 
@@ -228,12 +268,18 @@ class DeltakerIntegrationTest(
 			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(deltaker, opPos = pos)),
 		)
 
-		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
-			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, pos)
+		await().untilAsserted {
+			val arenaData =
+				arenaDataRepository.get(
+					tableName = ARENA_DELTAKER_TABLE_NAME,
+					operation = AmtOperation.CREATED,
+					position = pos,
+				)
+			arenaData.shouldNotBeNull()
+			arenaData.ingestStatus shouldBe IngestStatus.INVALID
 
-			deltakerRecord shouldBe null
-			arenaData!!.ingestStatus shouldBe IngestStatus.INVALID
+			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(topic = KafkaMessageConsumer.Topic.AMT_TILTAK)
+			deltakerRecord.shouldBeNull()
 		}
 	}
 
@@ -279,10 +325,17 @@ class DeltakerIntegrationTest(
 			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(deltaker, opPos = "67", opType = "U")),
 		)
 
-		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.MODIFIED, "67")
-
-			arenaData!!.ingestedTimestamp!! shouldBeAfter ingestedTimestamp.plus(Duration.ofMillis(500))
+		await().untilAsserted {
+			val arenaData =
+				arenaDataRepository.get(
+					tableName = ARENA_DELTAKER_TABLE_NAME,
+					operation = AmtOperation.MODIFIED,
+					position = "67",
+				)
+			arenaData.shouldNotBeNull()
+			arenaData.ingestedTimestamp!! shouldBeAfter
+				ingestedTimestamp
+					.plus(Duration.ofMillis(500))
 		}
 	}
 
@@ -293,7 +346,13 @@ class DeltakerIntegrationTest(
 		arenaDataIdTranslationRepository.insert(
 			ArenaDataIdTranslationDbo(amtId, ARENA_DELTAKER_TABLE_NAME, baseDeltaker.TILTAKDELTAKER_ID.toString()),
 		)
-		arenaDataHistIdTranslationRepository.insert(ArenaDataHistIdTranslationDbo(amtId, "123", baseDeltaker.TILTAKDELTAKER_ID.toString()))
+		arenaDataHistIdTranslationRepository.insert(
+			ArenaDataHistIdTranslationDbo(
+				amtId,
+				"123",
+				baseDeltaker.TILTAKDELTAKER_ID.toString(),
+			),
+		)
 
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 
@@ -309,12 +368,21 @@ class DeltakerIntegrationTest(
 			),
 		)
 
-		AsyncUtils.eventually {
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.DELETED, pos)
-			arenaData!!.note shouldBe "Slettes ikke fordi deltaker ble historisert"
-			arenaData.ingestStatus shouldBe IngestStatus.HANDLED
+		await().untilAsserted {
+			val arenaData =
+				arenaDataRepository.get(
+					tableName = ARENA_DELTAKER_TABLE_NAME,
+					operation = AmtOperation.DELETED,
+					position = pos,
+				)
+
+			assertSoftly(arenaData.shouldNotBeNull()) {
+				note shouldBe "Slettes ikke fordi deltaker ble historisert"
+				ingestStatus shouldBe IngestStatus.HANDLED
+			}
+
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
-			deltakerRecord shouldBe null
+			deltakerRecord.shouldBeNull()
 		}
 	}
 
@@ -336,11 +404,19 @@ class DeltakerIntegrationTest(
 			),
 		)
 
-		AsyncUtils.eventually {
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.DELETED, pos)
-			arenaData!!.ingestStatus shouldBe IngestStatus.RETRY
+		await().untilAsserted {
+			val arenaData =
+				arenaDataRepository.get(
+					tableName = ARENA_DELTAKER_TABLE_NAME,
+					operation = AmtOperation.DELETED,
+					position = pos,
+				)
+
+			arenaData.shouldNotBeNull()
+			arenaData.ingestStatus shouldBe IngestStatus.RETRY
+
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
-			deltakerRecord shouldBe null
+			deltakerRecord.shouldBeNull()
 		}
 	}
 
@@ -362,7 +438,9 @@ class DeltakerIntegrationTest(
 				ingestedTimestamp = null,
 			),
 		)
-		val arenaDataId = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.DELETED, pos)?.id ?: throw RuntimeException()
+		val arenaDataId =
+			arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.DELETED, pos)?.id
+				?: throw RuntimeException()
 		arenaDataRepository.updateIngestAttempts(arenaDataId, 3, null)
 
 		kafkaMessageSender.publiserArenaDeltaker(
@@ -376,21 +454,32 @@ class DeltakerIntegrationTest(
 			),
 		)
 
-		AsyncUtils.eventually {
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.DELETED, pos)
-			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
+		await().untilAsserted {
+			val arenaData =
+				arenaDataRepository.get(
+					tableName = ARENA_DELTAKER_TABLE_NAME,
+					operation = AmtOperation.DELETED,
+					position = pos,
+				)
+
+			arenaData.shouldNotBeNull()
+			arenaData.ingestStatus shouldBe IngestStatus.HANDLED
+
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
-			deltakerRecord shouldNotBe null
+			deltakerRecord.shouldNotBeNull()
 
-			val deltakerResult = fromJsonString<AmtKafkaMessageDto<AmtDeltaker>>(deltakerRecord!!.value())
-			deltakerResult.type shouldBe PayloadType.DELTAKER
-			deltakerResult.operation shouldBe AmtOperation.MODIFIED
+			val deltakerResult = fromJsonString<AmtKafkaMessageDto<AmtDeltaker>>(deltakerRecord.value())
+			assertSoftly(deltakerResult) {
+				type shouldBe PayloadType.DELTAKER
+				operation shouldBe AmtOperation.MODIFIED
+			}
 
-			val payload = deltakerResult.payload!!
-			payload.personIdent shouldBe fnr
-			payload.gjennomforingId shouldBe gjennomforingIdMR
-			payload.status shouldBe AmtDeltaker.Status.FEILREGISTRERT
-			payload.innsokBegrunnelse shouldBe null
+			assertSoftly(deltakerResult.payload.shouldNotBeNull()) {
+				personIdent shouldBe fnr
+				gjennomforingId shouldBe gjennomforingIdMR
+				status shouldBe AmtDeltaker.Status.FEILREGISTRERT
+				innsokBegrunnelse shouldBe null
+			}
 		}
 	}
 
@@ -424,7 +513,8 @@ class DeltakerIntegrationTest(
 			TILTAKGJENNOMFORING_ID,
 			toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(this)),
 		)
-		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
+
+		await().untilAsserted {
 			val gjennomforingResult = gjennomforingService.get(TILTAKGJENNOMFORING_ID.toString())
 			customAssertions(gjennomforingResult)
 		}
@@ -436,19 +526,22 @@ class DeltakerIntegrationTest(
 			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(this)),
 		)
 
-		AsyncUtils.eventually {
+		await().untilAsserted {
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
-			deltakerRecord shouldNotBe null
+			deltakerRecord.shouldNotBeNull()
 
-			val deltakerResult = fromJsonString<AmtKafkaMessageDto<AmtDeltaker>>(deltakerRecord!!.value())
-			deltakerResult.type shouldBe PayloadType.DELTAKER
-			deltakerResult.operation shouldBe AmtOperation.CREATED
+			val deltakerResult = fromJsonString<AmtKafkaMessageDto<AmtDeltaker>>(deltakerRecord.value())
+			assertSoftly(deltakerResult) {
+				type shouldBe PayloadType.DELTAKER
+				operation shouldBe AmtOperation.CREATED
 
-			val payload = deltakerResult.payload!!
-			payload.validate(this)
-			payload.personIdent shouldBe fnr
-			payload.gjennomforingId shouldBe gjennomforingIdMR
-			customAssertions(payload)
+				assertSoftly(payload.shouldNotBeNull()) {
+					personIdent shouldBe fnr
+					gjennomforingId shouldBe gjennomforingIdMR
+					customAssertions(it)
+					validate(this@publiserOgValiderOutput)
+				}
+			}
 		}
 	}
 }

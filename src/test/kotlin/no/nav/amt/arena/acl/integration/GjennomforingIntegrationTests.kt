@@ -1,19 +1,20 @@
 package no.nav.amt.arena.acl.integration
 
+import io.kotest.assertions.assertSoftly
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
-import no.nav.amt.arena.acl.integration.utils.AsyncUtils
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -38,20 +39,23 @@ class GjennomforingIntegrationTests(
 			gjennomforing.TILTAKGJENNOMFORING_ID,
 			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos)),
 		)
-		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
+		await().untilAsserted {
 			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
-			gjennomforingResult shouldNotBe null
-			gjennomforingResult!!.isValid shouldBe true
-			gjennomforingResult.isSupported shouldBe true
-			gjennomforingResult.id shouldBe gjennomforingId
+			assertSoftly(gjennomforingResult.shouldNotBeNull()) {
+				isValid shouldBe true
+				isSupported shouldBe true
+				id shouldBe gjennomforingId
+			}
 
-			arenaDataRepository
-				.get(
-					ARENA_GJENNOMFORING_TABLE_NAME,
-					AmtOperation.CREATED,
-					pos,
-				)!!
-				.ingestStatus shouldBe IngestStatus.HANDLED
+			val arenaDataDbo =
+				arenaDataRepository
+					.get(
+						ARENA_GJENNOMFORING_TABLE_NAME,
+						AmtOperation.CREATED,
+						pos,
+					)
+			arenaDataDbo.shouldNotBeNull()
+			arenaDataDbo.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 	}
 
@@ -75,20 +79,26 @@ class GjennomforingIntegrationTests(
 				),
 			),
 		)
-		AsyncUtils.eventually(until = Duration.ofSeconds(10)) {
-			val gjennomforingResult = gjennomforingService.get(ugyldigGjennomforing.TILTAKGJENNOMFORING_ID.toString())
-			gjennomforingResult shouldNotBe null
-			gjennomforingResult!!.isValid shouldBe false
-			gjennomforingResult.isSupported shouldBe true
-			gjennomforingResult.id shouldBe gjennomforingId
 
-			arenaDataRepository
-				.get(
-					ARENA_GJENNOMFORING_TABLE_NAME,
-					AmtOperation.CREATED,
-					pos,
-				)!!
-				.ingestStatus shouldBe IngestStatus.HANDLED
+		await().untilAsserted {
+			val gjennomforingResult =
+				gjennomforingService.get(ugyldigGjennomforing.TILTAKGJENNOMFORING_ID.toString())
+
+			assertSoftly(gjennomforingResult.shouldNotBeNull()) {
+				isValid shouldBe false
+				isSupported shouldBe true
+				id shouldBe gjennomforingId
+			}
+
+			val arenaDataDbo =
+				arenaDataRepository
+					.get(
+						ARENA_GJENNOMFORING_TABLE_NAME,
+						AmtOperation.CREATED,
+						pos,
+					)
+			arenaDataDbo.shouldNotBeNull()
+			arenaDataDbo.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 	}
 
@@ -101,17 +111,19 @@ class GjennomforingIntegrationTests(
 			gjennomforing.TILTAKGJENNOMFORING_ID,
 			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos)),
 		)
-		AsyncUtils.eventually {
+		await().untilAsserted {
 			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
-			gjennomforingResult shouldNotBe null
-			gjennomforingResult!!.isValid shouldBe true
-			gjennomforingResult.isSupported shouldBe false
+			assertSoftly(gjennomforingResult.shouldNotBeNull()) {
+				isValid shouldBe true
+				isSupported shouldBe false
+			}
 
-			arenaDataRepository.get(
-				ARENA_GJENNOMFORING_TABLE_NAME,
-				AmtOperation.CREATED,
-				pos,
-			) shouldBe null
+			arenaDataRepository
+				.get(
+					ARENA_GJENNOMFORING_TABLE_NAME,
+					AmtOperation.CREATED,
+					pos,
+				).shouldBeNull()
 		}
 	}
 

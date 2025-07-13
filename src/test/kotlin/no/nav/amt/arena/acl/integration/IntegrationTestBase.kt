@@ -11,6 +11,7 @@ import no.nav.amt.arena.acl.mocks.MockAmtTiltakServer
 import no.nav.amt.arena.acl.mocks.MockArenaOrdsProxyHttpServer
 import no.nav.amt.arena.acl.mocks.MockMachineToMachineHttpServer
 import no.nav.amt.arena.acl.mocks.MockMulighetsrommetApiServer
+import org.awaitility.Awaitility
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,6 +26,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.TestConstructor
+import java.util.concurrent.TimeUnit
 
 @ActiveProfiles("integration")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -52,6 +54,10 @@ abstract class IntegrationTestBase : JUnitRepositoryTestBase() {
 		kafkaMessageConsumer.stop()
 		kafkaMessageConsumer.reset()
 		kafkaConsumer.stop()
+	}
+
+	init {
+		Awaitility.setDefaultTimeout(10, TimeUnit.SECONDS)
 	}
 
 	companion object {

@@ -4,12 +4,11 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.slf4j.LoggerFactory
 
 open class MockOAuthServer {
-	private val azureAdIssuer = "azuread"
-
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	companion object {
 		private val server = MockOAuth2Server()
+		private const val AZURE_AD_ISSUER = "azuread"
 	}
 
 	fun start() {
@@ -20,5 +19,5 @@ open class MockOAuthServer {
 		}
 	}
 
-	fun getDiscoveryUrl(issuer: String = azureAdIssuer): String = server.wellKnownUrl(issuer).toString()
+	fun getDiscoveryUrl(issuer: String = AZURE_AD_ISSUER): String = server.wellKnownUrl(issuer).toString()
 }
