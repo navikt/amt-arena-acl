@@ -7,10 +7,8 @@ import no.nav.amt.arena.acl.database.SingletonPostgresContainer.postgresContaine
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.springframework.test.context.ActiveProfiles
 import javax.sql.DataSource
 
-@ActiveProfiles("test")
 @AutoConfigureJdbc
 abstract class KotestRepositoryTestBase(
 	body: FunSpec.() -> Unit,
