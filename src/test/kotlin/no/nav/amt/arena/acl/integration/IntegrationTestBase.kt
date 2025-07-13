@@ -1,7 +1,6 @@
 package no.nav.amt.arena.acl.integration
 
 import io.getunleash.FakeUnleash
-import io.getunleash.Unleash
 import no.nav.amt.arena.acl.integration.kafka.KafkaAmtIntegrationConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.SingletonKafkaProvider
@@ -97,20 +96,18 @@ abstract class IntegrationTestBase : JUnitRepositoryTestBase() {
 @Profile("integration")
 @TestConfiguration
 class IntegrationTestConfiguration {
-	@Value("\${app.env.amtTopic}")
-	lateinit var consumerTopic: String
-
 	@Bean
 	fun kafkaProperties(): KafkaProperties = SingletonKafkaProvider.getKafkaProperties()
 
 	@Bean
-	fun kafkaAmtIntegrationConsumer(properties: KafkaProperties): KafkaAmtIntegrationConsumer =
-		KafkaAmtIntegrationConsumer(properties, consumerTopic)
+	fun kafkaAmtIntegrationConsumer(
+		properties: KafkaProperties,
+		@Value("\${app.env.amtTopic}") consumerTopic: String,
+	) = KafkaAmtIntegrationConsumer(
+		kafkaProperties = properties,
+		topic = consumerTopic,
+	)
 
 	@Bean
-	fun unleashClient(): Unleash {
-		val fakeUnleash = FakeUnleash()
-		fakeUnleash.enableAll()
-		return fakeUnleash
-	}
+	fun unleashClient() = FakeUnleash().apply { enableAll() }
 }
