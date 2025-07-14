@@ -24,9 +24,10 @@ class GjennomforingIntegrationTests(
 	private val arenaDataRepository: ArenaDataRepository,
 ) : IntegrationTestBase() {
 	@BeforeEach
-	fun setup() {
-		mockArenaOrdsProxyHttpServer.mockHentVirksomhetsnummer("0", "12345")
-	}
+	fun setup() = mockArenaOrdsProxyHttpServer.mockHentVirksomhetsnummer(
+		arenaArbeidsgiverId = "0",
+		virksomhetsnummer = "12345"
+	)
 
 	@Test
 	fun `Konsumer gjennomføring - gyldig gjennomføring - ingestes uten feil`() {

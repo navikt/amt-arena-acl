@@ -10,26 +10,23 @@ import java.util.concurrent.TimeUnit
 open class MockHttpServer(
 	startImmediately: Boolean = false,
 ) {
-
 	private val server = MockWebServer()
-
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	private var lastRequestCount = 0
-
 	private val responseHandlers = mutableMapOf<(request: RecordedRequest) -> Boolean, MockResponse>()
 
 	init {
-	    if (startImmediately) {
+		if (startImmediately) {
 			start()
 		}
 	}
 
 	fun start() {
 		try {
-		    server.start()
+			server.start()
 			server.dispatcher = createResponseDispatcher()
-		} catch (e: IllegalArgumentException) {
+		} catch (_: IllegalArgumentException) {
 			log.info("${javaClass.simpleName} is already started")
 		}
 	}
@@ -40,9 +37,7 @@ open class MockHttpServer(
 		flushRequests()
 	}
 
-	fun serverUrl(): String {
-		return server.url("").toString().removeSuffix("/")
-	}
+	fun serverUrl(): String = server.url("").toString().removeSuffix("/")
 
 	fun addResponseHandler(requestMatcher: (req: RecordedRequest) -> Boolean, response: MockResponse) {
 		responseHandlers[requestMatcher] = response
@@ -78,28 +73,16 @@ open class MockHttpServer(
 		addResponseHandler(requestMatcher, response)
 	}
 
-	fun latestRequest(): RecordedRequest {
-		return server.takeRequest()
-	}
+	fun latestRequest(): RecordedRequest = server.takeRequest()
 
-	fun requestCount(): Int {
-		return server.requestCount - lastRequestCount
-	}
+	private fun createResponseDispatcher(): Dispatcher = object : Dispatcher() {
+		override fun dispatch(request: RecordedRequest): MockResponse {
+			val response = responseHandlers.entries.find { it.key.invoke(request) }?.value
+				?: throw IllegalStateException("No handler for $request")
 
-	fun shutdown() {
-		server.shutdown()
-	}
+			log.info("Responding [${request.path}]: $response")
 
-	private fun createResponseDispatcher(): Dispatcher {
-		return object : Dispatcher() {
-			override fun dispatch(request: RecordedRequest): MockResponse {
-				val response = responseHandlers.entries.find { it.key.invoke(request) }?.value
-					?: throw IllegalStateException("No handler for $request")
-
-				log.info("Responding [${request.path}]: $response")
-
-				return response
-			}
+			return response
 		}
 	}
 
@@ -115,6 +98,8 @@ open class MockHttpServer(
 	}
 
 	private fun flushRequests() {
-		while (server.takeRequest(1, TimeUnit.NANOSECONDS) != null) {}
+		while (server.takeRequest(1, TimeUnit.NANOSECONDS) != null) {
+			// noop
+		}
 	}
 }

@@ -33,14 +33,12 @@ class ArenaKafkaProducer {
 		log.info("Sent ${data.size} messages on topic $topic")
 	}
 
-	private fun getKafkaProperties(): Properties {
-		return KafkaPropertiesBuilder.producerBuilder()
-			.withBrokerUrl(("localhost:9092"))
-			.withBaseProperties()
-			.withProducerId("amt-arena-acl")
-			.withSerializers(StringSerializer::class.java, StringSerializer::class.java)
-			.build()
-	}
-
+	private fun getKafkaProperties(): Properties = KafkaPropertiesBuilder.producerBuilder()
+		.withBrokerUrl(("localhost:9092"))
+		.withBaseProperties()
+		.withProducerId("amt-arena-acl")
+		.withSerializers(StringSerializer::class.java, StringSerializer::class.java)
+		.build()
 }
+
 

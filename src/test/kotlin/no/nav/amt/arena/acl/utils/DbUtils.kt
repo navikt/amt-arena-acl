@@ -8,12 +8,7 @@ object DbUtils {
 	/**
 	 * A helping function as SQL Timestamp and LocalDateTime does not have the same precision
 	 */
-	fun LocalDateTime.isEqualTo(other: LocalDateTime?): Boolean {
-		if (other == null) {
-			return false
-		}
-
-		return this.truncatedTo(ChronoUnit.SECONDS) == other.truncatedTo(ChronoUnit.SECONDS)
-	}
-
+	fun LocalDateTime.isEqualTo(other: LocalDateTime?): Boolean = if (other == null) {
+		false
+	} else this.truncatedTo(ChronoUnit.SECONDS) == other.truncatedTo(ChronoUnit.SECONDS)
 }
