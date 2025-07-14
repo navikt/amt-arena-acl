@@ -7,16 +7,6 @@ object DatabaseTestUtils {
 
 	private const val SCHEMA = "public"
 
-	fun runScript(dataSource: DataSource, script: String) {
-		val jdbcTemplate = JdbcTemplate(dataSource)
-		jdbcTemplate.update(script)
-	}
-
-	fun runScriptFile(dataSource: DataSource, scriptFilePath: String) {
-		val script = javaClass.getResource(scriptFilePath).readText()
-		runScript(dataSource, script)
-	}
-
 	fun cleanDatabase(dataSource: DataSource) {
 		val jdbcTemplate = JdbcTemplate(dataSource)
 
@@ -30,11 +20,6 @@ object DatabaseTestUtils {
 		sequences.forEach {
 			jdbcTemplate.update("ALTER SEQUENCE $it RESTART WITH 1")
 		}
-	}
-
-	fun cleanAndInitDatabase(dataSource: DataSource, scriptFilePath: String) {
-		cleanDatabase(dataSource)
-		runScriptFile(dataSource, scriptFilePath)
 	}
 
 	private fun getAllTables(jdbcTemplate: JdbcTemplate, schema: String): List<String> {

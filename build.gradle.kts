@@ -28,7 +28,10 @@ val logstashEncoderVersion = "8.1"
 
 val kotestVersion = "5.9.1"
 val mockkVersion = "1.14.4"
+val springmockkVersion = "4.0.2"
 val testcontainersVersion = "1.21.3"
+val kotestExtensionsSpringVersion = "1.3.0"
+val kotestExtensionsTestcontainersVersion = "2.0.2"
 
 val navCommonModules = setOf("log", "job", "rest", "token-client")
 
@@ -74,11 +77,17 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
+    testImplementation("io.kotest.extensions:kotest-extensions-testcontainers:$kotestExtensionsTestcontainersVersion")
+    testImplementation("io.kotest.extensions:kotest-extensions-spring:$kotestExtensionsSpringVersion")
     testImplementation("io.mockk:mockk-jvm:$mockkVersion")
+    testImplementation("com.ninja-squad:springmockk:$springmockkVersion")
     testImplementation("no.nav.security:token-validation-spring-test:$navTokenSupportVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
     testImplementation("org.testcontainers:kafka:$testcontainersVersion")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "com.vaadin.external.google", module = "android-json")
+    }
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
 }
 
 kotlin {
@@ -97,6 +106,7 @@ tasks.test {
         "-Xshare:off",
         "-XX:+EnableDynamicAgentLoading",
         "-Dkotest.framework.classpath.scanning.autoscan.disable=true",
+        "-Dkotest.framework.config.fqn=no.nav.amt.arena.acl.KotestConfig",
     )
     useJUnitPlatform()
 }

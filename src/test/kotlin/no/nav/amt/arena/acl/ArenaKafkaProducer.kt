@@ -1,6 +1,7 @@
 package no.nav.amt.arena.acl
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.nav.amt.arena.acl.utils.ClassPathResourceUtils.readResourceAsText
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.common.kafka.producer.KafkaProducerClientImpl
 import no.nav.common.kafka.util.KafkaPropertiesBuilder
@@ -16,13 +17,11 @@ fun main() {
 }
 
 class ArenaKafkaProducer {
-
 	private val log = LoggerFactory.getLogger(javaClass)
-
 	private val kafkaProducer = KafkaProducerClientImpl<String, String>(getKafkaProperties())
 
 	fun send(jsonFilePath: String, topic: String) {
-		val jsonFileContent = javaClass.classLoader.getResource(jsonFilePath).readText()
+		val jsonFileContent = readResourceAsText(jsonFilePath)
 
 		val data: List<JsonNode> = fromJsonString(jsonFileContent)
 
