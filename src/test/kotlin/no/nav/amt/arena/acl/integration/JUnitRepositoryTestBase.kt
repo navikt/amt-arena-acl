@@ -8,7 +8,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import javax.sql.DataSource
 
 @AutoConfigureJdbc
@@ -31,8 +32,13 @@ abstract class JUnitRepositoryTestBase {
 	}
 
 	companion object {
-		@ServiceConnection
+		@JvmStatic
+		@DynamicPropertySource
 		@Suppress("unused")
-		val container = postgresContainer
+		fun overrideProps(registry: DynamicPropertyRegistry) {
+			registry.add("spring.datasource.url", postgresContainer::getJdbcUrl)
+			registry.add("spring.datasource.username", postgresContainer::getUsername)
+			registry.add("spring.datasource.password", postgresContainer::getPassword)
+		}
 	}
 }

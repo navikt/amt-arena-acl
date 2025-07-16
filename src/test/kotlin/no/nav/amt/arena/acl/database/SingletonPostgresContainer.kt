@@ -1,24 +1,24 @@
 package no.nav.amt.arena.acl.database
 
-import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.utility.DockerImageName
 
 object SingletonPostgresContainer {
-	private val log = LoggerFactory.getLogger(javaClass)
+	private const val POSTGRES_DOCKER_IMAGE_NAME = "postgres:14-alpine"
 
 	val postgresContainer =
-		PostgreSQLContainer<Nothing>(POSTGRES_DOCKER_IMAGE_NAME).apply {
-			setupShutdownHook()
+		createContainer().apply {
+			start()
 		}
 
-	private fun setupShutdownHook() {
-		Runtime.getRuntime().addShutdownHook(
-			Thread {
-				log.info("Shutting down postgres database...")
-				postgresContainer.stop()
-			},
-		)
-	}
-
-	const val POSTGRES_DOCKER_IMAGE_NAME = "postgres:14-alpine"
+	private fun createContainer() =
+		PostgreSQLContainer<Nothing>(
+			DockerImageName
+				.parse(POSTGRES_DOCKER_IMAGE_NAME)
+				.asCompatibleSubstituteFor("postgres"),
+		).apply {
+			addEnv("TZ", "Europe/Oslo")
+			waitingFor(Wait.forListeningPort())
+		}
 }
