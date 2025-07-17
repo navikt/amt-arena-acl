@@ -10,59 +10,50 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import java.util.*
+import java.util.Properties
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(KafkaTopicProperties::class)
-open class KafkaConfiguration {
-
-	@Value("\${app.env.consumerId}")
+class KafkaConfiguration {
+	@Value($$"${app.env.consumerId}")
 	var consumerId: String = ""
 
-	@Value("\${app.env.producerId}")
+	@Value($$"${app.env.producerId}")
 	var producerId: String = ""
 
 	@Bean
-	open fun kafkaProducer(kafkaProperties: KafkaProperties): KafkaProducerClientImpl<String, String> {
-		return KafkaProducerClientImpl(kafkaProperties.producer())
-	}
+	fun kafkaProducer(kafkaProperties: KafkaProperties): KafkaProducerClientImpl<String, String> =
+		KafkaProducerClientImpl(kafkaProperties.producer())
 
 	@Bean
 	@Profile("default")
-	open fun kafkaProperties(): KafkaProperties {
-		return object : KafkaProperties {
-			override fun consumer(): Properties {
-				return KafkaPropertiesPreset.aivenDefaultConsumerProperties(consumerId)
-			}
+	fun kafkaProperties(): KafkaProperties =
+		object : KafkaProperties {
+			override fun consumer(): Properties = KafkaPropertiesPreset.aivenDefaultConsumerProperties(consumerId)
 
-			override fun producer(): Properties {
-				return KafkaPropertiesPreset.aivenDefaultProducerProperties(producerId)
-			}
+			override fun producer(): Properties = KafkaPropertiesPreset.aivenDefaultProducerProperties(producerId)
 		}
-	}
 
 	@Bean
 	@Profile("local")
-	open fun localKafkaProperties(): KafkaProperties {
-		return object : KafkaProperties {
-			override fun consumer(): Properties {
-				return KafkaPropertiesBuilder.consumerBuilder()
+	fun localKafkaProperties(): KafkaProperties =
+		object : KafkaProperties {
+			override fun consumer(): Properties =
+				KafkaPropertiesBuilder
+					.consumerBuilder()
 					.withBrokerUrl("localhost:9092")
 					.withBaseProperties()
 					.withConsumerGroupId(consumerId)
 					.withDeserializers(ByteArrayDeserializer::class.java, ByteArrayDeserializer::class.java)
 					.build()
-			}
 
-			override fun producer(): Properties {
-				return KafkaPropertiesBuilder.producerBuilder()
+			override fun producer(): Properties =
+				KafkaPropertiesBuilder
+					.producerBuilder()
 					.withBrokerUrl(("localhost:9092"))
 					.withBaseProperties()
 					.withProducerId(producerId)
 					.withSerializers(StringSerializer::class.java, StringSerializer::class.java)
 					.build()
-			}
 		}
-	}
-
 }

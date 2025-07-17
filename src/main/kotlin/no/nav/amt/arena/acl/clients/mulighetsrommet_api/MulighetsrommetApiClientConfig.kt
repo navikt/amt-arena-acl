@@ -5,21 +5,16 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-@Configuration
-open class MulighetsrommetApiClientConfig {
-
-	@Value("\${mulighetsrommet-api.url}")
-	lateinit var url: String
-
-	@Value("\${mulighetsrommet-api.scope}")
-	lateinit var scope: String
-
+@Configuration(proxyBeanMethods = false)
+class MulighetsrommetApiClientConfig {
 	@Bean
-	open fun mulighetsrommetApiClient(machineToMachineTokenClient: MachineToMachineTokenClient): MulighetsrommetApiClient {
-		return MulighetsrommetApiClientImpl(
+	fun mulighetsrommetApiClient(
+		machineToMachineTokenClient: MachineToMachineTokenClient,
+		@Value($$"${mulighetsrommet-api.url}") url: String,
+		@Value($$"${mulighetsrommet-api.scope}") scope: String,
+	): MulighetsrommetApiClient =
+		MulighetsrommetApiClientImpl(
 			baseUrl = url,
 			tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },
 		)
-	}
-
 }
