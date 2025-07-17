@@ -17,15 +17,12 @@ class KafkaAmtIntegrationConsumer(
 	kafkaProperties: KafkaProperties,
 	topic: String
 ) {
-
 	private val client: KafkaConsumerClient
-
 
 	companion object {
 		private val deltakerSubsctiptions = mutableMapOf<UUID, (wrapper: AmtKafkaMessageDto<AmtDeltaker>) -> Unit>()
 
 	}
-
 
 	init {
 		val config = KafkaConsumerClientBuilder.TopicConfig<String, String>()
@@ -59,15 +56,17 @@ class KafkaAmtIntegrationConsumer(
 		}
 	}
 
-	private fun <T> toKnownMessageWrapper(payload: T, unknownMessageWrapper: UnknownMessageWrapper): AmtKafkaMessageDto<T> {
-		return AmtKafkaMessageDto(
+	private fun <T> toKnownMessageWrapper(
+		payload: T,
+		unknownMessageWrapper: UnknownMessageWrapper
+	): AmtKafkaMessageDto<T> =
+		AmtKafkaMessageDto(
 			transactionId = UUID.fromString(unknownMessageWrapper.transactionId),
 			type = unknownMessageWrapper.type,
 			timestamp = unknownMessageWrapper.timestamp,
 			operation = unknownMessageWrapper.operation,
 			payload = payload
 		)
-	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	data class UnknownMessageWrapper(
@@ -77,5 +76,4 @@ class KafkaAmtIntegrationConsumer(
 		val operation: AmtOperation,
 		val payload: JsonNode
 	)
-
 }
