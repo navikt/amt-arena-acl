@@ -11,10 +11,8 @@ import java.util.UUID
 @Service
 class KafkaProducerService(
 	private val kafkaProducer: KafkaProducerClient<String, String>,
+	@Value($$"${app.env.amtTopic}") private val topic: String,
 ) {
-	@Value($$"${app.env.amtTopic}")
-	lateinit var topic: String
-
 	fun sendTilAmtTiltak(
 		messageKey: UUID,
 		data: AmtKafkaMessageDto<*>,

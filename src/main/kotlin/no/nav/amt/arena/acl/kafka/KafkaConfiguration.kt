@@ -14,13 +14,10 @@ import java.util.Properties
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(KafkaTopicProperties::class)
-class KafkaConfiguration {
-	@Value($$"${app.env.consumerId}")
-	var consumerId: String = ""
-
-	@Value($$"${app.env.producerId}")
-	var producerId: String = ""
-
+class KafkaConfiguration(
+	@Value($$"${app.env.consumerId}") private val consumerId: String,
+	@Value($$"${app.env.producerId}") private val producerId: String,
+) {
 	@Bean
 	fun kafkaProducer(kafkaProperties: KafkaProperties): KafkaProducerClientImpl<String, String> =
 		KafkaProducerClientImpl(kafkaProperties.producer())
