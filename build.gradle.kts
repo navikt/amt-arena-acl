@@ -18,7 +18,7 @@ repositories {
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
-val nimbusVersion = "11.26"
+val nimbusVersion = "11.26.1"
 val okhttpVersion = "5.1.0"
 val shedlockVersion = "6.9.2"
 val unleashVersion = "11.0.2"
