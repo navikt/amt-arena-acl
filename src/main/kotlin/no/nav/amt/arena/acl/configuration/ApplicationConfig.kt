@@ -11,35 +11,39 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 
 @EnableJwtTokenValidation
-@Configuration
-open class ApplicationConfig {
-
+@Configuration(proxyBeanMethods = false)
+class ApplicationConfig {
 	@Bean
-	open fun machineToMachineTokenClient(
-		@Value("\${nais.env.azureAppClientId}") azureAdClientId: String,
-		@Value("\${nais.env.azureOpenIdConfigTokenEndpoint}") azureTokenEndpoint: String,
-		@Value("\${nais.env.azureAppJWK}") azureAdJWK: String,
-	): MachineToMachineTokenClient {
-		return AzureAdTokenClientBuilder.builder()
+	fun machineToMachineTokenClient(
+		@Value($$"${nais.env.azureAppClientId}") azureAdClientId: String,
+		@Value($$"${nais.env.azureOpenIdConfigTokenEndpoint}") azureTokenEndpoint: String,
+		@Value($$"${nais.env.azureAppJWK}") azureAdJWK: String,
+	): MachineToMachineTokenClient =
+		AzureAdTokenClientBuilder
+			.builder()
 			.withClientId(azureAdClientId)
 			.withTokenEndpointUrl(azureTokenEndpoint)
 			.withPrivateJwk(azureAdJWK)
 			.buildMachineToMachineTokenClient()
-	}
 
 	@Bean
 	@Profile("default")
-	open fun unleashClient(
-		@Value("\${app.env.unleashUrl}") unleashUrl: String,
-		@Value("\${app.env.unleashApiToken}") unleashApiToken: String
-	) : DefaultUnleash {
-		val appName = "amt-arena-acl"
-		val config = UnleashConfig.builder()
-			.appName(appName)
-			.instanceId(appName)
-			.unleashAPI(unleashUrl)
-			.apiKey(unleashApiToken)
-			.build()
+	fun unleashClient(
+		@Value($$"${app.env.unleashUrl}") unleashUrl: String,
+		@Value($$"${app.env.unleashApiToken}") unleashApiToken: String,
+	): DefaultUnleash {
+		val config =
+			UnleashConfig
+				.builder()
+				.appName(APP_NAME)
+				.instanceId(APP_NAME)
+				.unleashAPI(unleashUrl)
+				.apiKey(unleashApiToken)
+				.build()
 		return DefaultUnleash(config)
+	}
+
+	companion object {
+		const val APP_NAME = "amt-arena-acl"
 	}
 }

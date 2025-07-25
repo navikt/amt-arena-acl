@@ -114,7 +114,7 @@ class IntegrationTestConfiguration {
 	@Bean
 	fun kafkaAmtIntegrationConsumer(
 		properties: KafkaProperties,
-		@Value("\${app.env.amtTopic}") consumerTopic: String,
+		@Value($$"${app.env.amtTopic}") consumerTopic: String,
 	) = KafkaAmtIntegrationConsumer(
 		kafkaProperties = properties,
 		topic = consumerTopic,

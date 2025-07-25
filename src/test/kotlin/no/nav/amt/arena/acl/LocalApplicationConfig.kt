@@ -5,4 +5,4 @@ import org.springframework.context.annotation.Configuration
 
 @EnableJwtTokenValidation
 @Configuration
-open class LocalApplicationConfig {}
+class LocalApplicationConfig
