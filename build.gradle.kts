@@ -27,7 +27,7 @@ val navTokenSupportVersion = "5.0.30"
 val logstashEncoderVersion = "8.1"
 
 val kotestVersion = "5.9.1"
-val mockkVersion = "1.14.4"
+val mockkVersion = "1.14.5"
 val springmockkVersion = "4.0.2"
 val testcontainersVersion = "1.21.3"
 val kotestExtensionsSpringVersion = "1.3.0"
