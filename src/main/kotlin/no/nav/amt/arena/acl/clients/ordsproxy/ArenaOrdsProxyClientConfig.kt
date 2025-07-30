@@ -6,23 +6,16 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-@Configuration
-open class ArenaOrdsProxyClientConfig {
-
-	@Value("\${amt-arena-ords-proxy.url}")
-	lateinit var url: String
-
-	@Value("\${amt-arena-ords-proxy.scope}")
-	lateinit var scope: String
-
+@Configuration(proxyBeanMethods = false)
+class ArenaOrdsProxyClientConfig {
 	@Bean
-	open fun arenaOrdsProxyConnector(
-		machineToMachineTokenClient: MachineToMachineTokenClient
-	): ArenaOrdsProxyClient {
-		return ArenaOrdsProxyClientImpl(
+	fun arenaOrdsProxyConnector(
+		machineToMachineTokenClient: MachineToMachineTokenClient,
+		@Value($$"${amt-arena-ords-proxy.url}") url: String,
+		@Value($$"${amt-arena-ords-proxy.scope}") scope: String,
+	): ArenaOrdsProxyClient =
+		ArenaOrdsProxyClientImpl(
 			arenaOrdsProxyUrl = url,
 			tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },
 		)
-	}
-
 }
