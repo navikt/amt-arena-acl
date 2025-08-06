@@ -23,7 +23,6 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Profile
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -34,7 +33,6 @@ import java.util.concurrent.TimeUnit
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(IntegrationTestConfiguration::class)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 abstract class IntegrationTestBase : JUnitRepositoryTestBase() {
 	@Autowired
 	lateinit var kafkaMessageConsumer: KafkaMessageConsumer

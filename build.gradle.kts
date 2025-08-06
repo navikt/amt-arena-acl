@@ -31,6 +31,7 @@ val mockkVersion = "1.14.5"
 val springmockkVersion = "4.0.2"
 val testcontainersVersion = "1.21.3"
 val kotestExtensionsSpringVersion = "1.3.0"
+val kotestExtensionsTestcontainersVersion = "2.0.2"
 
 val navCommonModules = setOf("log", "job", "rest", "token-client")
 
@@ -80,12 +81,15 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
+    testImplementation("io.kotest.extensions:kotest-extensions-testcontainers:${kotestExtensionsTestcontainersVersion}")
     testImplementation("io.kotest.extensions:kotest-extensions-spring:$kotestExtensionsSpringVersion")
     testImplementation("io.mockk:mockk-jvm:$mockkVersion")
     testImplementation("com.ninja-squad:springmockk:$springmockkVersion")
     testImplementation("no.nav.security:token-validation-spring-test:$navTokenSupportVersion")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:kafka")
+
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "com.vaadin.external.google", module = "android-json")
     }
@@ -97,6 +101,7 @@ kotlin {
         freeCompilerArgs.addAll(
             "-Xjsr305=strict",
             "-Xannotation-default-target=param-property",
+            "-Xwarning-level=IDENTITY_SENSITIVE_OPERATIONS_WITH_VALUE_TYPE:disabled",
             "-Xmulti-dollar-interpolation",
         )
     }
