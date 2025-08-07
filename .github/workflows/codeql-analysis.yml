@@ -42,7 +42,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build artifacts
-        run: ./gradlew build -x test --no-build-cache --console=plain --no-daemon
+        run: ./gradlew clean build -x test --no-build-cache --console=plain --no-daemon
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
