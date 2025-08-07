@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl
 import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.shouldBe
 import no.nav.amt.arena.acl.integration.IntegrationTestBase
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -12,11 +11,10 @@ import org.springframework.boot.test.web.server.LocalManagementPort
 import org.springframework.http.HttpStatus
 import org.springframework.web.util.UriComponentsBuilder
 
-@Disabled("Unrelated tests are failing when enabling these tests")
 class ActuatorTest(
 	@LocalManagementPort private val managementPort: Int,
 	private val restTemplate: TestRestTemplate,
-) : IntegrationTestBase() {
+) : IntegrationTestBase(useKafkaConsumers = false) {
 	@ParameterizedTest(name = "{0} probe skal returnere OK og status = UP")
 	@ValueSource(strings = ["liveness", "readiness"])
 	fun probe_skal_returnere_OK_og_status_UP(probeName: String) {
