@@ -30,7 +30,6 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          build-mode: manual
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -44,9 +43,6 @@ jobs:
 
       - name: Build artifacts
         run: ./gradlew build -x test --console=plain --no-daemon
-
-      - name: Check compiled classes
-        run: find build -name "*.class" | head -n 20
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
