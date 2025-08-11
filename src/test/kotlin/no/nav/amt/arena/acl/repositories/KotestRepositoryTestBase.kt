@@ -1,13 +1,12 @@
 package no.nav.amt.arena.acl.repositories
 
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.extensions.testcontainers.perSpec
 import no.nav.amt.arena.acl.database.DatabaseTestUtils.cleanDatabase
-import no.nav.amt.arena.acl.database.SingletonPostgresContainer.postgresContainer
-import org.flywaydb.core.Flyway
+import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc
-import org.springframework.test.context.DynamicPropertyRegistry
-import org.springframework.test.context.DynamicPropertySource
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import javax.sql.DataSource
 
 @AutoConfigureJdbc
@@ -17,13 +16,8 @@ abstract class KotestRepositoryTestBase(
 	@Autowired
 	private lateinit var dataSource: DataSource
 
-	@Autowired
-	private lateinit var flyway: Flyway
-
 	init {
-		afterSpec {
-			flyway.clean()
-		}
+		listener(container.perSpec())
 
 		afterTest {
 			cleanDatabase(dataSource)
@@ -31,14 +25,8 @@ abstract class KotestRepositoryTestBase(
 	}
 
 	companion object {
-		@JvmStatic
-		@DynamicPropertySource
+		@ServiceConnection
 		@Suppress("unused")
-		fun overrideProps(registry: DynamicPropertyRegistry) {
-			registry.add("spring.datasource.url", postgresContainer::getJdbcUrl)
-			registry.add("spring.datasource.username", postgresContainer::getUsername)
-			registry.add("spring.datasource.password", postgresContainer::getPassword)
-			registry.add("spring.flyway.clean-disabled") { false }
-		}
+		private val container = SingletonPostgresContainer.postgresContainer
 	}
 }

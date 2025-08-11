@@ -10,12 +10,11 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalManagementPort
 import org.springframework.http.HttpStatus
 import org.springframework.web.util.UriComponentsBuilder
-import kotlin.jvm.java
 
 class ActuatorTest(
 	@LocalManagementPort private val managementPort: Int,
 	private val restTemplate: TestRestTemplate,
-) : IntegrationTestBase() {
+) : IntegrationTestBase(useKafkaConsumers = false) {
 	@ParameterizedTest(name = "{0} probe skal returnere OK og status = UP")
 	@ValueSource(strings = ["liveness", "readiness"])
 	fun probe_skal_returnere_OK_og_status_UP(probeName: String) {
