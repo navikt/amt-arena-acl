@@ -7,8 +7,6 @@ plugins {
     kotlin("plugin.spring") version kotlinVersion
     id("org.springframework.boot") version springBootVersion
     id("io.spring.dependency-management") version springDependencyManagementVersion
-    id("org.sonarqube") version "6.2.0.5505"
-    jacoco
 }
 
 group = "no.nav.amt.arena-acl"
@@ -121,29 +119,4 @@ tasks.test {
         "-Dkotest.framework.config.fqn=no.nav.amt.arena.acl.KotestConfig",
     )
     useJUnitPlatform()
-}
-
-tasks.withType<JacocoReport> {
-    dependsOn(tasks.withType<Test>())
-    reports {
-        xml.required.set(true)
-    }
-}
-
-sonarqube {
-    properties {
-        property("sonar.projectKey", "navikt_amt-arena-acl")
-        property("sonar.organization", "navikt")
-        property("sonar.host.url", "https://sonarcloud.io")
-        //property("sonar.login", System.getenv("SONAR_TOKEN"))
-        property("sonar.sourceEncoding", "UTF-8")
-        property(
-            "sonar.exclusions",
-            """
-            **/ArenaGjennomforing.kt,
-            **/ArenaDeltaker.kt,
-            **/ArenaHistDeltaker.kt
-            """.trimIndent()
-        )
-    }
 }
