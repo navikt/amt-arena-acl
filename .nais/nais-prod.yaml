@@ -17,6 +17,7 @@ spec:
   liveness:
     path: /internal/health/liveness
     initialDelay: 50
+    timeout: 3
   replicas:
     disableAutoScaling: true
     min: 1
