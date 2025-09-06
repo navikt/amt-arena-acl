@@ -5,7 +5,7 @@ import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 
 object SingletonPostgresContainer {
-	private const val POSTGRES_DOCKER_IMAGE_NAME = "postgres:14-alpine"
+	private const val POSTGRES_DOCKER_IMAGE_NAME = "postgres:17-alpine"
 
 	val postgresContainer = PostgreSQLContainer<Nothing>(
 		DockerImageName
