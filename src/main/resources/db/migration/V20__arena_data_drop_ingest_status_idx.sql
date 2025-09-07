@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS arena_data_ingest_status_idx;
