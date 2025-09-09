@@ -81,8 +81,8 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
-    testImplementation("io.kotest.extensions:kotest-extensions-testcontainers:${kotestExtensionsTestcontainersVersion}")
-    testImplementation("io.kotest.extensions:kotest-extensions-spring:$kotestExtensionsSpringVersion")
+    testImplementation("io.kotest:kotest-extensions-spring:${kotestVersion}")
+    testImplementation("io.kotest:kotest-extensions-testcontainers:${kotestVersion}")
     testImplementation("io.mockk:mockk-jvm:$mockkVersion")
     testImplementation("com.ninja-squad:springmockk:$springmockkVersion")
     testImplementation("no.nav.security:token-validation-spring-test:$navTokenSupportVersion")
