@@ -17,7 +17,7 @@ abstract class KotestRepositoryTestBase(
 	private lateinit var dataSource: DataSource
 
 	init {
-		listener(container.perSpec())
+		extensions(container.perSpec())
 
 		afterTest {
 			cleanDatabase(dataSource)

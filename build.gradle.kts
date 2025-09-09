@@ -18,15 +18,15 @@ repositories {
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
-val nimbusVersion = "11.27.1"
+val nimbusVersion = "11.28"
 val okhttpVersion = "5.1.0"
 val shedlockVersion = "6.10.0"
 val unleashVersion = "11.1.0"
-val navCommonVersion = "3.2025.08.19_06.12-48301d0f4239"
-val navTokenSupportVersion = "5.0.34"
+val navCommonVersion = "3.2025.09.03_08.33-728ff4acbfdb"
+val navTokenSupportVersion = "5.0.36"
 val logstashEncoderVersion = "8.1"
 
-val kotestVersion = "5.9.1"
+val kotestVersion = "6.0.3"
 val mockkVersion = "1.14.5"
 val springmockkVersion = "4.0.2"
 val testcontainersVersion = "1.21.3"
@@ -81,8 +81,8 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
-    testImplementation("io.kotest.extensions:kotest-extensions-testcontainers:${kotestExtensionsTestcontainersVersion}")
-    testImplementation("io.kotest.extensions:kotest-extensions-spring:$kotestExtensionsSpringVersion")
+    testImplementation("io.kotest:kotest-extensions-spring:${kotestVersion}")
+    testImplementation("io.kotest:kotest-extensions-testcontainers:${kotestVersion}")
     testImplementation("io.mockk:mockk-jvm:$mockkVersion")
     testImplementation("com.ninja-squad:springmockk:$springmockkVersion")
     testImplementation("no.nav.security:token-validation-spring-test:$navTokenSupportVersion")
