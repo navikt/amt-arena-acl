@@ -12,31 +12,26 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicInteger
 
 @Component
-open class MetricSchedules(
+class MetricSchedules(
 	private val arenaDataRepository: ArenaDataRepository,
-	private val meterRegistry: MeterRegistry,
+	meterRegistry: MeterRegistry,
 ) {
-	private val ingestStatusGaugeName = "amt.arena-acl.ingest.status"
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	private fun createGauge(status: String) = meterRegistry.gauge(
-		ingestStatusGaugeName, Tags.of("status", status), AtomicInteger(0)
-	)
-
-	private var statusGauges: Map<String, AtomicInteger> = IngestStatus.values().associate {
-		it.name to createGauge(it.name)!!
-	}
+	private val failedGauge: AtomicInteger = meterRegistry.gauge(
+		INGEST_STATUS_GAUGE_NAME,
+		Tags.of(STATUS_KEY, IngestStatus.FAILED.name),
+		AtomicInteger(0)
+	)!!
 
 	@Scheduled(fixedDelay = FIVE_MINUTES, initialDelay = ONE_MINUTE)
 	fun logIngestStatus() {
-		log.debug("Collecting metrics for ingest status")
-
-		val statusCounts = arenaDataRepository.getStatusCount()
-
-		IngestStatus.values().forEach { status ->
-			statusCounts.find { it.status == status }?.let { statusGauges.getValue(status.name).set(it.count) }
-				?: statusGauges.getValue(status.name).set(0)
-		}
+		log.debug("Collecting metrics for FAILED ingest status")
+		failedGauge.set(arenaDataRepository.getFailedIngestStatusCount())
 	}
 
+	companion object {
+		private const val INGEST_STATUS_GAUGE_NAME = "amt.arena-acl.ingest.status"
+		private const val STATUS_KEY = "status"
+	}
 }
