@@ -3,7 +3,6 @@ package no.nav.amt.arena.acl.repositories
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertInput
 import no.nav.amt.arena.acl.domain.db.IngestStatus
-import no.nav.amt.arena.acl.domain.dto.LogStatusCountDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
@@ -14,28 +13,9 @@ import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
 @Component
-open class ArenaDataRepository(
+class ArenaDataRepository(
 	private val template: NamedParameterJdbcTemplate,
 ) {
-
-	private val rowMapper = RowMapper { rs, _ ->
-		ArenaDataDbo(
-			id = rs.getInt("id"),
-			arenaTableName = rs.getString("arena_table_name"),
-			arenaId = rs.getString("arena_id"),
-			operation = AmtOperation.valueOf(rs.getString("operation_type")),
-			operationPosition = rs.getString("operation_pos"),
-			operationTimestamp = rs.getTimestamp("operation_timestamp").toLocalDateTime(),
-			ingestStatus = IngestStatus.valueOf(rs.getString("ingest_status")),
-			ingestedTimestamp = rs.getTimestamp("ingested_timestamp")?.toLocalDateTime(),
-			ingestAttempts = rs.getInt("ingest_attempts"),
-			lastAttempted = rs.getTimestamp("last_attempted")?.toLocalDateTime(),
-			before = rs.getString("before"),
-			after = rs.getString("after"),
-			note = rs.getString("note")
-		)
-	}
-
 	fun upsert(upsertData: ArenaDataUpsertInput) {
 		val sql = """
 			INSERT INTO arena_data(arena_table_name, arena_id, operation_type, operation_pos, operation_timestamp, ingest_status,
@@ -164,6 +144,7 @@ open class ArenaDataRepository(
 
 		return template.query(sql, parameters, rowMapper)
 	}
+
 	fun retryDeltakereMedGjennomforingIdOgStatus(arenaGjennomforingId: String, statuses: List<IngestStatus>): Int {
 		val sql = """
 		UPDATE arena_data
@@ -183,23 +164,29 @@ open class ArenaDataRepository(
 		return template.update(sql, parameters)
 	}
 
-	fun getStatusCount(): List<LogStatusCountDto> {
+	fun getFailedIngestStatusCount(): Int {
 		val sql = """
-			SELECT ingest_status, count(*)
+			SELECT COUNT(1)
 			FROM arena_data
-			GROUP BY ingest_status
-		""".trimIndent()
+			WHERE ingest_status = :status
+			""".trimIndent()
 
-		val logRowMapper = RowMapper { rs, _ ->
-			LogStatusCountDto(
-				status = IngestStatus.valueOf(rs.getString("ingest_status")),
-				count = rs.getInt("count")
-			)
-		}
-
-		return template.query(sql, logRowMapper)
+		return template.queryForObject(
+			sql,
+			mapOf("status" to IngestStatus.FAILED.name),
+			Int::class.java
+		) ?: 0
 	}
 
+	fun deleteAllIgnoredData(): Int {
+		val sql = """
+			DELETE FROM arena_data WHERE ingest_status = 'IGNORED'
+		""".trimIndent()
+
+		return template.update(sql, EmptySqlParameterSource())
+	}
+
+	// benyttes kun i tester
 	fun getAll(): List<ArenaDataDbo> {
 		val sql = """
 			SELECT *
@@ -209,11 +196,23 @@ open class ArenaDataRepository(
 		return template.query(sql, rowMapper)
 	}
 
-	fun deleteAllIgnoredData(): Int {
-		val sql = """
-			DELETE FROM arena_data WHERE ingest_status = 'IGNORED'
-		""".trimIndent()
-
-		return template.update(sql, EmptySqlParameterSource())
+	companion object {
+		private val rowMapper = RowMapper { rs, _ ->
+			ArenaDataDbo(
+				id = rs.getInt("id"),
+				arenaTableName = rs.getString("arena_table_name"),
+				arenaId = rs.getString("arena_id"),
+				operation = AmtOperation.valueOf(rs.getString("operation_type")),
+				operationPosition = rs.getString("operation_pos"),
+				operationTimestamp = rs.getTimestamp("operation_timestamp").toLocalDateTime(),
+				ingestStatus = IngestStatus.valueOf(rs.getString("ingest_status")),
+				ingestedTimestamp = rs.getTimestamp("ingested_timestamp")?.toLocalDateTime(),
+				ingestAttempts = rs.getInt("ingest_attempts"),
+				lastAttempted = rs.getTimestamp("last_attempted")?.toLocalDateTime(),
+				before = rs.getString("before"),
+				after = rs.getString("after"),
+				note = rs.getString("note")
+			)
+		}
 	}
 }

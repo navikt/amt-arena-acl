@@ -2,6 +2,8 @@ package no.nav.amt.arena.acl.repositories
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import io.kotest.assertions.assertSoftly
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertInput
@@ -16,133 +18,126 @@ import java.time.LocalDateTime
 class ArenaDataRepositoryTest(
 	dataRepository: ArenaDataRepository,
 ) : KotestRepositoryTestBase({
-		beforeEach {
-			val rootLogger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
-			rootLogger.level = Level.WARN
+	beforeEach {
+		val rootLogger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
+		rootLogger.level = Level.WARN
+	}
+
+	test("getFailedIngestStatusCount skal returnere 0 når det ikke er feil") {
+		dataRepository.upsert(arenaDataUpsertInputInTest)
+		val failedCount = dataRepository.getFailedIngestStatusCount()
+		failedCount shouldBe 0
+	}
+
+	test("getFailedIngestStatusCount skal returnere antall feil når det finnes feil") {
+		dataRepository.upsert(arenaDataUpsertInputInTest.copy(ingestStatus = IngestStatus.FAILED))
+		val failedCount = dataRepository.getFailedIngestStatusCount()
+		failedCount shouldBe 1
+	}
+
+	test("Insert and get should return inserted object") {
+		dataRepository.upsert(arenaDataUpsertInputInTest)
+
+		val stored = dataRepository.get(
+			tableName = arenaDataUpsertInputInTest.arenaTableName,
+			operation = arenaDataUpsertInputInTest.operation,
+			position = arenaDataUpsertInputInTest.operationPosition
+		)
+
+		assertSoftly(stored.shouldNotBeNull()) {
+			id shouldNotBe -1
+			arenaId shouldBe arenaDataUpsertInputInTest.arenaId
+			before shouldBe null
+			after shouldBe arenaDataUpsertInputInTest.after
+		}
+	}
+
+	test("retryDeltakereMedGjennomforingIdOgStatus - skal ikke feile") {
+		val gjennomforingId = 123
+
+		val data = arenaDataUpsertInputInTest.copy(
+			ingestStatus = IngestStatus.WAITING,
+			after = "{\"TILTAKGJENNOMFORING_ID\": \"$gjennomforingId\"}"
+		)
+
+		dataRepository.upsert(data)
+
+		dataRepository.retryDeltakereMedGjennomforingIdOgStatus(
+			arenaGjennomforingId = gjennomforingId.toString(),
+			statuses = listOf(IngestStatus.WAITING)
+		)
+	}
+
+	test("Upserting an existing object should modify it") {
+		val data = arenaDataUpsertInputInTest.copy()
+
+		dataRepository.upsert(data)
+
+		val stored = dataRepository.get(
+			tableName = data.arenaTableName,
+			operation = data.operation,
+			position = data.operationPosition
+		)
+
+		stored.shouldNotBeNull()
+
+		val newIngestedTimestamp = LocalDateTime.now()
+
+		val data2 =
+			data.copy(
+				ingestStatus = IngestStatus.RETRY,
+				ingestedTimestamp = newIngestedTimestamp,
+				note = "some note",
+			)
+
+		dataRepository.upsert(data2)
+
+		val updated = dataRepository.get(
+			tableName = data.arenaTableName,
+			operation = data.operation,
+			position = data.operationPosition
+		)
+
+		assertSoftly(updated.shouldNotBeNull()) {
+			ingestStatus shouldBe IngestStatus.RETRY
+			note shouldBe "some note"
+
+			ingestedTimestamp.shouldNotBeNull()
+			ingestedTimestamp.isEqualTo(newIngestedTimestamp) shouldBe true
 		}
 
-		test("Insert and get should return inserted object") {
-			val after = "{\"test\": \"test\"}"
+		stored.id shouldBe updated.id
+	}
 
-			val data =
-				ArenaDataUpsertInput(
-					arenaTableName = "Table",
-					arenaId = "ARENA_ID",
-					operation = AmtOperation.CREATED,
-					operationPosition = "1",
-					operationTimestamp = LocalDateTime.now(),
-					after = after,
-				)
+	test("Should delete all ignored arena data") {
+		setOf(
+			arenaDataUpsertInputInTest.copy(),
+			arenaDataUpsertInputInTest.copy(
+				operationPosition = "2",
+				ingestStatus = IngestStatus.IGNORED,
+			),
+			arenaDataUpsertInputInTest.copy(
+				operationPosition = "3",
+				ingestStatus = IngestStatus.IGNORED,
+			)
+		).forEach { dataRepository.upsert(it) }
 
-			dataRepository.upsert(data)
+		val rowsDeleted = dataRepository.deleteAllIgnoredData()
+		rowsDeleted shouldBe 2
 
-			val stored = dataRepository.get(data.arenaTableName, data.operation, data.operationPosition)
-
-			stored shouldNotBe null
-			stored!!.id shouldNotBe -1
-			stored.arenaId shouldBe data.arenaId
-			stored.before shouldBe null
-			stored.after shouldBe after
-		}
-
-		test("retryDeltakereMedGjennomforingIdOgStatus - skal ikke feile") {
-			val gjennomforingId = 123
-			val afterDeltaker = "{\"TILTAKGJENNOMFORING_ID\": \"$gjennomforingId\"}"
-
-			val data =
-				ArenaDataUpsertInput(
-					arenaTableName = "Table",
-					arenaId = "ARENA_ID",
-					operation = AmtOperation.CREATED,
-					operationPosition = "1",
-					operationTimestamp = LocalDateTime.now(),
-					ingestStatus = IngestStatus.WAITING,
-					after = afterDeltaker,
-				)
-
-			dataRepository.upsert(data)
-
-			dataRepository.retryDeltakereMedGjennomforingIdOgStatus(gjennomforingId.toString(), listOf(IngestStatus.WAITING))
-		}
-
-		test("Upserting a Inserted object should modify it") {
-			val data =
-				ArenaDataUpsertInput(
-					arenaTableName = "Table",
-					arenaId = "ARENA_ID",
-					operation = AmtOperation.CREATED,
-					operationPosition = "1",
-					operationTimestamp = LocalDateTime.now(),
-					after = "{\"test\": \"test\"}",
-				)
-
-			dataRepository.upsert(data)
-
-			val stored = dataRepository.get(data.arenaTableName, data.operation, data.operationPosition)
-
-			val newIngestedTimestamp = LocalDateTime.now()
-
-			val data2 =
-				data.copy(
-					ingestStatus = IngestStatus.RETRY,
-					ingestedTimestamp = newIngestedTimestamp,
-					note = "some note",
-				)
-
-			dataRepository.upsert(data2)
-
-			val updated = dataRepository.get(data.arenaTableName, data.operation, data.operationPosition)
-
-			stored!!.id shouldBe updated!!.id
-			updated.ingestStatus shouldBe IngestStatus.RETRY
-			updated.ingestedTimestamp!!.isEqualTo(newIngestedTimestamp) shouldBe true
-			updated.note shouldBe "some note"
-		}
-
-		test("Should delete all ignored arena data") {
-			val afterData = "{\"test\": \"test\"}"
-
-			val data1 =
-				ArenaDataUpsertInput(
-					arenaTableName = "Table",
-					arenaId = "ARENA_ID",
-					operation = AmtOperation.CREATED,
-					operationPosition = "1",
-					operationTimestamp = LocalDateTime.now(),
-					after = afterData,
-				)
-
-			val data2 =
-				ArenaDataUpsertInput(
-					arenaTableName = "Table",
-					arenaId = "ARENA_ID",
-					operation = AmtOperation.CREATED,
-					operationPosition = "2",
-					operationTimestamp = LocalDateTime.now(),
-					ingestStatus = IngestStatus.IGNORED,
-					after = afterData,
-				)
-
-			val data3 =
-				ArenaDataUpsertInput(
-					arenaTableName = "Table",
-					arenaId = "ARENA_ID",
-					operation = AmtOperation.CREATED,
-					operationPosition = "3",
-					operationTimestamp = LocalDateTime.now(),
-					ingestStatus = IngestStatus.IGNORED,
-					after = afterData,
-				)
-
-			dataRepository.upsert(data1)
-			dataRepository.upsert(data2)
-			dataRepository.upsert(data3)
-
-			val rowsDeleted = dataRepository.deleteAllIgnoredData()
-
-			val allData = dataRepository.getAll()
-
-			rowsDeleted shouldBe 2
-			allData.size shouldBe 1
-		}
-	})
+		val allData = dataRepository.getAll()
+		allData.size shouldBe 1
+	}
+}) {
+	companion object {
+		private val arenaDataUpsertInputInTest =
+			ArenaDataUpsertInput(
+				arenaTableName = "Table",
+				arenaId = "ARENA_ID",
+				operation = AmtOperation.CREATED,
+				operationPosition = "1",
+				operationTimestamp = LocalDateTime.now(),
+				after = "{\"test\": \"test\"}",
+			)
+	}
+}
