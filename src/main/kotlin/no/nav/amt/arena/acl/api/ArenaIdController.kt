@@ -18,21 +18,21 @@ class ArenaIdController(
 ) {
 	@ProtectedWithClaims(issuer = AZURE_AD_ISSUER)
 	@GetMapping("/translation/{id}")
-	fun hentArenaId(@PathVariable("id") id: UUID): HentArenaIdResponse {
-		return arenaDataIdTranslationService.hentArenaId(id)
+	fun hentArenaId(@PathVariable("id") id: UUID): HentArenaIdResponse =
+		arenaDataIdTranslationService.hentArenaId(id)
 			?.let { HentArenaIdResponse(it) }
 			?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Fant ikke arena id for $id")
-	}
 
 	@ProtectedWithClaims(issuer = AZURE_AD_ISSUER)
 	@GetMapping("/v2/translation/{id}")
-	fun hentArenaIdV2(@PathVariable("id") id: UUID): HentArenaIdV2Response {
-		val arenaId = arenaDataIdTranslationService.hentArenaId(id)
-		arenaId?.let { return HentArenaIdV2Response(arenaId = it, arenaHistId = null) }
-		val arenaHistId = arenaDataIdTranslationService.hentArenaHistId(id)
-		return HentArenaIdV2Response(
-			arenaId = null,
-			arenaHistId = arenaHistId
-		)
-	}
+	fun hentArenaIdV2(@PathVariable("id") id: UUID): HentArenaIdV2Response =
+		arenaDataIdTranslationService.hentArenaId(id)
+			?.let { arenaId ->
+				HentArenaIdV2Response(arenaId = arenaId, arenaHistId = null)
+			}
+			?: HentArenaIdV2Response(
+				arenaId = null,
+				arenaHistId = arenaDataIdTranslationService.hentArenaHistId(id)
+			)
+
 }
