@@ -11,7 +11,7 @@ class MulighetsrommetApiClientImplTest : FunSpec({
 
 	val server = MockHttpServer(true)
 
-	val client = MulighetsrommetApiClientImpl(
+	val client = MulighetsrommetApiClient(
 		baseUrl = server.serverUrl(),
 		tokenProvider = { "TOKEN" },
 	)

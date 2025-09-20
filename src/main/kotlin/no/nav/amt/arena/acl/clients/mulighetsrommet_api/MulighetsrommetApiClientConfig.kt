@@ -12,7 +12,7 @@ class MulighetsrommetApiClientConfig {
 		machineToMachineTokenClient: MachineToMachineTokenClient,
 		@Value($$"${mulighetsrommet-api.url}") url: String,
 		@Value($$"${mulighetsrommet-api.scope}") scope: String,
-	): MulighetsrommetApiClient = MulighetsrommetApiClientImpl(
+	) = MulighetsrommetApiClient(
 		baseUrl = url,
 		tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },
 	)

@@ -13,7 +13,7 @@ class ArenaOrdsProxyClientImplTest {
 
 	@Test
 	fun `hentFnr() skal lage riktig request og parse respons`() {
-		val client = ArenaOrdsProxyClientImpl(
+		val client = ArenaOrdsProxyClient(
 			arenaOrdsProxyUrl = serverUrl,
 			tokenProvider = { token },
 		)
@@ -39,7 +39,7 @@ class ArenaOrdsProxyClientImplTest {
 
 	@Test
 	fun `hentFnr() skal null hvis stauts er 404`() {
-		val client = ArenaOrdsProxyClientImpl(
+		val client = ArenaOrdsProxyClient(
 			arenaOrdsProxyUrl = serverUrl,
 			tokenProvider = { token },
 		)
@@ -51,7 +51,7 @@ class ArenaOrdsProxyClientImplTest {
 
 	@Test
 	fun `hentVirksomhetsnummer() skal lage riktig request og parse respons`() {
-		val client = ArenaOrdsProxyClientImpl(
+		val client = ArenaOrdsProxyClient(
 			arenaOrdsProxyUrl = serverUrl,
 			tokenProvider = { token },
 		)
