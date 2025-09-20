@@ -3,7 +3,7 @@ package no.nav.amt.arena.acl.consumer
 import no.nav.amt.arena.acl.clients.amttiltak.AmtTiltakClient
 import no.nav.amt.arena.acl.clients.amttiltak.DeltakerDto
 import no.nav.amt.arena.acl.clients.amttiltak.DeltakerStatusDto
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
+import no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing
 import no.nav.amt.arena.acl.clients.ordsproxy.ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker

@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.clients.mulighetsrommet_api
+package no.nav.amt.arena.acl.clients.mulighetsrommet
 
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.common.rest.client.RestClient.baseClient

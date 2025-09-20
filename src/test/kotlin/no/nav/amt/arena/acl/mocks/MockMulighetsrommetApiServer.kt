@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.mocks
 
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
+import no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing
 import okhttp3.mockwebserver.MockResponse
 import java.util.UUID
 

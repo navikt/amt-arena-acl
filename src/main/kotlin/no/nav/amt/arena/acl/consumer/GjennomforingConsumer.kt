@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.consumer
 
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
+import no.nav.amt.arena.acl.clients.mulighetsrommet.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.domain.Gjennomforing.Companion.isSupportedTiltak
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled

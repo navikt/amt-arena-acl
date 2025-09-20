@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.clients.mulighetsrommet_api
+package no.nav.amt.arena.acl.clients.mulighetsrommet
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

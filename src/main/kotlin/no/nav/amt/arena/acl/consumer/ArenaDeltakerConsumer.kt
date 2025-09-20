@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.consumer
 
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
+import no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing
+import no.nav.amt.arena.acl.clients.mulighetsrommet.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.clients.ordsproxy.ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus

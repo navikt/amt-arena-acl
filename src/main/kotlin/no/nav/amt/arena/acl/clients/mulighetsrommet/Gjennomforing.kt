@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.clients.mulighetsrommet_api
+package no.nav.amt.arena.acl.clients.mulighetsrommet
 
 import java.time.LocalDate
 import java.util.UUID
