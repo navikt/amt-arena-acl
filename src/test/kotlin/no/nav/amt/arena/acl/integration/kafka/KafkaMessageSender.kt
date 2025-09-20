@@ -10,15 +10,42 @@ class KafkaMessageSender(
 	private val kafkaTopicProperties: KafkaTopicProperties,
 	private val kafkaProducer: KafkaProducerClientImpl<String, String>,
 ) {
-	fun publiserArenaGjennomforing(arenaGjennomforingId: Long, jsonMessage: String) {
-		kafkaProducer.sendSync(ProducerRecord(kafkaTopicProperties.arenaTiltakGjennomforingTopic, arenaGjennomforingId.toString(), jsonMessage))
+	fun publiserArenaGjennomforing(
+		arenaGjennomforingId: Long,
+		jsonMessage: String
+	) {
+		kafkaProducer.sendSync(
+			ProducerRecord(
+				kafkaTopicProperties.arenaTiltakGjennomforingTopic,
+				arenaGjennomforingId.toString(),
+				jsonMessage
+			)
+		)
 	}
 
-	fun publiserArenaDeltaker(arenaDeltakerId: Long, jsonMessage: String) {
-		kafkaProducer.sendSync(ProducerRecord(kafkaTopicProperties.arenaTiltakDeltakerTopic, arenaDeltakerId.toString(), jsonMessage))
+	fun publiserArenaDeltaker(
+		arenaDeltakerId: Long,
+		jsonMessage: String
+	) {
+		kafkaProducer.sendSync(
+			ProducerRecord(
+				kafkaTopicProperties.arenaTiltakDeltakerTopic,
+				arenaDeltakerId.toString(),
+				jsonMessage
+			)
+		)
 	}
 
-	fun publiserArenaHistDeltaker(arenaDeltakerId: Long, jsonMessage: String) {
-		kafkaProducer.sendSync(ProducerRecord(kafkaTopicProperties.arenaHistTiltakDeltakerTopic, arenaDeltakerId.toString(), jsonMessage))
+	fun publiserArenaHistDeltaker(
+		arenaDeltakerId: Long,
+		jsonMessage: String
+	) {
+		kafkaProducer.sendSync(
+			ProducerRecord(
+				kafkaTopicProperties.arenaHistTiltakDeltakerTopic,
+				arenaDeltakerId.toString(),
+				jsonMessage
+			)
+		)
 	}
 }

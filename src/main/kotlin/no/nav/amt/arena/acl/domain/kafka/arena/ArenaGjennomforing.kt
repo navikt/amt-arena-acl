@@ -4,7 +4,7 @@ import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.utils.asValidatedLocalDate
 import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
 
-// @SONAR_START@
+@Suppress("PropertyName")
 data class ArenaGjennomforing(
 	val TILTAKGJENNOMFORING_ID: Long,
 	val SAK_ID: Long? = null,
@@ -78,4 +78,3 @@ data class ArenaGjennomforing(
 		)
 	}
 }
-// @SONAR_STOP@

@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.integration.utils
 
+import no.nav.amt.arena.acl.utils.AZURE_AD_ISSUER
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.slf4j.LoggerFactory
 
@@ -7,7 +8,6 @@ class MockOAuthServer {
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	companion object {
-		private const val AZURE_AD_ISSUER = "azuread"
 		private val server = MockOAuth2Server()
 	}
 

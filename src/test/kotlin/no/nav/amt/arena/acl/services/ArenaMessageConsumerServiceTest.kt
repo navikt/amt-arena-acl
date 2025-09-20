@@ -95,7 +95,6 @@ class ArenaMessageConsumerServiceTest : StringSpec({
 		}
 	}
 
-
 	"should handle message with unicode NULL" {
 		val tiltakgjennomforingerJsonFileContent =
 			readResourceAsText("data/arena-tiltakgjennomforingendret-v1-bad-unicode.json")
@@ -120,5 +119,4 @@ class ArenaMessageConsumerServiceTest : StringSpec({
 
 		capturedData.after?.VURDERING_GJENNOMFORING shouldBe "Vurdering"
 	}
-
 })

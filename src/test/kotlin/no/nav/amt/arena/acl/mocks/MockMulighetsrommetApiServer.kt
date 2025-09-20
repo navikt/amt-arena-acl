@@ -2,7 +2,7 @@ package no.nav.amt.arena.acl.mocks
 
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import okhttp3.mockwebserver.MockResponse
-import java.util.*
+import java.util.UUID
 
 class MockMulighetsrommetApiServer : MockHttpServer() {
 
@@ -38,5 +38,4 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 		val response = if(gjennomforingData != null) MockResponse().setResponseCode(200).setBody(body) else MockResponse().setResponseCode(404).setBody("{}")
 		handleRequest(matchPath = "/api/v1/tiltaksgjennomforinger/$id", response = response)
 	}
-
 }

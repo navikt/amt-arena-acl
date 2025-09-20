@@ -1,16 +1,15 @@
 package no.nav.amt.arena.acl.consumer
 
-import ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.clients.amttiltak.AmtTiltakClient
 import no.nav.amt.arena.acl.clients.amttiltak.DeltakerDto
 import no.nav.amt.arena.acl.clients.amttiltak.DeltakerStatusDto
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
+import no.nav.amt.arena.acl.clients.ordsproxy.ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
-import no.nav.amt.arena.acl.domain.kafka.amt.erAvsluttende
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltakerKafkaMessage
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
@@ -31,7 +30,7 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-open class HistDeltakerConsumer(
+class HistDeltakerConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val ordsClient: ArenaOrdsProxyClient,
 	private val kafkaProducerService: KafkaProducerService,
@@ -67,13 +66,13 @@ open class HistDeltakerConsumer(
 			if (eksisterendeDeltaker == null) {
 				//Her havner vi når vi spiller av topicen fra start
 				//(fordi disse deltakerene er allerede fjernet fra arenas deltaker tabell)
-				val nyDeltaker = arenaDeltakerConsumer.createDeltaker(histDeltaker, gjennomforing, erHistDeltaker = true)
+				val nyDeltaker =
+					arenaDeltakerConsumer.createDeltaker(histDeltaker, gjennomforing, erHistDeltaker = true)
 
 				nyDeltaker.validerGyldigHistDeltaker()
 				log.info("Fant ingen match for hist-deltaker $arenaHistDeltakerId, oppretter ny deltaker ${nyDeltaker.id} og lagrer mapping og sender videre")
 				sendMessage(nyDeltaker, arenaHistDeltakerId, AmtOperation.CREATED)
-			}
-			else {
+			} else {
 				log.info("Hist deltaker $arenaHistDeltakerId matcher deltaker ${eksisterendeDeltaker.arenaId}")
 
 				val eksisterendeDeltakerAmtId =
@@ -91,7 +90,12 @@ open class HistDeltakerConsumer(
 					gjenopprettFeilregistrertDeltaker(histDeltaker, deltakerFraAmtTiltak.id, gjennomforing, personIdent)
 				}
 			}
-			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaHistDeltakerId, note="Fant match? ${eksisterendeDeltaker != null}"))
+			arenaDataRepository.upsert(
+				message.toUpsertInputWithStatusHandled(
+					arenaHistDeltakerId,
+					note = "Fant match? ${eksisterendeDeltaker != null}"
+				)
+			)
 		}
 	}
 
@@ -116,7 +120,6 @@ open class HistDeltakerConsumer(
 		if (arenaDeltakerRaw.DELTAKERTYPEKODE == "EKSTERN") {
 			throw ExternalSourceSystemException("hist-deltaker har deltakertypekode ekstern, arenaid $deltakerHistId")
 		}
-
 	}
 
 	private fun sendMessage(
@@ -157,11 +160,10 @@ open class HistDeltakerConsumer(
 		log.info("Melding for hist-deltaker id=${deltaker.id} arenaHistId=${arenaDeltaker.tiltakdeltakerId} transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
 	}
 
-	private fun getAmtDeltaker(id: UUID, personIdent: String): DeltakerDto? {
-		val deltakelser = amtTiltakClient.hentDeltakelserForPerson(personIdent)
-		return deltakelser
+	private fun getAmtDeltaker(id: UUID, personIdent: String): DeltakerDto? =
+		amtTiltakClient
+			.hentDeltakelserForPerson(personIdent)
 			.find { it.id == id }
-	}
 
 	private fun getMatchingDeltaker(
 		arenaHistDeltaker: ArenaHistDeltaker,
@@ -170,6 +172,7 @@ open class HistDeltakerConsumer(
 			?: throw ValidationException("Kan ikke matche hist deltaker som mangler PERSON_ID")
 		val datoStatusendring = arenaHistDeltaker.DATO_STATUSENDRING?.asLocalDateTime()
 			?: throw ValidationException("Kan ikke matche hist deltaker som mangler DATO_STATUSENDRING")
+
 		val datoFra = arenaHistDeltaker.DATO_FRA?.asLocalDate()
 		val datoTil = arenaHistDeltaker.DATO_TIL?.asLocalDate()
 		val arenaDeltakere = deltakerRepository
@@ -181,14 +184,17 @@ open class HistDeltakerConsumer(
 			.filter { it.datoStatusEndring == datoStatusendring }
 
 		if (arenaDeltakere.isEmpty()) {
-			log.info("Fant ingen match for hist deltaker med id ${arenaHistDeltaker.HIST_TILTAKDELTAKER_ID} " +
-				"fordi personen har ingen andre deltakelser i databasen")
+			log.info(
+				"Fant ingen match for hist deltaker med id ${arenaHistDeltaker.HIST_TILTAKDELTAKER_ID} " +
+					"fordi personen har ingen andre deltakelser i databasen"
+			)
 			return null
-		}
-		else if (matchendeDeltakere.isEmpty()) {
-			log.info("Fant ingen match for hist-deltaker med id ${arenaHistDeltaker.HIST_TILTAKDELTAKER_ID}. " +
-				"fradato: $datoFra, tildato: $datoTil, modDato: $datoStatusendring" +
-				"Personen har ${arenaDeltakere.size} andre deltakelser")
+		} else if (matchendeDeltakere.isEmpty()) {
+			log.info(
+				"Fant ingen match for hist-deltaker med id ${arenaHistDeltaker.HIST_TILTAKDELTAKER_ID}. " +
+					"fradato: $datoFra, tildato: $datoTil, modDato: $datoStatusendring" +
+					"Personen har ${arenaDeltakere.size} andre deltakelser"
+			)
 
 			arenaDeltakere.forEach {
 				log.info("Ingen match med arenaId: ${it.arenaId}, fradato: ${it.datoFra}, tildato ${it.datoTil}, ${it.modDato}")
@@ -199,8 +205,9 @@ open class HistDeltakerConsumer(
 			return matchendeDeltakere.first()
 		}
 
-		throw OperationNotImplementedException("Fant ${arenaDeltakere.size} deltakere som matcher med hist deltaker ${arenaHistDeltaker.HIST_TILTAKDELTAKER_ID}")
-
+		throw OperationNotImplementedException(
+			"Fant ${arenaDeltakere.size} deltakere som matcher med hist deltaker ${arenaHistDeltaker.HIST_TILTAKDELTAKER_ID}"
+		)
 	}
 
 	private fun AmtDeltaker.validerGyldigHistDeltaker() {
@@ -211,5 +218,4 @@ open class HistDeltakerConsumer(
 			throw ValidationException("Kan ikke sende videre hist-deltaker $id fordi den mangler statusEndretDato som vil utledes til LocalDateTime.now()")
 		}
 	}
-
 }

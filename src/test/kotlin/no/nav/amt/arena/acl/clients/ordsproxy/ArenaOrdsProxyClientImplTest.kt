@@ -11,8 +11,6 @@ class ArenaOrdsProxyClientImplTest {
 	val server = MockWebServer()
 	val serverUrl = server.url("").toString().removeSuffix("/")
 
-
-
 	@Test
 	fun `hentFnr() skal lage riktig request og parse respons`() {
 		val client = ArenaOrdsProxyClientImpl(

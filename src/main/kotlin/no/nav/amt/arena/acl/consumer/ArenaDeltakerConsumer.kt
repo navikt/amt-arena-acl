@@ -1,8 +1,8 @@
 package no.nav.amt.arena.acl.consumer
 
-import ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
+import no.nav.amt.arena.acl.clients.ordsproxy.ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
@@ -33,7 +33,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
-open class ArenaDeltakerConsumer(
+class ArenaDeltakerConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val deltakerRepository: DeltakerRepository,
 	private val gjennomforingService: GjennomforingService,
@@ -90,8 +90,7 @@ open class ArenaDeltakerConsumer(
 			val arenaId = arenaDataIdTranslationService.hentArenaId(eksternId)
 			if (arenaId == null) {
 				arenaDataIdTranslationService.opprettIdTranslation(arenaDeltakerId, eksternId)
-			}
-			else if (arenaId != arenaDeltakerId) {
+			} else if (arenaId != arenaDeltakerId) {
 				log.error("Fikk arenadeltaker med id $arenaDeltakerId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
 				throw ValidationException("Fikk arenadeltaker med id $arenaDeltakerId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
 			}
@@ -103,6 +102,7 @@ open class ArenaDeltakerConsumer(
 		}
 
 	}
+
 	private fun sendMessageAndUpdateIngestStatus(
 		message: ArenaDeltakerKafkaMessage,
 		deltaker: AmtDeltaker,
@@ -151,7 +151,12 @@ open class ArenaDeltakerConsumer(
 		val arenaHistId = arenaDataIdTranslationService.hentArenaHistId(amtDeltaker.id)
 		if (arenaHistId != null) {
 			log.info("Mottatt delete-melding for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, blir ikke behandlet fordi det finnes hist-melding på samme deltaker")
-			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId, "Slettes ikke fordi deltaker ble historisert"))
+			arenaDataRepository.upsert(
+				message.toUpsertInputWithStatusHandled(
+					arenaDeltakerId,
+					"Slettes ikke fordi deltaker ble historisert"
+				)
+			)
 			deltakerRepository.upsert(arenaDeltakerRaw.toDbo()) // denne kan fjernes når vi har kjørt igjennom delete meldinger
 		} else {
 			if (getRetryAttempts(deltakerData, message) < 2) {
@@ -171,15 +176,21 @@ open class ArenaDeltakerConsumer(
 	private fun getRetryAttempts(
 		deltakerData: List<ArenaDataDbo>,
 		message: ArenaDeltakerKafkaMessage,
-	): Int {
-		return deltakerData.find { it.operationPosition == message.operationPosition }?.ingestAttempts ?: 0
-	}
+	): Int = deltakerData
+		.find { it.operationPosition == message.operationPosition }
+		?.ingestAttempts
+		?: 0
 
-	fun createDeltaker(arenaDeltaker: TiltakDeltaker, gjennomforing: Gjennomforing, erHistDeltaker: Boolean = false): AmtDeltaker {
+	fun createDeltaker(
+		arenaDeltaker: TiltakDeltaker,
+		gjennomforing: Gjennomforing,
+		erHistDeltaker: Boolean = false
+	): AmtDeltaker {
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
 			?: throw ValidationException("Arena mangler personlig ident for personId=${arenaDeltaker.personId}")
 
-		val deltakerId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, erHistDeltaker)
+		val deltakerId =
+			arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, erHistDeltaker)
 
 		return arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerId,
@@ -203,16 +214,17 @@ open class ArenaDeltakerConsumer(
 
 		// id kan være null for våre typer fordi id ikke ble lagret fra starten
 		// og pga en bug se trellokort #877
-		val gjennomforingId = gjennomforing.id?: getGjennomforingId(gjennomforing.arenaId).also {
+		val gjennomforingId = gjennomforing.id ?: getGjennomforingId(gjennomforing.arenaId).also {
 			gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
 		}
 
 		return mulighetsrommetApiClient.hentGjennomforing(gjennomforingId)
 	}
 
-	private fun getGjennomforingId(arenaId: String): UUID {
-		return mulighetsrommetApiClient.hentGjennomforingId(arenaId)
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet")
-	}
+	private fun getGjennomforingId(arenaId: String): UUID =
+		mulighetsrommetApiClient.hentGjennomforingId(arenaId)
+			?: throw DependencyNotIngestedException(
+				"Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet"
+			)
 
 }

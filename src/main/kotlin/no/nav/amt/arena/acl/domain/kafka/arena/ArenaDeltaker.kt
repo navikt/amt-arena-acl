@@ -7,7 +7,6 @@ import no.nav.amt.arena.acl.utils.asValidatedLocalDate
 import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
 import java.util.UUID
 
-// @SONAR_START@
 data class ArenaDeltaker(
 	val TILTAKDELTAKER_ID: Long,
 	val PERSON_ID: Long? = null,
@@ -42,7 +41,6 @@ data class ArenaDeltaker(
 	val ANTALL_DAGER_PR_UKE: Float? = null,
 	val EKSTERN_ID: String? = null
 ) {
-
 	fun mapTiltakDeltaker(): TiltakDeltaker {
 		val tiltakdeltakerId = TILTAKDELTAKER_ID.toString().also {
 			if (it == "0") throw ValidationException("TILTAKDELTAKER_ID er 0")
@@ -82,8 +80,6 @@ data class ArenaDeltaker(
 		status = DELTAKERSTATUSKODE,
 		datoStatusEndring = DATO_STATUSENDRING?.asValidatedLocalDateTime("DATO_STATUSENDRING"),
 		arenaSourceTable = ARENA_DELTAKER_TABLE_NAME,
-		eksternId = EKSTERN_ID?.let { UUID.fromString(EKSTERN_ID)},
+		eksternId = EKSTERN_ID?.let { UUID.fromString(EKSTERN_ID) },
 	)
-
 }
-// @SONAR_STOP@

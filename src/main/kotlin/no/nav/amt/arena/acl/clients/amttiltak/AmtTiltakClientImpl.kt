@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.clients.amttiltak
 
+import jakarta.ws.rs.core.HttpHeaders
 import no.nav.amt.arena.acl.utils.JsonUtils
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import no.nav.common.rest.client.RestClient
@@ -14,13 +15,12 @@ class AmtTiltakClientImpl(
 	private val tokenProvider: Supplier<String>,
 	private val httpClient: OkHttpClient = RestClient.baseClient()
 ) : AmtTiltakClient {
-	private val mediaTypeJson = "application/json".toMediaType()
-
 	override fun hentDeltakelserForPerson(personIdent: String): List<DeltakerDto> {
 		val request = Request.Builder()
 			.url("$baseUrl/api/external/deltakelser")
-			.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
-			.post(toJsonString(HentDeltakelserRequest(personIdent)).toRequestBody(mediaTypeJson))
+			.addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
+			.post(toJsonString(HentDeltakelserRequest(personIdent))
+				.toRequestBody("application/json".toMediaType()))
 			.build()
 
 		httpClient.newCall(request).execute().use { response ->
@@ -28,12 +28,7 @@ class AmtTiltakClientImpl(
 				throw RuntimeException("Klarte ikke å hente tiltaksdeltakelser fra amt-tiltak. status=${response.code}")
 			}
 
-			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
-			return JsonUtils.fromJsonString<List<DeltakerDto>>(body)
+			return JsonUtils.fromJsonString<List<DeltakerDto>>(response.body.string())
 		}
 	}
-
-	data class HentDeltakelserRequest(
-		val personIdent: String
-	)
 }

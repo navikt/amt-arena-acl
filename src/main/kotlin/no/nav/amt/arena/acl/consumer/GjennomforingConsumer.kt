@@ -1,6 +1,7 @@
 package no.nav.amt.arena.acl.consumer
 
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
+import no.nav.amt.arena.acl.domain.Gjennomforing.Companion.isSupportedTiltak
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-open class GjennomforingConsumer(
+class GjennomforingConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val gjennomforingService: GjennomforingService,
 	private val mulighetsrommetApiClient: MulighetsrommetApiClient
@@ -30,7 +31,7 @@ open class GjennomforingConsumer(
 
 		gjennomforingService.upsert(arenaId, arenaTiltakskode, isValid)
 
-		if (!gjennomforingService.isSupportedTiltak(arenaTiltakskode)) {
+		if (!isSupportedTiltak(arenaTiltakskode)) {
 			log.info("Gjennomføring $arenaId ble ignorert fordi $arenaTiltakskode er ikke støttet")
 			return
 		}
@@ -49,8 +50,9 @@ open class GjennomforingConsumer(
 
 	}
 
-	private fun getGjennomforingId(arenaId: String): UUID {
-		return mulighetsrommetApiClient.hentGjennomforingId(arenaId)
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet")
-	}
+	private fun getGjennomforingId(arenaId: String): UUID =
+		mulighetsrommetApiClient.hentGjennomforingId(arenaId)
+			?: throw DependencyNotIngestedException(
+				"Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet"
+			)
 }

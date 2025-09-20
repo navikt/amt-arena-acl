@@ -56,19 +56,21 @@ class DeltakerRepositoryTest(
 			val deltaker = deltakerRepository.get(arenaId, ARENA_DELTAKER_TABLE_NAME)
 			deltaker!!.toInsertDbo() shouldBe dbo2
 		}
-	})
-
-fun DeltakerDbo.toInsertDbo(): DeltakerInsertDbo =
-	DeltakerInsertDbo(
-		arenaId = arenaId,
-		personId = personId,
-		gjennomforingId = gjennomforingId,
-		datoFra = datoFra,
-		datoTil = datoTil,
-		regDato = regDato,
-		modDato = modDato,
-		status = status,
-		datoStatusEndring = datoStatusEndring,
-		arenaSourceTable = arenaSourceTable,
-		eksternId = eksternId,
-	)
+	}) {
+	companion object {
+		private fun DeltakerDbo.toInsertDbo(): DeltakerInsertDbo =
+			DeltakerInsertDbo(
+				arenaId = arenaId,
+				personId = personId,
+				gjennomforingId = gjennomforingId,
+				datoFra = datoFra,
+				datoTil = datoTil,
+				regDato = regDato,
+				modDato = modDato,
+				status = status,
+				datoStatusEndring = datoStatusEndring,
+				arenaSourceTable = arenaSourceTable,
+				eksternId = eksternId,
+			)
+	}
+}
