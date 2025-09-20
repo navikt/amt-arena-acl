@@ -86,16 +86,11 @@ open class MockHttpServer(
 		}
 	}
 
-	private fun hasExpectedHeaders(requestHeaders: okhttp3.Headers, expectedHeaders: Map<String, String>): Boolean {
-		var hasHeaders = true
-
-		expectedHeaders.forEach { (name, value) ->
-			if (requestHeaders[name] != value)
-				hasHeaders = false
-		}
-
-		return hasHeaders
-	}
+	private fun hasExpectedHeaders(
+		requestHeaders: okhttp3.Headers,
+		expectedHeaders: Map<String, String>
+	): Boolean = expectedHeaders
+		.all { (headerName, headerValue) -> requestHeaders[headerName] == headerValue }
 
 	private fun flushRequests() {
 		while (server.takeRequest(1, TimeUnit.NANOSECONDS) != null) {

@@ -1,26 +1,34 @@
 package no.nav.amt.arena.acl.clients.amttiltak
 
-import java.time.LocalDate
-import java.util.UUID
+import jakarta.ws.rs.core.HttpHeaders
+import no.nav.amt.arena.acl.utils.JsonUtils
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
+import no.nav.common.rest.client.RestClient
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.util.function.Supplier
 
-interface AmtTiltakClient {
-	fun hentDeltakelserForPerson(personIdent: String): List<DeltakerDto>
-}
+class AmtTiltakClient(
+	private val baseUrl: String,
+	private val tokenProvider: Supplier<String>,
+	private val httpClient: OkHttpClient = RestClient.baseClient()
+) {
+	fun hentDeltakelserForPerson(personIdent: String): List<DeltakerDto> {
+		val request = Request.Builder()
+			.url("$baseUrl/api/external/deltakelser")
+			.addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
+			.post(toJsonString(HentDeltakelserRequest(personIdent))
+				.toRequestBody("application/json".toMediaType()))
+			.build()
 
-data class DeltakerDto(
-	val id: UUID,
-	val gjennomforing: GjennomforingDto,
-	val startDato: LocalDate?,
-	val sluttDato: LocalDate?,
-	val status: DeltakerStatusDto,
-)
+		httpClient.newCall(request).execute().use { response ->
+			if (!response.isSuccessful) {
+				throw RuntimeException("Klarte ikke å hente tiltaksdeltakelser fra amt-tiltak. status=${response.code}")
+			}
 
-data class GjennomforingDto(
-	val id: UUID
-)
-
-enum class DeltakerStatusDto {
-	UTKAST_TIL_PAMELDING, AVBRUTT_UTKAST,
-	VENTER_PA_OPPSTART, DELTAR, HAR_SLUTTET, FULLFORT, IKKE_AKTUELL, FEILREGISTRERT,
-	SOKT_INN, VURDERES, VENTELISTE, AVBRUTT, PABEGYNT_REGISTRERING
+			return JsonUtils.fromJsonString<List<DeltakerDto>>(response.body.string())
+		}
+	}
 }

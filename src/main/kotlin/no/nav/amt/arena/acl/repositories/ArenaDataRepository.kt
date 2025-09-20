@@ -9,35 +9,44 @@ import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-@Component
+@Service
 class ArenaDataRepository(
 	private val template: NamedParameterJdbcTemplate,
 ) {
 	fun upsert(upsertData: ArenaDataUpsertInput) {
 		val sql = """
-			INSERT INTO arena_data(arena_table_name, arena_id, operation_type, operation_pos, operation_timestamp, ingest_status,
-								   ingested_timestamp, before, after, note)
+			INSERT INTO arena_data(
+				arena_table_name,
+				arena_id,
+				operation_type,
+				operation_pos,
+				operation_timestamp,
+				ingest_status,
+				ingested_timestamp,
+				before,
+				after, note)
 			VALUES (:arena_table_name,
-					:arena_id,
-					:operation_type,
-					:operation_pos,
-					:operation_timestamp,
-					:ingest_status,
-					:ingested_timestamp,
-					:before::json,
-					:after::json,
-					:note)
+				:arena_id,
+				:operation_type,
+				:operation_pos,
+				:operation_timestamp,
+				:ingest_status,
+				:ingested_timestamp,
+				:before::json,
+				:after::json,
+				:note)
 			ON CONFLICT (arena_table_name, operation_type, operation_pos) DO UPDATE SET
-					ingest_status      = :ingest_status,
-					ingested_timestamp = :ingested_timestamp,
-					note 			   = :note
+				ingest_status      = :ingest_status,
+				ingested_timestamp = :ingested_timestamp,
+				note 			   = :note
 		""".trimIndent()
 
 		template.update(
-			sql, sqlParameters(
+			sql,
+			sqlParameters(
 				"arena_table_name" to upsertData.arenaTableName,
 				"arena_id" to upsertData.arenaId,
 				"operation_type" to upsertData.operation.name,
@@ -53,12 +62,9 @@ class ArenaDataRepository(
 	}
 
 	fun updateIngestStatus(id: Int, ingestStatus: IngestStatus) {
-		val sql = """
-			UPDATE arena_data SET ingest_status = :ingest_status WHERE id = :id
-		""".trimIndent()
-
 		template.update(
-			sql, sqlParameters(
+			"UPDATE arena_data SET ingest_status = :ingest_status WHERE id = :id",
+			sqlParameters(
 				"ingest_status" to ingestStatus.name,
 				"id" to id
 			)
@@ -75,7 +81,8 @@ class ArenaDataRepository(
 		""".trimIndent()
 
 		template.update(
-			sql, sqlParameters(
+			sql,
+			sqlParameters(
 				"ingest_attempts" to ingestAttempts,
 				"last_attempted" to LocalDateTime.now(),
 				"note" to note,
@@ -88,18 +95,21 @@ class ArenaDataRepository(
 		val sql = """
 			SELECT *
 			FROM arena_data
-			WHERE arena_table_name = :arena_table_name
+			WHERE
+				arena_table_name = :arena_table_name
 				AND operation_type = :operation_type
 				AND operation_pos = :operation_pos
 		""".trimIndent()
 
-		val parameters = sqlParameters(
-			"arena_table_name" to tableName,
-			"operation_type" to operation.name,
-			"operation_pos" to position,
-		)
-
-		return template.query(sql, parameters, rowMapper).firstOrNull()
+		return template.query(
+			sql,
+			sqlParameters(
+				"arena_table_name" to tableName,
+				"operation_type" to operation.name,
+				"operation_pos" to position,
+			),
+			rowMapper
+		).firstOrNull()
 	}
 
 	fun get(tableName: String, arenaId: String): List<ArenaDataDbo> {
@@ -108,15 +118,17 @@ class ArenaDataRepository(
 			FROM arena_data
 			WHERE arena_table_name = :arena_table_name
 			AND arena_id = :arena_id
-			ORDER BY id asc
+			ORDER BY id
 		""".trimIndent()
 
-		val parameters = sqlParameters(
-			"arena_table_name" to tableName,
-			"arena_id" to arenaId,
+		return template.query(
+			sql,
+			sqlParameters(
+				"arena_table_name" to tableName,
+				"arena_id" to arenaId,
+			),
+			rowMapper
 		)
-
-		return template.query(sql, parameters, rowMapper)
 	}
 
 	fun getByIngestStatus(
@@ -131,7 +143,7 @@ class ArenaDataRepository(
 			WHERE ingest_status = :ingestStatus
 			AND arena_table_name = :tableName
 			AND id >= :fromId
-			ORDER BY id ASC
+			ORDER BY id
 			LIMIT :limit
 		""".trimIndent()
 
@@ -147,21 +159,26 @@ class ArenaDataRepository(
 
 	fun retryDeltakereMedGjennomforingIdOgStatus(arenaGjennomforingId: String, statuses: List<IngestStatus>): Int {
 		val sql = """
-		UPDATE arena_data
-		SET ingest_status      =  '${IngestStatus.RETRY.name}',
-			ingest_attempts    = 0
-		WHERE (after ->> 'TILTAKGJENNOMFORING_ID' = :gjennomforing_id
-			OR before ->> 'TILTAKGJENNOMFORING_ID' = :gjennomforing_id)
-		  AND ingest_status in (:statuses)
-		  AND arena_table_name = '$ARENA_DELTAKER_TABLE_NAME'
-		""".trimIndent()
+			UPDATE arena_data
+			SET
+				ingest_status = '${IngestStatus.RETRY.name}',
+				ingest_attempts = 0
+			WHERE
+				(
+					after ->> 'TILTAKGJENNOMFORING_ID' = :gjennomforing_id
+					OR before ->> 'TILTAKGJENNOMFORING_ID' = :gjennomforing_id
+				)
+				AND ingest_status in (:statuses)
+				AND arena_table_name = '$ARENA_DELTAKER_TABLE_NAME'
+			""".trimIndent()
 
-		val parameters = sqlParameters(
-			"gjennomforing_id" to arenaGjennomforingId,
-			"statuses" to statuses.map { it.name }
+		return template.update(
+			sql,
+			sqlParameters(
+				"gjennomforing_id" to arenaGjennomforingId,
+				"statuses" to statuses.map { it.name }
+			)
 		)
-
-		return template.update(sql, parameters)
 	}
 
 	fun getFailedIngestStatusCount(): Int {
@@ -178,23 +195,14 @@ class ArenaDataRepository(
 		) ?: 0
 	}
 
-	fun deleteAllIgnoredData(): Int {
-		val sql = """
-			DELETE FROM arena_data WHERE ingest_status = 'IGNORED'
-		""".trimIndent()
-
-		return template.update(sql, EmptySqlParameterSource())
-	}
+	fun deleteAllIgnoredData(): Int = template.update(
+		"DELETE FROM arena_data WHERE ingest_status = 'IGNORED'",
+		EmptySqlParameterSource()
+	)
 
 	// benyttes kun i tester
-	fun getAll(): List<ArenaDataDbo> {
-		val sql = """
-			SELECT *
-			FROM arena_data
-		""".trimIndent()
-
-		return template.query(sql, rowMapper)
-	}
+	fun getAll(): List<ArenaDataDbo> =
+		template.query("SELECT * FROM arena_data", rowMapper)
 
 	companion object {
 		private val rowMapper = RowMapper { rs, _ ->

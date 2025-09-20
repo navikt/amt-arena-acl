@@ -4,44 +4,29 @@ import no.nav.amt.arena.acl.domain.Gjennomforing
 import no.nav.amt.arena.acl.repositories.GjennomforingDbo
 import no.nav.amt.arena.acl.repositories.GjennomforingRepository
 import org.springframework.stereotype.Service
-import java.util.*
-
-val SUPPORTED_TILTAK = setOf(
-	"INDOPPFAG",
-	"ARBFORB",
-	"AVKLARAG",
-	"VASV",
-	"ARBRRHDAG",
-	"DIGIOPPARB",
-	"JOBBK",
-	"GRUPPEAMO",
-	"GRUFAGYRKE"
-)
+import java.util.UUID
 
 @Service
 class GjennomforingService(
 	private val gjennomforingRepository: GjennomforingRepository,
 ) {
-	fun upsert(arenaId: String, tiltakKode: String, isValid: Boolean) {
+	fun upsert(arenaId: String, tiltakKode: String, isValid: Boolean) =
 		gjennomforingRepository.upsert(arenaId, tiltakKode, isValid)
-	}
 
-	fun get(arenaId: String): Gjennomforing? {
-		return gjennomforingRepository.get(arenaId)?.toModel()
-	}
+	fun get(arenaId: String): Gjennomforing? =
+		gjennomforingRepository
+			.get(arenaId)
+			?.toModel()
 
-	fun setGjennomforingId(arenaId: String, gjennomforingId: UUID) {
-		return gjennomforingRepository.updateGjennomforingId(arenaId, gjennomforingId)
-	}
+	fun setGjennomforingId(arenaId: String, gjennomforingId: UUID): Unit =
+		gjennomforingRepository.updateGjennomforingId(arenaId, gjennomforingId)
 
-	fun isSupportedTiltak(kode: String): Boolean {
-		return SUPPORTED_TILTAK.contains(kode)
+	companion object {
+		private fun GjennomforingDbo.toModel() = Gjennomforing(
+			arenaId = arenaId,
+			tiltakKode = tiltakKode,
+			isValid = isValid,
+			id = id
+		)
 	}
 }
-
-fun GjennomforingDbo.toModel() = Gjennomforing(
-	arenaId = arenaId,
-	tiltakKode = tiltakKode,
-	isValid = isValid,
-	id = id
-)

@@ -18,30 +18,27 @@ class ApplicationConfig {
 		@Value($$"${nais.env.azureAppClientId}") azureAdClientId: String,
 		@Value($$"${nais.env.azureOpenIdConfigTokenEndpoint}") azureTokenEndpoint: String,
 		@Value($$"${nais.env.azureAppJWK}") azureAdJWK: String,
-	): MachineToMachineTokenClient =
-		AzureAdTokenClientBuilder
-			.builder()
-			.withClientId(azureAdClientId)
-			.withTokenEndpointUrl(azureTokenEndpoint)
-			.withPrivateJwk(azureAdJWK)
-			.buildMachineToMachineTokenClient()
+	): MachineToMachineTokenClient = AzureAdTokenClientBuilder
+		.builder()
+		.withClientId(azureAdClientId)
+		.withTokenEndpointUrl(azureTokenEndpoint)
+		.withPrivateJwk(azureAdJWK)
+		.buildMachineToMachineTokenClient()
 
 	@Bean
 	@Profile("default")
 	fun unleashClient(
 		@Value($$"${app.env.unleashUrl}") unleashUrl: String,
 		@Value($$"${app.env.unleashApiToken}") unleashApiToken: String,
-	): DefaultUnleash {
-		val config =
-			UnleashConfig
-				.builder()
-				.appName(APP_NAME)
-				.instanceId(APP_NAME)
-				.unleashAPI(unleashUrl)
-				.apiKey(unleashApiToken)
-				.build()
-		return DefaultUnleash(config)
-	}
+	): DefaultUnleash = DefaultUnleash(
+		UnleashConfig
+			.builder()
+			.appName(APP_NAME)
+			.instanceId(APP_NAME)
+			.unleashAPI(unleashUrl)
+			.apiKey(unleashApiToken)
+			.build()
+	)
 
 	companion object {
 		const val APP_NAME = "amt-arena-acl"

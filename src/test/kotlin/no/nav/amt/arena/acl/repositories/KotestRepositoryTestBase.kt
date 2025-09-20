@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.repositories
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.extensions.testcontainers.perSpec
+import io.kotest.extensions.testcontainers.TestContainerSpecExtension
 import no.nav.amt.arena.acl.database.DatabaseTestUtils.cleanDatabase
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,7 +17,7 @@ abstract class KotestRepositoryTestBase(
 	private lateinit var dataSource: DataSource
 
 	init {
-		extensions(container.perSpec())
+		extensions(TestContainerSpecExtension(container))
 
 		afterTest {
 			cleanDatabase(dataSource)

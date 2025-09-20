@@ -1,9 +1,9 @@
 package no.nav.amt.arena.acl.consumer
 
 import io.kotest.matchers.shouldBe
+import no.nav.amt.arena.acl.consumer.converters.ArenaDeltakerAarsakConverter
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
-import no.nav.amt.arena.acl.consumer.converters.ArenaDeltakerAarsakConverter
 import org.junit.jupiter.api.Test
 
 class DeltakerGjennomforingStatusAarsakConverterTest {
@@ -79,7 +79,6 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.IKKE_MOTT
-
 	}
 
 	@Test
@@ -92,7 +91,6 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
-
 	}
 
 	@Test
@@ -105,7 +103,6 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.SYK
-
 	}
 
 	@Test
@@ -118,8 +115,5 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
-
 	}
-
-
 }

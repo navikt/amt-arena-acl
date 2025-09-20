@@ -7,6 +7,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.domain.Gjennomforing
+import no.nav.amt.arena.acl.domain.Gjennomforing.Companion.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.domain.db.ArenaDataHistIdTranslationDbo
 import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.db.ArenaDataUpsertInput
@@ -24,17 +25,17 @@ import no.nav.amt.arena.acl.repositories.ArenaDataHistIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataIdTranslationRepository
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
-import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
+import no.nav.amt.arena.acl.utils.asLocalDate
+import no.nav.amt.arena.acl.utils.asLocalDateTime
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class DeltakerIntegrationTest(
@@ -56,10 +57,10 @@ class DeltakerIntegrationTest(
 
 	val gjennomforingIdMR: UUID = UUID.randomUUID()
 	val gjennomforingMRData =
-		no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing(
+		no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing(
 			id = gjennomforingIdMR,
 			tiltakstype =
-				no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Tiltakstype(
+				no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Tiltakstype(
 					id = UUID.randomUUID(),
 					navn = "Navn på tiltak",
 					arenaKode = "INDOPPFAG",
@@ -67,9 +68,9 @@ class DeltakerIntegrationTest(
 			navn = "Navn på gjennomføring",
 			startDato = LocalDate.now(),
 			sluttDato = LocalDate.now().plusDays(3),
-			status = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Status.GJENNOMFORES,
+			status = no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Status.GJENNOMFORES,
 			virksomhetsnummer = "999888777",
-			oppstart = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Oppstartstype.LOPENDE,
+			oppstart = no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Oppstartstype.LOPENDE,
 		)
 
 	val fnr = "123456789"
@@ -480,22 +481,12 @@ class DeltakerIntegrationTest(
 	}
 
 	private fun AmtDeltaker.validate(baseDeltaker: ArenaDeltaker) {
-		fun parseDate(dateStr: String?): LocalDate? {
-			val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-			return dateStr?.let { LocalDate.parse(dateStr, dateFormatter) }
-		}
-
-		fun parseDateTime(dateStr: String?): LocalDateTime? {
-			val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-			return dateStr?.let { LocalDateTime.parse(dateStr, dateFormatter) }
-		}
-
 		dagerPerUke shouldBe baseDeltaker.ANTALL_DAGER_PR_UKE
 		innsokBegrunnelse shouldBe baseDeltaker.BEGRUNNELSE_BESTILLING
 		prosentDeltid shouldBe baseDeltaker.PROSENT_DELTID
-		sluttDato shouldBe parseDate(baseDeltaker.DATO_TIL)
-		startDato shouldBe parseDate(baseDeltaker.DATO_FRA)
-		registrertDato shouldBe parseDateTime(baseDeltaker.REG_DATO)
+		sluttDato shouldBe baseDeltaker.DATO_TIL?.asLocalDate()
+		startDato shouldBe baseDeltaker.DATO_FRA?.asLocalDate()
+		registrertDato shouldBe baseDeltaker.REG_DATO.asLocalDateTime()
 	}
 
 	private fun createDeltaker() =

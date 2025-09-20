@@ -2,7 +2,7 @@ package no.nav.amt.arena.acl.domain.kafka.amt
 
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class AmtDeltaker(
 	val id: UUID,
@@ -18,10 +18,17 @@ data class AmtDeltaker(
 	val statusEndretDato: LocalDateTime?,
 	val innsokBegrunnelse: String?
 ) {
-
 	enum class Status {
 		VENTER_PA_OPPSTART, DELTAR, HAR_SLUTTET, IKKE_AKTUELL, FEILREGISTRERT, PABEGYNT_REGISTRERING,
-		SOKT_INN, VURDERES, VENTELISTE, AVBRUTT, FULLFORT // kurs statuser
+		SOKT_INN, VURDERES, VENTELISTE, AVBRUTT, FULLFORT; // kurs statuser
+
+		fun erAvsluttende() : Boolean = this in setOf(
+			IKKE_AKTUELL,
+			HAR_SLUTTET,
+			FEILREGISTRERT,
+			AVBRUTT,
+			FULLFORT
+		)
 	}
 
 	enum class StatusAarsak {
@@ -42,14 +49,4 @@ data class AmtDeltaker(
 			prosentDeltid = null,
 			innsokBegrunnelse = null
 		)
-}
-
-fun AmtDeltaker.Status.erAvsluttende() : Boolean{
-	return this in listOf(
-		AmtDeltaker.Status.IKKE_AKTUELL,
-		AmtDeltaker.Status.HAR_SLUTTET,
-		AmtDeltaker.Status.FEILREGISTRERT,
-		AmtDeltaker.Status.AVBRUTT,
-		AmtDeltaker.Status.FULLFORT
-	)
 }

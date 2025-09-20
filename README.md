@@ -65,3 +65,60 @@ Vanlig usecase mens vi er i produksjon er at det kommer løpende data fra hist o
    => Vi får DELETE record på deltakeren, denne skal kastes av oss
    => Vi får CREATED record på hist_deltaker, denne skal vi koble til eksisterende deltaker
    => vi får CREATED record på ny deltaker og samme person, denne skal vi lagre og sende videre
+
+### Databasetabeller
+```mermaid
+erDiagram
+    arena_data {
+        integer id
+        varchar arena_id
+        varchar arena_table_name
+        timestamp_without_timezone operation_timestamp
+        varchar operation_type
+        varchar operation_pos
+        varchar ingest_status
+        integer ingest_attempts
+        timestamp_without_timezone ingested_timestamp
+        timestamp_without_timezone last_attempted
+        jsonb before
+        jsonb after
+        varchar note
+    }
+
+    arena_data_id_translation {
+        varchar arena_table_name
+        varchar arena_id
+        uuid amt_id
+    }
+
+    arena_data_hist_id_translation {
+        varchar arena_id
+        varchar arena_hist_id
+        uuid amt_id
+    }
+
+    deltaker {
+        uuid id
+        double_precision person_id
+        double_precision gjennomforing_id
+        double_precision arena_id
+        varchar status
+        timestamp_with_timezone reg_dato
+        timestamp_with_timezone mod_dato
+        timestamp_with_timezone modified_at
+        timestamp_with_timezone created_at
+        varchar arena_source_table
+        date dato_fra
+        date dato_til
+        timestamp_with_timezone dato_statusendring
+        uuid ekstern_id
+    }
+
+    gjennomforing {
+        uuid id
+        varchar tiltak_kode
+        varchar arena_id
+        timestamp_with_timezone created_at
+        boolean is_valid
+    }
+```
