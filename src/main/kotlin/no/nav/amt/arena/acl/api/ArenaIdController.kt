@@ -34,5 +34,4 @@ class ArenaIdController(
 				arenaId = null,
 				arenaHistId = arenaDataIdTranslationService.hentArenaHistId(id)
 			)
-
 }
