@@ -4,7 +4,7 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
-import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
+import no.nav.amt.arena.acl.utils.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME

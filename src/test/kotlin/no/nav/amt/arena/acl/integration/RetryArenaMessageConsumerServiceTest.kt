@@ -10,7 +10,7 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.services.GjennomforingService
+import no.nav.amt.arena.acl.repositories.GjennomforingRepository
 import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
@@ -25,7 +25,7 @@ class RetryArenaMessageConsumerServiceTest(
 	private val kafkaMessageSender: KafkaMessageSender,
 	private val arenaDataRepository: ArenaDataRepository,
 	private val retryArenaMessageProcessorService: RetryArenaMessageProcessorService,
-	private val gjennomforingService: GjennomforingService,
+	private val gjennomforingRepository: GjennomforingRepository,
 ) : IntegrationTestBase() {
 	val gjennomforingArenaId = 5435345L
 	val gjennomforingIdMR: UUID = UUID.randomUUID()
@@ -128,7 +128,7 @@ class RetryArenaMessageConsumerServiceTest(
 			arenaData.shouldNotBeNull()
 			arenaData.ingestStatus shouldBe IngestStatus.HANDLED
 
-			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
+			val gjennomforingResult = gjennomforingRepository.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
 			gjennomforingResult.shouldNotBeNull()
 		}
 	}

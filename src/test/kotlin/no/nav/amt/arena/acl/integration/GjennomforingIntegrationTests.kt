@@ -9,7 +9,7 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.services.GjennomforingService
+import no.nav.amt.arena.acl.repositories.GjennomforingRepository
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils
 import org.awaitility.Awaitility.await
@@ -20,7 +20,7 @@ import java.util.UUID
 
 class GjennomforingIntegrationTests(
 	private val kafkaMessageSender: KafkaMessageSender,
-	private val gjennomforingService: GjennomforingService,
+	private val gjennomforingRepository: GjennomforingRepository,
 	private val arenaDataRepository: ArenaDataRepository,
 ) : IntegrationTestBase() {
 	@BeforeEach
@@ -42,7 +42,8 @@ class GjennomforingIntegrationTests(
 		)
 
 		await().untilAsserted {
-			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
+			val gjennomforingResult =
+				gjennomforingRepository.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
 			assertSoftly(gjennomforingResult.shouldNotBeNull()) {
 				isValid shouldBe true
 				isSupported shouldBe true
@@ -84,7 +85,7 @@ class GjennomforingIntegrationTests(
 
 		await().untilAsserted {
 			val gjennomforingResult =
-				gjennomforingService.get(ugyldigGjennomforing.TILTAKGJENNOMFORING_ID.toString())
+				gjennomforingRepository.get(ugyldigGjennomforing.TILTAKGJENNOMFORING_ID.toString())
 
 			assertSoftly(gjennomforingResult.shouldNotBeNull()) {
 				isValid shouldBe false
@@ -115,7 +116,7 @@ class GjennomforingIntegrationTests(
 		)
 
 		await().untilAsserted {
-			val gjennomforingResult = gjennomforingService.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
+			val gjennomforingResult = gjennomforingRepository.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
 			assertSoftly(gjennomforingResult.shouldNotBeNull()) {
 				isValid shouldBe true
 				isSupported shouldBe false

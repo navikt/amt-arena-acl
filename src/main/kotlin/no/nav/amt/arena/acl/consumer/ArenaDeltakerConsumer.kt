@@ -21,8 +21,8 @@ import no.nav.amt.arena.acl.exceptions.ValidationException
 import no.nav.amt.arena.acl.metrics.DeltakerMetricHandler
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.DeltakerRepository
+import no.nav.amt.arena.acl.repositories.GjennomforingRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
-import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.tryRun
@@ -33,10 +33,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
-open class ArenaDeltakerConsumer(
+class ArenaDeltakerConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val deltakerRepository: DeltakerRepository,
-	private val gjennomforingService: GjennomforingService,
+	private val gjennomforingRepository: GjennomforingRepository,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val ordsClient: ArenaOrdsProxyClient,
 	private val metrics: DeltakerMetricHandler,
@@ -90,8 +90,7 @@ open class ArenaDeltakerConsumer(
 			val arenaId = arenaDataIdTranslationService.hentArenaId(eksternId)
 			if (arenaId == null) {
 				arenaDataIdTranslationService.opprettIdTranslation(arenaDeltakerId, eksternId)
-			}
-			else if (arenaId != arenaDeltakerId) {
+			} else if (arenaId != arenaDeltakerId) {
 				log.error("Fikk arenadeltaker med id $arenaDeltakerId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
 				throw ValidationException("Fikk arenadeltaker med id $arenaDeltakerId og EKSTERN_ID ${arenaDeltakerRaw.EKSTERN_ID} men arenaId er allerede mappet til $arenaId")
 			}
@@ -103,6 +102,7 @@ open class ArenaDeltakerConsumer(
 		}
 
 	}
+
 	private fun sendMessageAndUpdateIngestStatus(
 		message: ArenaDeltakerKafkaMessage,
 		deltaker: AmtDeltaker,
@@ -151,7 +151,12 @@ open class ArenaDeltakerConsumer(
 		val arenaHistId = arenaDataIdTranslationService.hentArenaHistId(amtDeltaker.id)
 		if (arenaHistId != null) {
 			log.info("Mottatt delete-melding for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, blir ikke behandlet fordi det finnes hist-melding på samme deltaker")
-			arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId, "Slettes ikke fordi deltaker ble historisert"))
+			arenaDataRepository.upsert(
+				message.toUpsertInputWithStatusHandled(
+					arenaDeltakerId,
+					"Slettes ikke fordi deltaker ble historisert"
+				)
+			)
 			deltakerRepository.upsert(arenaDeltakerRaw.toDbo()) // denne kan fjernes når vi har kjørt igjennom delete meldinger
 		} else {
 			if (getRetryAttempts(deltakerData, message) < 2) {
@@ -175,11 +180,16 @@ open class ArenaDeltakerConsumer(
 		return deltakerData.find { it.operationPosition == message.operationPosition }?.ingestAttempts ?: 0
 	}
 
-	fun createDeltaker(arenaDeltaker: TiltakDeltaker, gjennomforing: Gjennomforing, erHistDeltaker: Boolean = false): AmtDeltaker {
+	fun createDeltaker(
+		arenaDeltaker: TiltakDeltaker,
+		gjennomforing: Gjennomforing,
+		erHistDeltaker: Boolean = false
+	): AmtDeltaker {
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
 			?: throw ValidationException("Arena mangler personlig ident for personId=${arenaDeltaker.personId}")
 
-		val deltakerId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, erHistDeltaker)
+		val deltakerId =
+			arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, erHistDeltaker)
 
 		return arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerId,
@@ -192,7 +202,7 @@ open class ArenaDeltakerConsumer(
 	}
 
 	fun getGjennomforing(arenaGjennomforingId: String): Gjennomforing {
-		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
+		val gjennomforing = gjennomforingRepository.get(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
 		if (!gjennomforing.isSupported) {
@@ -203,8 +213,11 @@ open class ArenaDeltakerConsumer(
 
 		// id kan være null for våre typer fordi id ikke ble lagret fra starten
 		// og pga en bug se trellokort #877
-		val gjennomforingId = gjennomforing.id?: getGjennomforingId(gjennomforing.arenaId).also {
-			gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
+		val gjennomforingId = gjennomforing.id ?: getGjennomforingId(gjennomforing.arenaId).also {
+			gjennomforingRepository.updateGjennomforingId(
+				arenaId = gjennomforing.arenaId,
+				gjennomforingId = it
+			)
 		}
 
 		return mulighetsrommetApiClient.hentGjennomforing(gjennomforingId)

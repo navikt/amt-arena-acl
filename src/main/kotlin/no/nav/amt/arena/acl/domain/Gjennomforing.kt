@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.domain
 
-import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
+import no.nav.amt.arena.acl.utils.SUPPORTED_TILTAK
 import java.util.UUID
 
 data class Gjennomforing (
