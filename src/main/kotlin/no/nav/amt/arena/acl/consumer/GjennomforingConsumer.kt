@@ -30,6 +30,7 @@ class GjennomforingConsumer(
 		val gjennomforingResult = arenaGjennomforing.mapTiltakGjennomforing()
 		val isValid = gjennomforingResult.isSuccess
 
+		// hvorfor lagre her hvis ikke supporterte tiltak?
 		gjennomforingRepository.upsert(arenaId, arenaTiltakskode, isValid)
 
 		if (!isSupportedTiltak(arenaTiltakskode)) {
