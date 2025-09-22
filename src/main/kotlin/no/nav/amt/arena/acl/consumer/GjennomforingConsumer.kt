@@ -7,6 +7,7 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.GjennomforingRepository
+import no.nav.amt.arena.acl.utils.enkeltPersonTiltakskoder
 import no.nav.amt.arena.acl.utils.isSupportedTiltak
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -36,9 +37,11 @@ class GjennomforingConsumer(
 			return
 		}
 
-		runCatching {
-			val gjennomforingId = getGjennomforingId(arenaId)
-			gjennomforingRepository.updateGjennomforingId(arenaId, gjennomforingId)
+		if (arenaTiltakskode !in enkeltPersonTiltakskoder) {
+			runCatching {
+				val gjennomforingId = getGjennomforingId(arenaId)
+				gjennomforingRepository.updateGjennomforingId(arenaId, gjennomforingId)
+			}
 		}
 
 		if (isValid) {
@@ -49,8 +52,9 @@ class GjennomforingConsumer(
 		log.info("Gjennomføring $arenaId er ferdig håndtert")
 	}
 
-	private fun getGjennomforingId(arenaId: String): UUID {
-		return mulighetsrommetApiClient.hentGjennomforingId(arenaId)
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet")
-	}
+	private fun getGjennomforingId(arenaId: String): UUID =
+		mulighetsrommetApiClient.hentGjennomforingId(arenaId)
+			?: throw DependencyNotIngestedException(
+				"Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet"
+			)
 }
