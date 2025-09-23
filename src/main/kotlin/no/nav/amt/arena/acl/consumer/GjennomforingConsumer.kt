@@ -7,7 +7,7 @@ import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.GjennomforingRepository
-import no.nav.amt.arena.acl.utils.enkeltPersonTiltakskoder
+import no.nav.amt.arena.acl.utils.enkeltPlassTiltakskoder
 import no.nav.amt.arena.acl.utils.isSupportedTiltak
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -38,7 +38,7 @@ class GjennomforingConsumer(
 			return
 		}
 
-		if (arenaTiltakskode !in enkeltPersonTiltakskoder) {
+		if (arenaTiltakskode !in enkeltPlassTiltakskoder) {
 			runCatching {
 				val gjennomforingId = getGjennomforingId(arenaId)
 				gjennomforingRepository.updateGjennomforingId(arenaId, gjennomforingId)

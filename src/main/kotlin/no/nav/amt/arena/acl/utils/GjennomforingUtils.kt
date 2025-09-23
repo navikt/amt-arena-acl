@@ -15,11 +15,14 @@ val SUPPORTED_TILTAK = setOf(
 	"GRUFAGYRKE"
 )
 
-// Izis:Legger du til tiltakskoder her?
-val enkeltPersonTiltakskoder = setOf("TODO")
+val enkeltPlassTiltakskoder = setOf(
+	"ENKELAMO",
+	"ENKFAGYRKE",
+	"HOYEREUTD"
+)
 
 fun isSupportedTiltak(kode: String): Boolean = SUPPORTED_TILTAK
-	.plus(enkeltPersonTiltakskoder)
+	.plus(enkeltPlassTiltakskoder)
 	.contains(kode)
 
 fun GjennomforingDbo.toModel() = Gjennomforing(
