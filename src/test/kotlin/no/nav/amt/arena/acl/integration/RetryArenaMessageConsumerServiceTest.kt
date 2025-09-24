@@ -2,7 +2,7 @@ package no.nav.amt.arena.acl.integration
 
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
+import no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker

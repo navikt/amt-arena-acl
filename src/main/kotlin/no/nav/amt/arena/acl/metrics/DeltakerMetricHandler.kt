@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component
 class DeltakerMetricHandler(
 	private val registry: MeterRegistry
 ) {
-
 	fun publishMetrics(message: ArenaDeltakerKafkaMessage) {
 
 		// Flyttet fra et annet sted, er noe rart her men må undersøke hva denne brukes til

@@ -11,15 +11,14 @@ import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
 @Component
-open class KafkaConsumer(
+class KafkaConsumer(
 	kafkaTopicProperties: KafkaTopicProperties,
 	kafkaProperties: KafkaProperties,
 	private val arenaMessageConsumerService: ArenaMessageConsumerService,
 ) {
+	private val log = LoggerFactory.getLogger(javaClass)
 
 	private val client: KafkaConsumerClient
-
-	private val log = LoggerFactory.getLogger(javaClass)
 
 	init {
 		val topics = listOf(
@@ -46,10 +45,12 @@ open class KafkaConsumer(
 	}
 
 	@EventListener
-	open fun onContextRefreshed(_event: ContextRefreshedEvent) = start()
+	@Suppress("unused")
+	fun onContextRefreshed(event: ContextRefreshedEvent) = start()
 
 	@EventListener
-	open fun onContextClosed(_event: ContextClosedEvent) = stop()
+	@Suppress("unused")
+	fun onContextClosed(event: ContextClosedEvent) = stop()
 
 	fun start() {
 		log.info("Starting kafka consumer...")

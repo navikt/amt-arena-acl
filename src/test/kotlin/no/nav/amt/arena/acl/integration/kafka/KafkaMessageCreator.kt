@@ -1,13 +1,14 @@
 package no.nav.amt.arena.acl.integration.kafka
 
+import no.nav.amt.arena.acl.domain.Gjennomforing.Companion.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforing
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaHistDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessageDto
-import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.DateUtils.localDateTimeFormatter
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonNode
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import java.time.LocalDate
@@ -22,7 +23,6 @@ object KafkaMessageCreator {
 	private const val GENERIC_FLOAT = Float.MIN_VALUE
 
 	private val opTsFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
-	private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
 	private var pos = 0
 
@@ -103,8 +103,8 @@ object KafkaMessageCreator {
 		TILTAKSKODE = tiltakskode,
 		ANTALL_DELTAKERE = GENERIC_INT,
 		ANTALL_VARIGHET = GENERIC_INT,
-		DATO_FRA = datoFra?.let { dateFormatter.format(it) },
-		DATO_TIL = datoTil?.let { dateFormatter.format(it) },
+		DATO_FRA = datoFra?.let { localDateTimeFormatter.format(it) },
+		DATO_TIL = datoTil?.let { localDateTimeFormatter.format(it) },
 		FAGPLANKODE = GENERIC_STRING,
 		MAALEENHET_VARIGHET = GENERIC_STRING,
 		TEKST_FAGBESKRIVELSE = GENERIC_STRING,
@@ -162,17 +162,17 @@ object KafkaMessageCreator {
 		PRIORITET = GENERIC_INT,
 		BEGRUNNELSE_INNSOKT = GENERIC_STRING,
 		BEGRUNNELSE_PRIORITERING = GENERIC_STRING,
-		REG_DATO = dateFormatter.format(registrertDato),
+		REG_DATO = localDateTimeFormatter.format(registrertDato),
 		REG_USER = GENERIC_STRING,
 		MOD_DATO = GENERIC_DATE_STRING,
 		MOD_USER = GENERIC_STRING,
 		DATO_SVARFRIST = GENERIC_STRING,
-		DATO_FRA = startDato?.let { dateFormatter.format(it.atStartOfDay()) },
-		DATO_TIL = sluttDato?.let { dateFormatter.format(it.atStartOfDay()) },
+		DATO_FRA = startDato?.let { localDateTimeFormatter.format(it.atStartOfDay()) },
+		DATO_TIL = sluttDato?.let { localDateTimeFormatter.format(it.atStartOfDay()) },
 		BEGRUNNELSE_STATUS = GENERIC_STRING,
 		PROSENT_DELTID = GENERIC_FLOAT,
 		BRUKERID_STATUSENDRING = GENERIC_STRING,
-		DATO_STATUSENDRING = datoStatusEndring?.let { dateFormatter.format(it) },
+		DATO_STATUSENDRING = datoStatusEndring?.let { localDateTimeFormatter.format(it) },
 		AKTIVITET_ID = GENERIC_LONG,
 		BRUKERID_ENDRING_PRIORITERING = GENERIC_STRING,
 		DATO_ENDRING_PRIORITERING = GENERIC_STRING,
@@ -207,17 +207,17 @@ object KafkaMessageCreator {
 		PRIORITET = GENERIC_INT,
 		BEGRUNNELSE_INNSOKT = GENERIC_STRING,
 		BEGRUNNELSE_PRIORITERING = GENERIC_STRING,
-		REG_DATO = dateFormatter.format(registrertDato),
+		REG_DATO = localDateTimeFormatter.format(registrertDato),
 		REG_USER = GENERIC_STRING,
 		MOD_DATO = GENERIC_DATE_STRING,
 		MOD_USER = GENERIC_STRING,
 		DATO_SVARFRIST = GENERIC_STRING,
-		DATO_FRA = startDato?.let { dateFormatter.format(it.atStartOfDay()) },
-		DATO_TIL = sluttDato?.let { dateFormatter.format(it.atStartOfDay()) },
+		DATO_FRA = startDato?.let { localDateTimeFormatter.format(it.atStartOfDay()) },
+		DATO_TIL = sluttDato?.let { localDateTimeFormatter.format(it.atStartOfDay()) },
 		BEGRUNNELSE_STATUS = GENERIC_STRING,
 		PROSENT_DELTID = GENERIC_FLOAT,
 		BRUKERID_STATUSENDRING = GENERIC_STRING,
-		DATO_STATUSENDRING = datoStatusEndring?.let { dateFormatter.format(it) },
+		DATO_STATUSENDRING = datoStatusEndring?.let { localDateTimeFormatter.format(it) },
 		AKTIVITET_ID = GENERIC_LONG,
 		BRUKERID_ENDRING_PRIORITERING = GENERIC_STRING,
 		DATO_ENDRING_PRIORITERING = GENERIC_STRING,

@@ -10,6 +10,6 @@ object KotestConfig : AbstractProjectConfig() {
 	}
 
 	override val extensions = listOf(
-            SpringExtension(),
-        )
+		SpringExtension(),
+	)
 }

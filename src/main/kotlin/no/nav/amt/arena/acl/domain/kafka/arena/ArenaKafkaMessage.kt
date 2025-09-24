@@ -12,12 +12,10 @@ data class ArenaKafkaMessage<D>(
 	val before: D?,
 	val after: D?
 ) {
-	fun getData(): D {
-		return when (operationType) {
-			AmtOperation.CREATED -> after ?: throw ValidationException("Message with opType=CREATED is missing 'after'")
-			AmtOperation.MODIFIED -> after ?: throw ValidationException("Message with opType=MODIFIED is missing 'after'")
-			AmtOperation.DELETED -> before ?: throw ValidationException("Message with opType=DELETED is missing 'before'")
-		}
+	fun getData(): D = when (operationType) {
+		AmtOperation.CREATED -> after ?: throw ValidationException("Message with opType=CREATED is missing 'after'")
+		AmtOperation.MODIFIED -> after ?: throw ValidationException("Message with opType=MODIFIED is missing 'after'")
+		AmtOperation.DELETED -> before ?: throw ValidationException("Message with opType=DELETED is missing 'before'")
 	}
 }
 

@@ -3,17 +3,6 @@ package no.nav.amt.arena.acl.domain.db
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import java.time.LocalDateTime
 
-enum class IngestStatus {
-	NEW,
-	HANDLED,
-	RETRY,
-	FAILED,
-	IGNORED,
-	INVALID,
-	WAITING,
-	EXTERNAL_SOURCE
-}
-
 data class ArenaDataDbo(
 	val id: Int,
 	val arenaTableName: String,

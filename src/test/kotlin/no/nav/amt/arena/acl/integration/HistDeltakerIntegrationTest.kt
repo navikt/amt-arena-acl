@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.amt.arena.acl.clients.amttiltak.DeltakerStatusDto
 import no.nav.amt.arena.acl.domain.Gjennomforing
+import no.nav.amt.arena.acl.domain.Gjennomforing.Companion.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
@@ -25,7 +26,6 @@ import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.repositories.DeltakerInsertDbo
 import no.nav.amt.arena.acl.repositories.DeltakerRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
-import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
@@ -37,7 +37,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class HistDeltakerIntegrationTest(
@@ -60,10 +59,10 @@ class HistDeltakerIntegrationTest(
 
 	val gjennomforingIdMR: UUID = UUID.randomUUID()
 	val gjennomforingMRData =
-		no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing(
+		no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing(
 			id = gjennomforingIdMR,
 			tiltakstype =
-				no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Tiltakstype(
+				no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Tiltakstype(
 					id = UUID.randomUUID(),
 					navn = "Navn på tiltak",
 					arenaKode = "INDOPPFAG",
@@ -71,9 +70,9 @@ class HistDeltakerIntegrationTest(
 			navn = "Navn på gjennomføring",
 			startDato = LocalDate.now(),
 			sluttDato = LocalDate.now().plusDays(3),
-			status = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Status.GJENNOMFORES,
+			status = no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Status.GJENNOMFORES,
 			virksomhetsnummer = "999888777",
-			oppstart = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Oppstartstype.LOPENDE,
+			oppstart = no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Oppstartstype.LOPENDE,
 		)
 
 	val fnr = "123456789"
@@ -121,8 +120,8 @@ class HistDeltakerIntegrationTest(
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = amtTiltakDeltakerId,
 			gjennomforingId = gjennomforingIdMR,
-			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL),
+			startdato = baseDeltaker.DATO_FRA?.asLocalDate(),
+			sluttdato = baseDeltaker.DATO_TIL?.asLocalDate(),
 		)
 
 		baseGjennomforing.publiser {
@@ -188,8 +187,8 @@ class HistDeltakerIntegrationTest(
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = amtTiltakDeltakerId,
 			gjennomforingId = gjennomforingIdMR,
-			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL),
+			startdato = baseDeltaker.DATO_FRA?.asLocalDate(),
+			sluttdato = baseDeltaker.DATO_TIL?.asLocalDate(),
 			status = DeltakerStatusDto.FEILREGISTRERT,
 		)
 
@@ -217,8 +216,8 @@ class HistDeltakerIntegrationTest(
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = null,
 			gjennomforingId = gjennomforingIdMR,
-			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL),
+			startdato = baseDeltaker.DATO_FRA?.asLocalDate(),
+			sluttdato = baseDeltaker.DATO_TIL?.asLocalDate(),
 		)
 		val pos = "45"
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
@@ -249,8 +248,8 @@ class HistDeltakerIntegrationTest(
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = UUID.randomUUID(),
 			gjennomforingId = UUID.randomUUID(),
-			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL),
+			startdato = baseDeltaker.DATO_FRA?.asLocalDate(),
+			sluttdato = baseDeltaker.DATO_TIL?.asLocalDate(),
 		)
 
 		val pos = "48"
@@ -277,7 +276,7 @@ class HistDeltakerIntegrationTest(
 	}
 
 	@Test
-	fun `ingest deltaker - har deltakelse på samme gjennomforing, andre datoer - status HANDLED`() {
+	fun `ingest deltaker - har deltakelse pa samme gjennomforing, andre datoer - status HANDLED`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = UUID.randomUUID(),
@@ -314,8 +313,8 @@ class HistDeltakerIntegrationTest(
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = UUID.randomUUID(),
 			gjennomforingId = gjennomforingIdMR,
-			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL),
+			startdato = baseDeltaker.DATO_FRA?.asLocalDate(),
+			sluttdato = baseDeltaker.DATO_TIL?.asLocalDate(),
 		)
 
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
@@ -353,8 +352,8 @@ class HistDeltakerIntegrationTest(
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = UUID.randomUUID(),
 			gjennomforingId = gjennomforingIdMR,
-			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL),
+			startdato = baseDeltaker.DATO_FRA?.asLocalDate(),
+			sluttdato = baseDeltaker.DATO_TIL?.asLocalDate(),
 		)
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), "IKKESTOTTET", true)
 
@@ -382,8 +381,8 @@ class HistDeltakerIntegrationTest(
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = UUID.randomUUID(),
 			gjennomforingId = gjennomforingIdMR,
-			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL),
+			startdato = baseDeltaker.DATO_FRA?.asLocalDate(),
+			sluttdato = baseDeltaker.DATO_TIL?.asLocalDate(),
 		)
 		gjennomforingService.upsert(
 			baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(),
@@ -416,8 +415,8 @@ class HistDeltakerIntegrationTest(
 		mockAmtTiltakServer.mockHentDeltakelserForPerson(
 			deltakerId = UUID.randomUUID(),
 			gjennomforingId = gjennomforingIdMR,
-			startdato = parseDate(baseDeltaker.DATO_FRA),
-			sluttdato = parseDate(baseDeltaker.DATO_TIL),
+			startdato = baseDeltaker.DATO_FRA?.asLocalDate(),
+			sluttdato = baseDeltaker.DATO_TIL?.asLocalDate(),
 		)
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 		kafkaMessageSender.publiserArenaHistDeltaker(
@@ -444,9 +443,9 @@ class HistDeltakerIntegrationTest(
 		dagerPerUke shouldBe baseDeltaker.ANTALL_DAGER_PR_UKE
 		innsokBegrunnelse shouldBe baseDeltaker.BEGRUNNELSE_BESTILLING
 		prosentDeltid shouldBe baseDeltaker.PROSENT_DELTID
-		sluttDato shouldBe parseDate(baseDeltaker.DATO_TIL)
-		startDato shouldBe parseDate(baseDeltaker.DATO_FRA)
-		registrertDato shouldBe parseDateTime(baseDeltaker.REG_DATO)
+		sluttDato shouldBe baseDeltaker.DATO_TIL?.asLocalDate()
+		startDato shouldBe baseDeltaker.DATO_FRA?.asLocalDate()
+		registrertDato shouldBe baseDeltaker.REG_DATO.asLocalDateTime()
 	}
 
 	private fun createDeltaker() =
@@ -491,15 +490,5 @@ class HistDeltakerIntegrationTest(
 				}
 			}
 		}
-	}
-
-	private fun parseDate(dateStr: String?): LocalDate? {
-		val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-		return dateStr?.let { LocalDate.parse(dateStr, dateFormatter) }
-	}
-
-	private fun parseDateTime(dateStr: String?): LocalDateTime? {
-		val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-		return dateStr?.let { LocalDateTime.parse(dateStr, dateFormatter) }
 	}
 }

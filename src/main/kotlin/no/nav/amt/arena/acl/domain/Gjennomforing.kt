@@ -1,6 +1,5 @@
 package no.nav.amt.arena.acl.domain
 
-import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import java.util.UUID
 
 data class Gjennomforing (
@@ -10,4 +9,20 @@ data class Gjennomforing (
 	val id: UUID?
 ) {
 	val isSupported = SUPPORTED_TILTAK.contains(tiltakKode)
+
+	companion object {
+		val SUPPORTED_TILTAK = setOf(
+			"INDOPPFAG",
+			"ARBFORB",
+			"AVKLARAG",
+			"VASV",
+			"ARBRRHDAG",
+			"DIGIOPPARB",
+			"JOBBK",
+			"GRUPPEAMO",
+			"GRUFAGYRKE"
+		)
+
+		fun isSupportedTiltak(kode: String): Boolean = SUPPORTED_TILTAK.contains(kode)
+	}
 }

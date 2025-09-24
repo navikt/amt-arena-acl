@@ -1,22 +1,22 @@
-package no.nav.amt.arena.acl.clients.mulighetsrommet_api
+package no.nav.amt.arena.acl.clients.mulighetsrommet
 
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.common.rest.client.RestClient.baseClient
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.util.*
+import org.springframework.http.HttpHeaders
+import java.util.UUID
 import java.util.function.Supplier
 
-class MulighetsrommetApiClientImpl(
-    private val baseUrl: String,
-    private val tokenProvider: Supplier<String>,
-    private val httpClient: OkHttpClient = baseClient(),
-) : MulighetsrommetApiClient {
-
-	override fun hentGjennomforingId(arenaId: String): UUID? {
+class MulighetsrommetApiClient(
+	private val baseUrl: String,
+	private val tokenProvider: Supplier<String>,
+	private val httpClient: OkHttpClient = baseClient(),
+) {
+	fun hentGjennomforingId(arenaId: String): UUID? {
 		val request = Request.Builder()
 			.url("$baseUrl/api/v1/tiltaksgjennomforinger/id/$arenaId")
-			.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
+			.addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
 			.get()
 			.build()
 
@@ -28,18 +28,15 @@ class MulighetsrommetApiClientImpl(
 				throw RuntimeException("Klarte ikke å hente gjennomføring arenadata fra Mulighetsrommet. status=${response.code}")
 			}
 
-			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
-
-			val responseBody = fromJsonString<HentGjennomforingId.Response>(body)
-
+			val responseBody = fromJsonString<HentGjennomforingIdResponse>(response.body.string())
 			return responseBody.id
 		}
 	}
 
-	override fun hentGjennomforing(id: UUID): Gjennomforing {
+	fun hentGjennomforing(id: UUID): Gjennomforing {
 		val request = Request.Builder()
 			.url("$baseUrl/api/v1/tiltaksgjennomforinger/$id")
-			.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
+			.addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
 			.get()
 			.build()
 
@@ -48,17 +45,7 @@ class MulighetsrommetApiClientImpl(
 				throw RuntimeException("Klarte ikke å hente gjennomføring arenadata fra Mulighetsrommet. status=${response.code}")
 			}
 
-			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
-
-			return fromJsonString(body)
-
+			return fromJsonString(response.body.string())
 		}
 	}
-
-	object HentGjennomforingId{
-		data class Response(
-			val id: UUID
-		)
-	}
-
 }

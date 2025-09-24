@@ -13,30 +13,29 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-open class ArenaDataSchedules(
+class ArenaDataSchedules(
 	private val retryArenaMessageProcessorService: RetryArenaMessageProcessorService,
 	private val arenaDataRepository: ArenaDataRepository,
 	private val leaderElectionClient: LeaderElectionClient
 ) {
-
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	@Scheduled(fixedDelay = TEN_MINUTES, initialDelay = ONE_MINUTE)
-	open fun processArenaMessages() {
+	fun processArenaMessages() {
 		if (leaderElectionClient.isLeader) {
 			JobRunner.run("process_arena_messages", retryArenaMessageProcessorService::processMessages)
 		}
 	}
 
 	@Scheduled(cron = AT_MIDNIGHT)
-	open fun processFailedArenaMessages() {
+	fun processFailedArenaMessages() {
 		if (leaderElectionClient.isLeader) {
 			JobRunner.run("process_failed_arena_messages", retryArenaMessageProcessorService::processFailedMessages)
 		}
 	}
 
 	@Scheduled(fixedDelay = ONE_HOUR, initialDelay = ONE_MINUTE)
-	open fun deleteIgnoredArenaData() {
+	fun deleteIgnoredArenaData() {
 		if (leaderElectionClient.isLeader) {
 			JobRunner.run("delete_ignored_data") {
 				val rowsDeleted = arenaDataRepository.deleteAllIgnoredData()
@@ -44,5 +43,4 @@ open class ArenaDataSchedules(
 			}
 		}
 	}
-
 }
