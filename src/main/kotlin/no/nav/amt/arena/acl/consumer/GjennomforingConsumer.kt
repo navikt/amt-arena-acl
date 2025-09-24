@@ -6,15 +6,17 @@ import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotIngestedException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
-import no.nav.amt.arena.acl.services.GjennomforingService
+import no.nav.amt.arena.acl.repositories.GjennomforingRepository
+import no.nav.amt.arena.acl.utils.enkeltPlassTiltakskoder
+import no.nav.amt.arena.acl.utils.isSupportedTiltak
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-open class GjennomforingConsumer(
+class GjennomforingConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
-	private val gjennomforingService: GjennomforingService,
+	private val gjennomforingRepository: GjennomforingRepository,
 	private val mulighetsrommetApiClient: MulighetsrommetApiClient
 ) : ArenaMessageConsumer<ArenaGjennomforingKafkaMessage> {
 
@@ -28,16 +30,19 @@ open class GjennomforingConsumer(
 		val gjennomforingResult = arenaGjennomforing.mapTiltakGjennomforing()
 		val isValid = gjennomforingResult.isSuccess
 
-		gjennomforingService.upsert(arenaId, arenaTiltakskode, isValid)
+		// hvorfor lagre her hvis ikke supporterte tiltak?
+		gjennomforingRepository.upsert(arenaId, arenaTiltakskode, isValid)
 
-		if (!gjennomforingService.isSupportedTiltak(arenaTiltakskode)) {
+		if (!isSupportedTiltak(arenaTiltakskode)) {
 			log.info("Gjennomføring $arenaId ble ignorert fordi $arenaTiltakskode er ikke støttet")
 			return
 		}
 
-		kotlin.runCatching {
-			val gjennomforingId = getGjennomforingId(arenaId)
-			gjennomforingService.setGjennomforingId(arenaId, gjennomforingId)
+		if (arenaTiltakskode !in enkeltPlassTiltakskoder) {
+			runCatching {
+				val gjennomforingId = getGjennomforingId(arenaId)
+				gjennomforingRepository.updateGjennomforingId(arenaId, gjennomforingId)
+			}
 		}
 
 		if (isValid) {
@@ -46,11 +51,11 @@ open class GjennomforingConsumer(
 
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaId))
 		log.info("Gjennomføring $arenaId er ferdig håndtert")
-
 	}
 
-	private fun getGjennomforingId(arenaId: String): UUID {
-		return mulighetsrommetApiClient.hentGjennomforingId(arenaId)
-			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet")
-	}
+	private fun getGjennomforingId(arenaId: String): UUID =
+		mulighetsrommetApiClient.hentGjennomforingId(arenaId)
+			?: throw DependencyNotIngestedException(
+				"Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet"
+			)
 }
