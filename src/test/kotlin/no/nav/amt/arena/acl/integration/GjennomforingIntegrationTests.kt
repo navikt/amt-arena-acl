@@ -46,7 +46,6 @@ class GjennomforingIntegrationTests(
 				gjennomforingRepository.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
 			assertSoftly(gjennomforingResult.shouldNotBeNull()) {
 				isValid shouldBe true
-				isSupported shouldBe true
 				id shouldBe gjennomforingId
 			}
 
@@ -89,7 +88,6 @@ class GjennomforingIntegrationTests(
 
 			assertSoftly(gjennomforingResult.shouldNotBeNull()) {
 				isValid shouldBe false
-				isSupported shouldBe true
 				id shouldBe gjennomforingId
 			}
 
@@ -119,7 +117,6 @@ class GjennomforingIntegrationTests(
 			val gjennomforingResult = gjennomforingRepository.get(gjennomforing.TILTAKGJENNOMFORING_ID.toString())
 			assertSoftly(gjennomforingResult.shouldNotBeNull()) {
 				isValid shouldBe true
-				isSupported shouldBe false
 			}
 
 			arenaDataRepository

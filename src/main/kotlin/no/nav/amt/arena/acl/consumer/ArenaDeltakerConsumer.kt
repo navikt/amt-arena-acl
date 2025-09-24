@@ -25,6 +25,7 @@ import no.nav.amt.arena.acl.repositories.GjennomforingRepository
 import no.nav.amt.arena.acl.services.ArenaDataIdTranslationService
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
+import no.nav.amt.arena.acl.utils.isSupportedTiltak
 import no.nav.amt.arena.acl.utils.tryRun
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -205,7 +206,7 @@ class ArenaDeltakerConsumer(
 		val gjennomforing = gjennomforingRepository.get(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
-		if (!gjennomforing.isSupported) {
+		if (!isSupportedTiltak(gjennomforing.tiltakKode)) {
 			throw IgnoredException("Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
 		} else if (!gjennomforing.isValid) {
 			throw DependencyNotValidException("Deltaker på ugyldig gjennomføring <$arenaGjennomforingId>")

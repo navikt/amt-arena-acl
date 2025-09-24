@@ -1,6 +1,5 @@
 package no.nav.amt.arena.acl.domain
 
-import no.nav.amt.arena.acl.utils.SUPPORTED_TILTAK
 import java.util.UUID
 
 data class Gjennomforing (
@@ -8,6 +7,4 @@ data class Gjennomforing (
 	val tiltakKode: String,
 	val isValid: Boolean,
 	val id: UUID?
-) {
-	val isSupported = SUPPORTED_TILTAK.contains(tiltakKode)
-}
+)
