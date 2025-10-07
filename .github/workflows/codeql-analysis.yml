@@ -39,7 +39,7 @@ jobs:
           cache: "gradle"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Build artifacts
         run: ./gradlew clean build -x test --no-build-cache --console=plain --no-daemon
