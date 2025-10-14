@@ -207,7 +207,7 @@ open class ArenaDeltakerConsumer(
 			gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
 		}
 
-		return mulighetsrommetApiClient.hentGjennomforing(gjennomforingId)
+		return mulighetsrommetApiClient.hentGjennomforingV2(gjennomforingId)
 	}
 
 	private fun getGjennomforingId(arenaId: String): UUID {

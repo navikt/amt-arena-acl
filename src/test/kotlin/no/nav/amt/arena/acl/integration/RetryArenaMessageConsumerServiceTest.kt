@@ -80,7 +80,7 @@ class RetryArenaMessageConsumerServiceTest(
 			)
 
 		mockArenaOrdsProxyHttpServer.mockHentFnr(deltaker.PERSON_ID!!, (1..Long.MAX_VALUE).random().toString())
-		mockMulighetsrommetApiServer.mockHentGjennomforingData(gjennomforingIdMR, gjennomforingData)
+		mockMulighetsrommetApiServer.mockHentGjennomforingV2Data(gjennomforingIdMR, gjennomforingData)
 
 		kafkaMessageSender.publiserArenaDeltaker(
 			deltaker.TILTAKDELTAKER_ID,

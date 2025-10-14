@@ -6,7 +6,7 @@ import java.util.*
 
 data class AmtDeltaker(
 	val id: UUID,
-	val gjennomforingId: UUID,
+	val gjennomforingId: UUID?,
 	val personIdent: String,
 	val startDato: LocalDate?,
 	val sluttDato: LocalDate?,

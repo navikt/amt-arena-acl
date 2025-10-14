@@ -82,7 +82,7 @@ class DeltakerIntegrationTest(
 			baseGjennomforing.TILTAKGJENNOMFORING_ID,
 			gjennomforingIdMR,
 		)
-		mockMulighetsrommetApiServer.mockHentGjennomforingData(gjennomforingIdMR, gjennomforingMRData)
+		mockMulighetsrommetApiServer.mockHentGjennomforingV2Data(gjennomforingIdMR, gjennomforingMRData)
 	}
 
 	@Test
