@@ -22,8 +22,8 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 			{
 				"id": "$id",
 				"tiltakstype": {
-					"tiltakskode": "ENKELTPLASS_ARBEIDSMARKEDSOPPLAERING",
-					"arenakode": "ENKELAMO"
+					"tiltakskode": "Tralala",
+					"arenakode": "INDOPPFAG"
 				},
 				"arrangor": {
 					"organisasjonsnummer": "${gjennomforingData?.virksomhetsnummer}"

@@ -71,9 +71,9 @@ open class ArenaDeltakerConsumer(
 		log.info("Prosesserer melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId op=${message.operationType} er sendt")
 
 		if (message.operationType == AmtOperation.DELETED) {
-			handleDeleteMessage(arenaDeltakerRaw, deltaker, arenaDeltakerId, message, deltakerData)
+			handleDeleteMessage(arenaDeltakerRaw, deltaker, arenaDeltakerId, message, deltakerData, gjennomforing)
 		} else {
-			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId)
+			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId, gjennomforing=gjennomforing)
 			log.info("Lagrer deltaker med id=${deltaker.id}")
 			deltakerRepository.upsert(arenaDeltakerRaw.toDbo())
 
@@ -107,14 +107,20 @@ open class ArenaDeltakerConsumer(
 		message: ArenaDeltakerKafkaMessage,
 		deltaker: AmtDeltaker,
 		arenaDeltakerId: String,
-		operation: AmtOperation = message.operationType
+		operation: AmtOperation = message.operationType,
+		gjennomforing: Gjennomforing? = null,
 	) {
 		val deltakerKafkaMessage = AmtKafkaMessageDto(
 			type = PayloadType.DELTAKER,
 			operation = operation,
 			payload = deltaker
 		)
-		kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
+		if(gjennomforing?.tiltakstype?.arenaKode in listOf("ENKELAMO","ENKFAGYRKE", "HOYEREUTD")) {
+			kafkaProducerService.produceEnkeltplassDeltaker(deltaker.id,deltakerKafkaMessage)
+		}
+		else {
+			kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
+		}
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
 		log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
 	}
@@ -144,7 +150,8 @@ open class ArenaDeltakerConsumer(
 		amtDeltaker: AmtDeltaker,
 		arenaDeltakerId: String,
 		message: ArenaDeltakerKafkaMessage,
-		deltakerData: List<ArenaDataDbo>
+		deltakerData: List<ArenaDataDbo>,
+		gjennomforing: Gjennomforing
 	) {
 		// Hvis deltakeren er flyttet til hist-tabellen betyr det at deltakeren deltar på samme gjennomføring flere ganger,
 		// og den eldre deltakelsen skal ikke slettes.
@@ -158,11 +165,13 @@ open class ArenaDeltakerConsumer(
 				log.info("Fant ikke hist-deltaker for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, venter litt..")
 				throw DependencyNotIngestedException("Fant ikke hist-deltaker for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId")
 			} else {
+				log.info("Sender tombstone for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId")
 				sendMessageAndUpdateIngestStatus(
 					message,
 					amtDeltaker.toFeilregistrertDeltaker(),
 					arenaDeltakerId,
-					AmtOperation.MODIFIED
+					AmtOperation.MODIFIED,
+					gjennomforing = gjennomforing,
 				)
 			}
 		}

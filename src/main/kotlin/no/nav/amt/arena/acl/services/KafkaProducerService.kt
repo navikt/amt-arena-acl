@@ -11,13 +11,22 @@ import java.util.UUID
 @Service
 class KafkaProducerService(
 	private val kafkaProducer: KafkaProducerClient<String, String>,
-	@Value($$"${app.env.amtTopic}") private val topic: String,
+	@Value($$"${app.env.amtTopic}") private val amtTiltakTopic: String,
+	@Value($$"${app.env.amtEnkeltplassTopic}") private val amtEnkeltplassDeltakerTopic: String,
 ) {
 	fun sendTilAmtTiltak(
 		messageKey: UUID,
 		data: AmtKafkaMessageDto<*>,
 	) {
-		val record = ProducerRecord(topic, messageKey.toString(), toJsonString(data))
+		val record = ProducerRecord(amtTiltakTopic, messageKey.toString(), toJsonString(data))
+		kafkaProducer.sendSync(record)
+	}
+
+	fun produceEnkeltplassDeltaker(
+		messageKey: UUID,
+		data: AmtKafkaMessageDto<*>,
+	) {
+		val record = ProducerRecord(amtEnkeltplassDeltakerTopic, messageKey.toString(), toJsonString(data))
 		kafkaProducer.sendSync(record)
 	}
 }
