@@ -25,9 +25,16 @@ class KafkaProducerService(
 
 	fun produceEnkeltplassDeltaker(
 		messageKey: UUID,
-		data: AmtKafkaMessageDto<*>,
+		deltaker: AmtDeltaker,
 	) {
-		val record = ProducerRecord(amtEnkeltplassDeltakerTopic, messageKey.toString(), toJsonString(data))
+		val record = ProducerRecord(amtEnkeltplassDeltakerTopic, messageKey.toString(), toJsonString(deltaker))
+		kafkaProducer.sendSync(record)
+	}
+
+	fun tombstoneEnkeltplassDeltaker(
+		messageKey: UUID,
+	) {
+		val record: ProducerRecord<String, String?> = ProducerRecord(amtEnkeltplassDeltakerTopic, messageKey.toString(), null)
 		kafkaProducer.sendSync(record)
 	}
 }

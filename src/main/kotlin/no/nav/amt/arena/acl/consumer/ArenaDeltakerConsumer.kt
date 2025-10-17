@@ -116,7 +116,10 @@ open class ArenaDeltakerConsumer(
 			payload = deltaker
 		)
 		if(gjennomforing?.tiltakstype?.arenaKode in listOf("ENKELAMO","ENKFAGYRKE", "HOYEREUTD")) {
-			kafkaProducerService.produceEnkeltplassDeltaker(deltaker.id,deltakerKafkaMessage)
+			if(operation == AmtOperation.DELETED) {
+				kafkaProducerService.tombstoneEnkeltplassDeltaker(deltaker.id)
+			}
+			else kafkaProducerService.produceEnkeltplassDeltaker(deltaker.id, deltaker)
 		}
 		else {
 			kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
@@ -165,7 +168,6 @@ open class ArenaDeltakerConsumer(
 				log.info("Fant ikke hist-deltaker for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, venter litt..")
 				throw DependencyNotIngestedException("Fant ikke hist-deltaker for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId")
 			} else {
-				log.info("Sender tombstone for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId")
 				sendMessageAndUpdateIngestStatus(
 					message,
 					amtDeltaker.toFeilregistrertDeltaker(),
