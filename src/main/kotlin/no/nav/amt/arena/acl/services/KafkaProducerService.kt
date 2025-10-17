@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.services
 
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import no.nav.common.kafka.producer.KafkaProducerClient
@@ -12,7 +13,7 @@ import java.util.UUID
 class KafkaProducerService(
 	private val kafkaProducer: KafkaProducerClient<String, String>,
 	@Value($$"${app.env.amtTopic}") private val amtTiltakTopic: String,
-	@Value($$"${app.env.amtEnkeltplassTopic}") private val amtEnkeltplassDeltakerTopic: String,
+	@Value($$"${app.env.amtEnkeltplassDeltakerTopic}") private val amtEnkeltplassDeltakerTopic: String,
 ) {
 	fun sendTilAmtTiltak(
 		messageKey: UUID,
