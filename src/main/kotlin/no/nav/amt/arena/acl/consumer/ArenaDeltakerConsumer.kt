@@ -71,9 +71,9 @@ open class ArenaDeltakerConsumer(
 		log.info("Prosesserer melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId op=${message.operationType} er sendt")
 
 		if (message.operationType == AmtOperation.DELETED) {
-			handleDeleteMessage(arenaDeltakerRaw, deltaker, arenaDeltakerId, message, deltakerData)
+			handleDeleteMessage(arenaDeltakerRaw, deltaker, arenaDeltakerId, message, deltakerData, gjennomforing)
 		} else {
-			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId)
+			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId, gjennomforing=gjennomforing)
 			log.info("Lagrer deltaker med id=${deltaker.id}")
 			deltakerRepository.upsert(arenaDeltakerRaw.toDbo())
 
@@ -107,14 +107,23 @@ open class ArenaDeltakerConsumer(
 		message: ArenaDeltakerKafkaMessage,
 		deltaker: AmtDeltaker,
 		arenaDeltakerId: String,
-		operation: AmtOperation = message.operationType
+		operation: AmtOperation = message.operationType,
+		gjennomforing: Gjennomforing? = null,
 	) {
 		val deltakerKafkaMessage = AmtKafkaMessageDto(
 			type = PayloadType.DELTAKER,
 			operation = operation,
 			payload = deltaker
 		)
-		kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
+		if(gjennomforing?.tiltakstype?.arenaKode in listOf("ENKELAMO","ENKFAGYRKE", "HOYEREUTD")) {
+			if(operation == AmtOperation.DELETED) {
+				kafkaProducerService.tombstoneEnkeltplassDeltaker(deltaker.id)
+			}
+			else kafkaProducerService.produceEnkeltplassDeltaker(deltaker.id, deltaker)
+		}
+		else {
+			kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
+		}
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusHandled(arenaDeltakerId))
 		log.info("Melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId transactionId=${deltakerKafkaMessage.transactionId} op=${deltakerKafkaMessage.operation} er sendt")
 	}
@@ -144,7 +153,8 @@ open class ArenaDeltakerConsumer(
 		amtDeltaker: AmtDeltaker,
 		arenaDeltakerId: String,
 		message: ArenaDeltakerKafkaMessage,
-		deltakerData: List<ArenaDataDbo>
+		deltakerData: List<ArenaDataDbo>,
+		gjennomforing: Gjennomforing
 	) {
 		// Hvis deltakeren er flyttet til hist-tabellen betyr det at deltakeren deltar på samme gjennomføring flere ganger,
 		// og den eldre deltakelsen skal ikke slettes.
@@ -162,7 +172,8 @@ open class ArenaDeltakerConsumer(
 					message,
 					amtDeltaker.toFeilregistrertDeltaker(),
 					arenaDeltakerId,
-					AmtOperation.MODIFIED
+					AmtOperation.MODIFIED,
+					gjennomforing = gjennomforing,
 				)
 			}
 		}
@@ -207,7 +218,7 @@ open class ArenaDeltakerConsumer(
 			gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
 		}
 
-		return mulighetsrommetApiClient.hentGjennomforing(gjennomforingId)
+		return mulighetsrommetApiClient.hentGjennomforingV2(gjennomforingId)
 	}
 
 	private fun getGjennomforingId(arenaId: String): UUID {

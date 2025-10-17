@@ -28,6 +28,7 @@ class KafkaMessageConsumer(
 			kafkaTopicProperties.arenaHistTiltakDeltakerTopic,
 			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
 			kafkaTopicProperties.amtTopic,
+			kafkaTopicProperties.amtEnkeltplassDeltakerTopic,
 		).map(::createTopicConfig)
 
 		client = KafkaConsumerClientBuilder.builder()
@@ -66,6 +67,7 @@ class KafkaMessageConsumer(
 		Topic.ARENA_HIST_TILTAK_DELTAKER -> kafkaTopicProperties.arenaHistTiltakDeltakerTopic
 		Topic.ARENA_TILTAK_GJENNOMFORING -> kafkaTopicProperties.arenaTiltakGjennomforingTopic
 		Topic.AMT_TILTAK -> kafkaTopicProperties.amtTopic
+		Topic.AMT_ENKELTPLASS_DELTAKER -> kafkaTopicProperties.amtEnkeltplassDeltakerTopic
 	}
 
 	enum class Topic {
@@ -73,5 +75,6 @@ class KafkaMessageConsumer(
 		ARENA_HIST_TILTAK_DELTAKER,
 		ARENA_TILTAK_GJENNOMFORING,
 		AMT_TILTAK,
+		AMT_ENKELTPLASS_DELTAKER
 	}
 }

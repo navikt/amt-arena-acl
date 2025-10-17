@@ -82,7 +82,7 @@ class DeltakerIntegrationTest(
 			baseGjennomforing.TILTAKGJENNOMFORING_ID,
 			gjennomforingIdMR,
 		)
-		mockMulighetsrommetApiServer.mockHentGjennomforingData(gjennomforingIdMR, gjennomforingMRData)
+		mockMulighetsrommetApiServer.mockHentGjennomforingV2Data(gjennomforingIdMR, gjennomforingMRData)
 	}
 
 	@Test
@@ -420,7 +420,7 @@ class DeltakerIntegrationTest(
 	fun `slett deltaker - hist-deltaker finnes ikke, retryet tre ganger - deltaker blir feilregistrert, melding blir handled`() {
 		mockArenaOrdsProxyHttpServer.mockHentFnr(baseDeltaker.PERSON_ID!!, fnr)
 
-		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
+		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), "INDOPPFAG", true)
 
 		val pos = "73"
 		arenaDataRepository.upsert(

@@ -17,26 +17,22 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 		handleRequest(matchPath = "/api/v1/tiltaksgjennomforinger/id/${arenaId}", response = response)
 	}
 
-	fun mockHentGjennomforingData(id: UUID, gjennomforingData: Gjennomforing?) {
+	fun mockHentGjennomforingV2Data(id: UUID, gjennomforingData: Gjennomforing?) {
 		val body = """
 			{
 				"id": "$id",
 				"tiltakstype": {
-					"id": "${UUID.randomUUID()}",
-					"arenaKode": "INDOPPFAG",
-					"navn": "navn på tiltakstype"
+					"tiltakskode": "Tralala",
+					"arenakode": "INDOPPFAG"
 				},
-				"navn": "navn på gjennomføring",
-				"status": "GJENNOMFORES",
-				"startDato": "${gjennomforingData?.startDato}",
-				"sluttDato": "${gjennomforingData?.sluttDato}",
-				"virksomhetsnummer": "${gjennomforingData?.virksomhetsnummer}",
-				"oppstart": "LOPENDE"
+				"arrangor": {
+					"organisasjonsnummer": "${gjennomforingData?.virksomhetsnummer}"
+				}
 			}
 		""".trimIndent()
 
 		val response = if(gjennomforingData != null) MockResponse().setResponseCode(200).setBody(body) else MockResponse().setResponseCode(404).setBody("{}")
-		handleRequest(matchPath = "/api/v1/tiltaksgjennomforinger/$id", response = response)
+		handleRequest(matchPath = "/api/v2/tiltaksgjennomforinger/$id", response = response)
 	}
 
 }
