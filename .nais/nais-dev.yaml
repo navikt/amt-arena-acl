@@ -61,7 +61,7 @@ spec:
       value: api://dev-gcp.amt.amt-tiltak/.default
     - name: AMTTILTAK_URL
       value: http://amt-tiltak
-    - name: ENKELTPLASS_DELTAKER_TOPIC
+    - name: AMT_ENKELTPLASS_TOPIC
       value: amt.arena-enkeltplass-deltaker-v1
 
     # Kafka topics

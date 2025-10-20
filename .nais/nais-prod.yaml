@@ -70,7 +70,7 @@ spec:
       value: teamarenanais.aapen-arena-tiltakdeltakerendret-v1-p
     - name: ARENA_HIST_TILTAK_DELTAKER_TOPIC
       value: teamarenanais.aapen-arena-histtiltakdeltakerendret-v1-p
-    - name: ENKELTPLASS_DELTAKER_TOPIC
+    - name: AMT_ENKELTPLASS_TOPIC
       value: amt.arena-enkeltplass-deltaker-v1
 
   gcp:
