@@ -25,10 +25,10 @@ class MulighetsrommetApiClientImpl(
 				return null
 			}
 			if (!response.isSuccessful) {
-				throw RuntimeException("Klarte ikke å hente gjennomføring arenadata fra Mulighetsrommet. status=${response.code}")
+				throw RuntimeException("Klarte ikke å hente gjennomføring $arenaId arenadata fra Mulighetsrommet. status=${response.code}")
 			}
 
-			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
+			val body = response.body.string()
 
 			val responseBody = fromJsonString<HentGjennomforingId.Response>(body)
 
@@ -48,7 +48,7 @@ class MulighetsrommetApiClientImpl(
 				throw RuntimeException("Klarte ikke å hente gjennomføring fra Mulighetsrommet. status=${response.code}")
 			}
 
-			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
+			val body = response.body.string()
 
 			return fromJsonString(body)
 
@@ -64,7 +64,7 @@ class MulighetsrommetApiClientImpl(
 
 		httpClient.newCall(request).execute().use { response ->
 			if (!response.isSuccessful) {
-				throw RuntimeException("Klarte ikke å hente gjennomføring fra Mulighetsrommet v2 API. status=${response.code}")
+				throw RuntimeException("Klarte ikke å hente gjennomføring $id fra Mulighetsrommet v2 API. status=${response.code}")
 			}
 
 			val body = response.body.string()
