@@ -144,7 +144,7 @@ open class HistDeltakerConsumer(
 			gjennomforingId = gjennomforing.id,
 			gjennomforingSluttDato = gjennomforing.sluttDato,
 			erGjennomforingAvsluttet = gjennomforing.erAvsluttet(),
-			erKurs = gjennomforing.erKurs(),
+			deltakelseKreverGodkjenningLoep = gjennomforing.erKurs() || gjennomforing.erEnkelplass() ,
 			personIdent = personIdent,
 		)
 		val deltakerKafkaMessage = AmtKafkaMessageDto(

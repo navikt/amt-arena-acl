@@ -197,7 +197,7 @@ open class ArenaDeltakerConsumer(
 			gjennomforingId = gjennomforing.id,
 			gjennomforingSluttDato = gjennomforing.sluttDato,
 			erGjennomforingAvsluttet = gjennomforing.erAvsluttet(),
-			erKurs = gjennomforing.erKurs(),
+			deltakelseKreverGodkjenningLoep = gjennomforing.erKurs() || gjennomforing.erEnkelplass(),
 			personIdent = personIdent,
 		)
 	}

@@ -15,14 +15,14 @@ class ArenaDeltakerStatusConverter(
 	val datoStatusEndring: LocalDateTime?,
 	val erGjennomforingAvsluttet: Boolean,
 	val gjennomforingSluttdato: LocalDate?,
-	val erKurs: Boolean
+	val deltakelseKreverGodkjenningLoep: Boolean
 ) {
 
 	fun convert(): DeltakerStatus {
 		val status =
 			if (arenaStatus.erSoktInn()) utledSoktInnStatus()
 			else if (arenaStatus.erFeilregistrert()) utledFeilregistrertStatus()
-			else if (erKurs) convertKursStatuser()
+			else if (deltakelseKreverGodkjenningLoep) convertKursStatuser()
 			else if (arenaStatus.erGjennomforende()) utledGjennomforendeStatus()
 			else if (arenaStatus.erAvsluttende()) utledAvsluttendeStatus()
 			else if (arenaStatus.erIkkeAktuell()) utledIkkeAkuelleStatus()
@@ -80,7 +80,7 @@ class ArenaDeltakerStatusConverter(
 
 	private fun utledGjennomforendeStatus(): DeltakerStatus {
 		if (startDatoHarPassert() && sluttDatoHarPassert())
-			return if (erKurs) {
+			return if (deltakelseKreverGodkjenningLoep) {
 				DeltakerStatus(AmtDeltaker.Status.FULLFORT, deltakerSluttdato?.atStartOfDay())
 			} else {
 				DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, deltakerSluttdato?.atStartOfDay())
@@ -102,7 +102,7 @@ class ArenaDeltakerStatusConverter(
 	private fun utledAvsluttendeStatus(): DeltakerStatus {
 		if (statusEndretEtterStartDato()) {
 			val dato = if (sluttDatoHaddePassert()) deltakerSluttdato?.atStartOfDay() else datoStatusEndring
-			return if (erKurs) {
+			return if (deltakelseKreverGodkjenningLoep) {
 				DeltakerStatus(AmtDeltaker.Status.FULLFORT, dato)
 			} else {
 				DeltakerStatus(AmtDeltaker.Status.HAR_SLUTTET, dato)
