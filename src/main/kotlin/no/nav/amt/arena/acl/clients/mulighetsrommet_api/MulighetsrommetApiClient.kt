@@ -70,4 +70,8 @@ data class Gjennomforing(
 	fun erKurs(): Boolean {
 		return oppstart == Oppstartstype.FELLES
 	}
+
+	fun erEnkelplass(): Boolean {
+		return tiltakstype.arenaKode in setOf("ENKELAMO", "ENKFAGYRKE", "HOYEREUTD")
+	}
 }

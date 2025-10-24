@@ -55,7 +55,7 @@ data class TiltakDeltaker(
 		gjennomforingSluttDato: LocalDate?,
 		erGjennomforingAvsluttet: Boolean,
 		personIdent: String,
-		erKurs: Boolean
+		deltakelseKreverGodkjenningLoep: Boolean
 	): AmtDeltaker {
 		val deltakerStatus = ArenaDeltakerStatusConverter(
 			deltakerRegistrertDato = regDato,
@@ -65,7 +65,7 @@ data class TiltakDeltaker(
 			datoStatusEndring = datoStatusendring,
 			gjennomforingSluttdato = gjennomforingSluttDato,
 			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
-			erKurs = erKurs
+			deltakelseKreverGodkjenningLoep = deltakelseKreverGodkjenningLoep
 		).convert()
 		val statusAarsak = ArenaDeltakerAarsakConverter.convert(
 			deltakerStatusKode,
