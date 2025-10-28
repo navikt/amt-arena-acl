@@ -24,7 +24,7 @@ val shedlockVersion = "6.10.0"
 val unleashVersion = "11.1.1"
 val navCommonVersion = "3.2025.10.10_08.21-bb7c7830d93c"
 val navTokenSupportVersion = "5.0.37"
-val logstashEncoderVersion = "8.1"
+val logstashEncoderVersion = "9.0"
 
 val kotestVersion = "6.0.4"
 val mockkVersion = "1.14.6"
