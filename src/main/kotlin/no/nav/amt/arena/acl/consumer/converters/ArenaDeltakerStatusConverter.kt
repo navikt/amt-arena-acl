@@ -63,7 +63,7 @@ class ArenaDeltakerStatusConverter(
 
 	private fun statusEndretSammeDagSomRegistrering() = datoStatusEndring != null && datoStatusEndring.toLocalDate() == deltakerRegistrertDato.toLocalDate()
 
-	private fun sluttetForTidlig() = deltakerSluttdato?.isBefore(gjennomforingSluttdato) == true
+	private fun sluttetForTidlig() = gjennomforingSluttdato != null && deltakerSluttdato?.isBefore(gjennomforingSluttdato) == true
 
 	private fun starterIDag() = deltakerStartdato?.equals(LocalDate.now()) == true
 
