@@ -1,10 +1,12 @@
 package no.nav.amt.arena.acl.api
 
 import jakarta.servlet.http.HttpServletRequest
+import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.KafkaProducerService
 import no.nav.security.token.support.core.api.Unprotected
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -16,7 +18,8 @@ import java.util.UUID
 @RestController
 @RequestMapping("/internal/api")
 class InternalAPI(
-	val kafkaProducerService: KafkaProducerService
+	val kafkaProducerService: KafkaProducerService,
+	private val arenaDataRepository: ArenaDataRepository
 ) {
 	private val log = LoggerFactory.getLogger(javaClass)
 
@@ -35,6 +38,22 @@ class InternalAPI(
 		}
 	}
 
+	@PostMapping("/relast-enkeltplass-deltakere/{tiltakskode}")
+	fun relastDeltakere(
+		request: HttpServletRequest,
+		@PathVariable tiltakskode: String,
+	) {
+		if (!isInternal(request)) {
+			throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
+		}
+		if (tiltakskode in setOf("ENKELAMO", "ENKFAGYRKE", "HOYEREUTD")) {
+			throw IllegalArgumentException("Det er ikke trygt å relaste deltakere som komet er master for")
+		}
+		log.info("Retryer deltakere med tiltakskode=$tiltakskode")
+		arenaDataRepository.retryDeltakerePaaTiltakstype(tiltakskode)
+		log.info("Retryer deltakere med tiltakskode=$tiltakskode")
+
+	}
 
 	private fun isInternal(request: HttpServletRequest): Boolean {
 		return request.remoteAddr == "127.0.0.1"
