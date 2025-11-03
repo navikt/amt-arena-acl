@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.repositories
 
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.utils.DatabaseUtils.sqlParameters
 import no.nav.amt.arena.acl.utils.getLocalDateTime
 import no.nav.amt.arena.acl.utils.getNullableLocalDate
@@ -84,6 +85,18 @@ class DeltakerRepository(
 			"datoStatusEndring" to deltakerDbo.datoStatusEndring,
 			"arenaSourceTable" to deltakerDbo.arenaSourceTable,
 			"eksternId" to deltakerDbo.eksternId,
+		)
+		template.update(sql, parameters)
+	}
+
+	fun updateStatus(deltakerStatus: AmtDeltaker.Status, arenaId: Long) {
+		val sql = """
+			UPDATE deltaker SET status = :status, modified_at = CURRENT_TIMESTAMP
+			WHERE arena_id = :arenaId
+		""".trimIndent()
+		val parameters = sqlParameters(
+			"arenaId" to arenaId,
+			"status" to deltakerStatus.name,
 		)
 		template.update(sql, parameters)
 	}
