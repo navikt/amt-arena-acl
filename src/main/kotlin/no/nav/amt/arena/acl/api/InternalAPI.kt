@@ -38,7 +38,7 @@ class InternalAPI(
 		}
 	}
 
-	@PostMapping("/relast-enkeltplass-deltakere/{tiltakskode}")
+	@PostMapping("/relast-deltakere/{tiltakskode}")
 	fun relastDeltakere(
 		request: HttpServletRequest,
 		@PathVariable tiltakskode: String,
@@ -46,8 +46,8 @@ class InternalAPI(
 		if (!isInternal(request)) {
 			throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
 		}
-		if (tiltakskode in setOf("ENKELAMO", "ENKFAGYRKE", "HOYEREUTD")) {
-			throw IllegalArgumentException("Det er ikke trygt å relaste deltakere som komet er master for")
+		if (tiltakskode !in setOf("ENKELAMO", "ENKFAGYRKE", "HOYEREUTD")) {
+			throw IllegalArgumentException("Kan ikke relaste tiltakstype $tiltakskode. Det er bare trygt å relaste tiltakstyper som komet ikke er master for")
 		}
 		log.info("Retryer deltakere med tiltakskode=$tiltakskode")
 		arenaDataRepository.retryDeltakerePaaTiltakstype(tiltakskode)
