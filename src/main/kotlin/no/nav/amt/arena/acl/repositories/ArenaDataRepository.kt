@@ -145,6 +145,36 @@ class ArenaDataRepository(
 		return template.query(sql, parameters, rowMapper)
 	}
 
+	fun retryDeltakerePaaTiltakstype(tiltakskode: String) {
+		val sql = """
+			WITH
+				deltakere_paa_tiltakstype AS (
+					select deltaker.*
+					from deltaker
+					join gjennomforing on deltaker.gjennomforing_id::integer = gjennomforing.arena_id::integer
+					where tiltak_kode in (:tiltakskode)
+				),
+    			max_ids AS (
+					select max(arena_data.id) as max
+					from arena_data
+						join deltakere_paa_tiltakstype on arena_data.arena_id::integer = deltakere_paa_tiltakstype.arena_id and arena_table_name = 'SIAMO.TILTAKDELTAKER'
+					where ingest_status = 'HANDLED'
+					group by arena_data.arena_id
+				) update arena_data
+				SET ingest_status  = 'RETRY',
+			    ingest_attempts = 0,
+			    last_attempted  = null
+			WHERE id in (SELECT max from max_ids);
+		""".trimIndent()
+
+		val parameters = sqlParameters(
+			"tiltakskode" to tiltakskode,
+		)
+
+		template.update(sql, parameters)
+
+	}
+
 	fun retryDeltakereMedGjennomforingIdOgStatus(arenaGjennomforingId: String, statuses: List<IngestStatus>): Int {
 		val sql = """
 		UPDATE arena_data

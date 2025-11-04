@@ -33,7 +33,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
-open class ArenaDeltakerConsumer(
+class ArenaDeltakerConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val deltakerRepository: DeltakerRepository,
 	private val gjennomforingService: GjennomforingService,
@@ -168,9 +168,11 @@ open class ArenaDeltakerConsumer(
 				log.info("Fant ikke hist-deltaker for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId, venter litt..")
 				throw DependencyNotIngestedException("Fant ikke hist-deltaker for deltaker id=${amtDeltaker.id} arenaId=$arenaDeltakerId")
 			} else {
+				val feilregistrertDeltakerDbo = amtDeltaker.toFeilregistrertDeltaker()
+				deltakerRepository.updateStatus(feilregistrertDeltakerDbo.status, arenaDeltakerId.toLong())
 				sendMessageAndUpdateIngestStatus(
 					message,
-					amtDeltaker.toFeilregistrertDeltaker(),
+					feilregistrertDeltakerDbo,
 					arenaDeltakerId,
 					AmtOperation.MODIFIED,
 					gjennomforing = gjennomforing,
