@@ -116,10 +116,7 @@ class ArenaDeltakerConsumer(
 			payload = deltaker
 		)
 		if(gjennomforing?.tiltakstype?.arenaKode in listOf("ENKELAMO","ENKFAGYRKE", "HOYEREUTD")) {
-			if(operation == AmtOperation.DELETED) {
-				kafkaProducerService.tombstoneEnkeltplassDeltaker(deltaker.id)
-			}
-			else kafkaProducerService.produceEnkeltplassDeltaker(deltaker.id, deltaker)
+			kafkaProducerService.produceEnkeltplassDeltaker(deltaker.id, deltaker)
 		}
 		else {
 			kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)
