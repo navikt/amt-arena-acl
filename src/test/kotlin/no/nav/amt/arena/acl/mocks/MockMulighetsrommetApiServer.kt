@@ -19,7 +19,7 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 	}
 
 	fun mockHentGjennomforingV2Data(id: UUID, gjennomforingData: Gjennomforing?) {
-		val tiltakskode = Tiltakskode.ENKELTPLASS_FAG_OG_YRKESOPPLAERING.name
+		val tiltakskode = Tiltakskode.OPPFOLGING.name
 		val body = """
 			{
 				"id": "$id",
