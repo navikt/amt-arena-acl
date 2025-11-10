@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.clients.mulighetsrommet_api
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Tiltakstype
 import java.time.LocalDate
 import java.util.UUID
@@ -13,10 +14,10 @@ interface MulighetsrommetApiClient {
 	fun hentGjennomforingV2(id: UUID): Gjennomforing
 }
 
-
 data class GjennomforingV2Response(
 	val id: UUID,
-	val tiltakstype: TiltakstypeResponse,
+	val tiltakskode: String? = null, // skal gjøres non-nullable
+	val tiltakstype: TiltakstypeResponse? = null, // skal fjernes
 	val arrangor: ArrangorResponse,
 ) {
 	data class ArrangorResponse(
@@ -25,13 +26,25 @@ data class GjennomforingV2Response(
 
 	data class TiltakstypeResponse(
 		val tiltakskode: String,
-		val arenakode: String
 	)
-	fun toGjennomforing() = Gjennomforing(
-		id = id,
-		tiltakstype = Tiltakstype(arenaKode = tiltakstype.arenakode),
-		virksomhetsnummer = arrangor.organisasjonsnummer,
-	)
+
+	// erstattes av tiltakskode senere
+	@get:JsonIgnore
+	val effectiveTiltakskode: String
+		get() = tiltakskode ?: tiltakstype?.tiltakskode ?: throw IllegalStateException("Tiltakskode er ikke satt")
+
+	fun toGjennomforing(): Gjennomforing {
+		val arenaKode = no.nav.amt.lib.models.deltakerliste.tiltakstype.Tiltakskode
+			.valueOf(effectiveTiltakskode)
+			.toArenaKode()
+			.name
+
+		return Gjennomforing(
+			id = id,
+			tiltakstype = Tiltakstype(arenaKode = arenaKode),
+			virksomhetsnummer = arrangor.organisasjonsnummer,
+		)
+	}
 }
 
 data class Gjennomforing(

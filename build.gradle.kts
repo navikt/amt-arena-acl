@@ -33,6 +33,7 @@ val testcontainersVersion = "2.0.1"
 val kotestExtensionsSpringVersion = "1.3.0"
 val kotestExtensionsTestcontainersVersion = "2.0.2"
 
+val amtLibVersion = "1.2025.11.04_07.48-1183a3751d73"
 val navCommonModules = setOf("log", "job", "rest", "token-client")
 
 dependencyManagement {
@@ -79,6 +80,8 @@ dependencies {
     compileOnly("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     implementation("io.micrometer:micrometer-registry-prometheus")
+
+    implementation("no.nav.amt.lib:models:${amtLibVersion}")
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
     testImplementation("io.kotest:kotest-extensions-spring:${kotestVersion}")
