@@ -20,7 +20,7 @@ repositories {
 
 val nimbusVersion = "11.30.1"
 val okhttpVersion = "5.3.1"
-val shedlockVersion = "6.10.0"
+val shedlockVersion = "7.0.0"
 val unleashVersion = "11.1.1"
 val navCommonVersion = "3.2025.10.10_08.21-bb7c7830d93c"
 val navTokenSupportVersion = "5.0.39"
