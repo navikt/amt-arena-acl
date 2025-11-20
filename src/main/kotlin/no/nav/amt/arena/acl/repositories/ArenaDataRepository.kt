@@ -152,7 +152,7 @@ class ArenaDataRepository(
 				FROM
 					arena_data a
 					JOIN deltaker d ON a.arena_id = d.arena_id::text
-					JOIN gjennomforing g ON d.gjennomforing_id = g.arena_id::integer
+					JOIN gjennomforing g ON d.gjennomforing_id::text = g.arena_id
 				WHERE
 					a.arena_table_name = 'SIAMO.TILTAKDELTAKER'
 				  	AND a.ingest_status = 'HANDLED'
