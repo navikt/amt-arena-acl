@@ -3,6 +3,7 @@ package no.nav.amt.arena.acl.api
 import jakarta.servlet.http.HttpServletRequest
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.KafkaProducerService
+import no.nav.common.job.JobRunner
 import no.nav.security.token.support.core.api.Unprotected
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -50,8 +51,11 @@ class InternalAPI(
 			throw IllegalArgumentException("Kan ikke relaste tiltakstype $tiltakskode. Det er bare trygt å relaste tiltakstyper som komet ikke er master for")
 		}
 		log.info("Retryer deltakere med tiltakskode=$tiltakskode")
-		arenaDataRepository.retryDeltakerePaaTiltakstype(tiltakskode)
-		log.info("Retryer deltakere med tiltakskode=$tiltakskode")
+		JobRunner.runAsync("republiser_deltakere_kafka") {
+			arenaDataRepository.retryDeltakerePaaTiltakstype(tiltakskode)
+		}
+
+		log.info("Done: Retryer deltakere med tiltakskode=$tiltakskode")
 
 	}
 
