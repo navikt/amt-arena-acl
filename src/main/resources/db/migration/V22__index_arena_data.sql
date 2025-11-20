@@ -1,0 +1,1 @@
+CREATE INDEX ON arena_data (arena_table_name, ingest_status, arena_id, id DESC);
