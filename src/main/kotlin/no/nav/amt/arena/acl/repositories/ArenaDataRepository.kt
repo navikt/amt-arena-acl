@@ -174,7 +174,6 @@ class ArenaDataRepository(
 		)
 
 		template.update(sql, parameters)
-
 	}
 
 	fun retryDeltakereMedGjennomforingIdOgStatus(arenaGjennomforingId: String, statuses: List<IngestStatus>): Int {
