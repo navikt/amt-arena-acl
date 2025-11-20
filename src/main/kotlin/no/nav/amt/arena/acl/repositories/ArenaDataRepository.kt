@@ -108,7 +108,7 @@ class ArenaDataRepository(
 			FROM arena_data
 			WHERE arena_table_name = :arena_table_name
 			AND arena_id = :arena_id
-			ORDER BY id asc
+			ORDER BY id
 		""".trimIndent()
 
 		val parameters = sqlParameters(
@@ -131,7 +131,7 @@ class ArenaDataRepository(
 			WHERE ingest_status = :ingestStatus
 			AND arena_table_name = :tableName
 			AND id >= :fromId
-			ORDER BY id ASC
+			ORDER BY id
 			LIMIT :limit
 		""".trimIndent()
 
@@ -149,16 +149,18 @@ class ArenaDataRepository(
 		val sql = """
 			WITH latest AS (
 				SELECT DISTINCT ON (a.arena_id) a.id
-				FROM arena_data a
-						 JOIN deltaker d
-							  ON a.arena_id::integer = d.arena_id
-						 JOIN gjennomforing g
-							  ON d.gjennomforing_id = g.arena_id::integer
-				WHERE a.arena_table_name = 'SIAMO.TILTAKDELTAKER'
-				  AND a.ingest_status = 'HANDLED'
-				  AND g.tiltak_kode = :tiltakskode
-				ORDER BY a.arena_id, a.id DESC
+				FROM
+					arena_data a
+					JOIN deltaker d ON a.arena_id = d.arena_id::text
+					JOIN gjennomforing g ON d.gjennomforing_id = g.arena_id::integer
+				WHERE
+					a.arena_table_name = 'SIAMO.TILTAKDELTAKER'
+				  	AND a.ingest_status = 'HANDLED'
+				  	AND g.tiltak_kode = :tiltakskode
+				ORDER BY
+					a.arena_id, a.id DESC
 			)
+
 			UPDATE arena_data AS a
 			SET ingest_status = 'RETRY',
 				ingest_attempts = 0,
