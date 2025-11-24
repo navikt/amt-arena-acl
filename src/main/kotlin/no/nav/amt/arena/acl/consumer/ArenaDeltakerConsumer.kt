@@ -6,6 +6,7 @@ import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
+import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusNew
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
@@ -59,21 +60,25 @@ class ArenaDeltakerConsumer(
 			.getOrThrow()
 
 		val deltaker = createDeltaker(arenaDeltaker, gjennomforing)
-		val deltakerData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
+		val eldreMeldingerForDeltaker = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
 
-		if (skalRetryes(deltakerData, message)) {
+		if (!skalMeldingIngestes(eldreMeldingerForDeltaker, message)) {
+			return
+		}
+
+		if (skalRetryes(eldreMeldingerForDeltaker, message)) {
 			throw DependencyNotIngestedException("Forrige melding på deltaker med id=$arenaDeltakerId er ikke håndtert enda")
 		}
 
-		if (skalVente(deltakerData)) {
-			Thread.sleep(500)
-		}
 		log.info("Prosesserer melding for deltaker id=${deltaker.id} arenaId=$arenaDeltakerId op=${message.operationType} er sendt")
 
 		if (message.operationType == AmtOperation.DELETED) {
-			handleDeleteMessage(arenaDeltakerRaw, deltaker, arenaDeltakerId, message, deltakerData, gjennomforing)
+			//handleDeleteMessage(arenaDeltakerRaw, deltaker, arenaDeltakerId, message, eldreMeldingerForDeltaker, gjennomforing)
+			arenaDataRepository.upsert(message.toUpsertInputWithStatusNew(arenaDeltakerId, "Slettes ikke fordi deltaker ble historisert"))
+			deltakerRepository.upsert(arenaDeltakerRaw.toDbo())
 		} else {
-			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId, gjennomforing=gjennomforing)
+			//sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId, gjennomforing=gjennomforing)
+			arenaDataRepository.upsert(message.toUpsertInputWithStatusNew(arenaDeltakerId))
 			log.info("Lagrer deltaker med id=${deltaker.id}")
 			deltakerRepository.upsert(arenaDeltakerRaw.toDbo())
 
@@ -141,8 +146,18 @@ class ArenaDeltakerConsumer(
 		// Hvis det finnes en eldre melding på deltaker som ikke er håndtert så skal meldingen få status RETRY
 		val eldreMeldingVenter = deltakerData
 			.filter { it.operationPosition < message.operationPosition }
-			.firstOrNull { it.ingestStatus in listOf(IngestStatus.RETRY, IngestStatus.FAILED, IngestStatus.WAITING) }
+			.firstOrNull { it.ingestStatus in listOf(IngestStatus.RETRY, IngestStatus.FAILED, IngestStatus.WAITING, IngestStatus.NEW) }
 		return eldreMeldingVenter != null
+	}
+
+	private fun skalMeldingIngestes(
+		tidligereDeltakerData: List<ArenaDataDbo>,
+		message: ArenaDeltakerKafkaMessage,
+	): Boolean {
+		val sisteIngestedeMelding = tidligereDeltakerData
+			.maxBy { it.operationPosition }
+
+		return message.operationPosition > sisteIngestedeMelding.operationPosition
 	}
 
 	private fun handleDeleteMessage(

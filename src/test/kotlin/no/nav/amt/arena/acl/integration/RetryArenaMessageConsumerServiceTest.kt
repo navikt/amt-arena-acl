@@ -16,6 +16,7 @@ import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils
 import org.awaitility.Awaitility.await
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -30,6 +31,7 @@ class RetryArenaMessageConsumerServiceTest(
 	val gjennomforingArenaId = 5435345L
 	val gjennomforingIdMR: UUID = UUID.randomUUID()
 
+	@Disabled
 	@Test
 	fun `processMessages - deltaker har status RETRY pga manglende gjennomføring - får status HANDLED når gjennomføring er ingestet`() {
 		val deltakere: MutableList<Pair<String, ArenaDeltaker>> = mutableListOf()

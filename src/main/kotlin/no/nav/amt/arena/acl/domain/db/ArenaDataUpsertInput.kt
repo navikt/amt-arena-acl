@@ -36,3 +36,6 @@ fun ArenaKafkaMessage<*>.toUpsertInput(arenaId: String, ingestStatus: IngestStat
 fun ArenaKafkaMessage<*>.toUpsertInputWithStatusHandled(arenaId: String, note: String? = null): ArenaDataUpsertInput {
 	return this.toUpsertInput(arenaId, IngestStatus.HANDLED, note)
 }
+fun ArenaKafkaMessage<*>.toUpsertInputWithStatusNew(arenaId: String, note: String? = null): ArenaDataUpsertInput {
+	return this.toUpsertInput(arenaId, IngestStatus.NEW, note)
+}

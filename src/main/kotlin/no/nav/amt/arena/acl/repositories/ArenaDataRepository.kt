@@ -155,7 +155,7 @@ class ArenaDataRepository(
 					JOIN gjennomforing g ON d.gjennomforing_id::text = g.arena_id
 				WHERE
 					a.arena_table_name = 'SIAMO.TILTAKDELTAKER'
-				  	AND a.ingest_status = 'HANDLED'
+				  	AND (a.ingest_status = 'HANDLED' OR a.ingest_status = 'NEW')
 				  	AND g.tiltak_kode = :tiltakskode
 				ORDER BY
 					a.arena_id, a.id DESC
