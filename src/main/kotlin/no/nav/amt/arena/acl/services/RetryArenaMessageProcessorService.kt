@@ -51,18 +51,18 @@ class RetryArenaMessageProcessorService(
 		val start = Instant.now()
 		var totalHandled = 0
 
-			while (true) {
-				val data = arenaDataRepository.getByIngestStatus(
-					tableName = tableName,
-					status = status,
-					limit = batchSize
-				)
+		while (true) {
+			val data = arenaDataRepository.getByIngestStatus(
+				tableName = tableName,
+				status = status,
+				limit = batchSize
+			)
 
-				if (data.isEmpty()) break
+			if (data.isEmpty()) break
 
-				data.forEach { process(it) }
-				totalHandled += data.size
-			}
+			data.forEach { process(it) }
+			totalHandled += data.size
+		}
 
 		val duration = Duration.between(start, Instant.now())
 
