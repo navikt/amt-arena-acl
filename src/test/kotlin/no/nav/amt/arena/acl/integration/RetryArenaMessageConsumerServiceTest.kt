@@ -44,7 +44,7 @@ class RetryArenaMessageConsumerServiceTest(
 
 		publiserGjennomforing(pos.toOperationPosition())
 
-		retryArenaMessageProcessorService.processMessages(5)
+		retryArenaMessageProcessorService.processRetryMessages(2)
 
 		deltakere.forEach { (position, _) ->
 			val arenaData = arenaDataRepository.get(
