@@ -108,7 +108,7 @@ class ArenaDataRepository(
 			FROM arena_data
 			WHERE arena_table_name = :arena_table_name
 			AND arena_id = :arena_id
-			ORDER BY id
+			ORDER BY operation_pos
 		""".trimIndent()
 
 		val parameters = sqlParameters(
@@ -122,7 +122,7 @@ class ArenaDataRepository(
 	fun getByIngestStatus(
 		tableName: String,
 		status: IngestStatus,
-		fromId: Int,
+		offset: Int,
 		limit: Int = 500
 	): List<ArenaDataDbo> {
 		val sql = """
@@ -130,16 +130,16 @@ class ArenaDataRepository(
 			FROM arena_data
 			WHERE ingest_status = :ingestStatus
 			AND arena_table_name = :tableName
-			AND id >= :fromId
-			ORDER BY id
+			ORDER BY operation_pos
 			LIMIT :limit
+			OFFSET :offset
 		""".trimIndent()
 
 		val parameters = sqlParameters(
 			"ingestStatus" to status.name,
 			"tableName" to tableName,
-			"fromId" to fromId,
-			"limit" to limit
+			"limit" to limit,
+			"offset" to offset,
 		)
 
 		return template.query(sql, parameters, rowMapper)
@@ -148,7 +148,7 @@ class ArenaDataRepository(
 	fun retryDeltakerePaaTiltakstype(tiltakskode: String) {
 		val sql = """
 			WITH latest AS (
-				SELECT DISTINCT ON (a.arena_id) a.id
+				SELECT DISTINCT ON (a.arena_id) a.operation_pos
 				FROM
 					arena_data a
 					JOIN deltaker d ON a.arena_id = d.arena_id::text
@@ -158,7 +158,7 @@ class ArenaDataRepository(
 				  	AND a.ingest_status = 'HANDLED'
 				  	AND g.tiltak_kode = :tiltakskode
 				ORDER BY
-					a.arena_id, a.id DESC
+					a.arena_id, a.operation_pos DESC
 			)
 
 			UPDATE arena_data AS a
