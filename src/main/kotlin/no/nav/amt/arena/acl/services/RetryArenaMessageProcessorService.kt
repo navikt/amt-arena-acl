@@ -50,17 +50,20 @@ class RetryArenaMessageProcessorService(
 	private fun processMessages(tableName: String, status: IngestStatus, batchSize: Int) {
 		val start = Instant.now()
 		var totalHandled = 0
+		var operationPosition = "0".repeat(10) // TODO
 
 		while (true) {
 			val data = arenaDataRepository.getByIngestStatus(
 				tableName = tableName,
 				status = status,
+				operationPosition = operationPosition,
 				limit = batchSize
 			)
 
 			if (data.isEmpty()) break
 
 			data.forEach { process(it) }
+			operationPosition = data.last().operationPosition
 			totalHandled += data.size
 		}
 

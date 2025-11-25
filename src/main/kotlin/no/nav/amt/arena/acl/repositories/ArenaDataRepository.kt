@@ -122,7 +122,8 @@ class ArenaDataRepository(
 	fun getByIngestStatus(
 		tableName: String,
 		status: IngestStatus,
-		limit: Int = 500
+		operationPosition: String,
+		limit: Int = 500,
 	): List<ArenaDataDbo> {
 		val sql = """
 			SELECT *
@@ -130,6 +131,7 @@ class ArenaDataRepository(
 			WHERE
 				ingest_status = :ingestStatus
 				AND arena_table_name = :tableName
+				AND operation_pos > :operation_pos
 			ORDER BY operation_pos
 			LIMIT :limit
 		""".trimIndent()
@@ -137,6 +139,7 @@ class ArenaDataRepository(
 		val parameters = sqlParameters(
 			"ingestStatus" to status.name,
 			"tableName" to tableName,
+			"operation_pos" to operationPosition,
 			"limit" to limit,
 		)
 
