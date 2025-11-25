@@ -31,6 +31,16 @@ class RetryArenaMessageProcessorService(
 
 	companion object {
 		private const val MAX_INGEST_ATTEMPTS = 10
+
+		// OPERATION_POS_LENGTH er hentet ut med følgende spørringer:
+		// SELECT MIN(length(arena_data.operation_pos)) FROm arena_data
+		// SELECT MIN(length(arena_data.operation_pos)) FROM arena_data
+		private const val OPERATION_POS_LENGTH = 20
+		private const val OPERATION_POS_PAD_CHAR = '0'
+		fun Int.toOperationPosition() = this.toString().padStart(
+			length = OPERATION_POS_LENGTH,
+			padChar = OPERATION_POS_PAD_CHAR
+		)
 	}
 
 	fun processMessages(batchSize: Int = 5000) {
@@ -50,20 +60,22 @@ class RetryArenaMessageProcessorService(
 	private fun processMessages(tableName: String, status: IngestStatus, batchSize: Int) {
 		val start = Instant.now()
 		var totalHandled = 0
-		var operationPosition = "0".repeat(10) // TODO
+
+
+		var currentOperationPosition = 0.toOperationPosition()
 
 		while (true) {
 			val data = arenaDataRepository.getByIngestStatus(
 				tableName = tableName,
 				status = status,
-				operationPosition = operationPosition,
+				operationPosition = currentOperationPosition,
 				limit = batchSize
 			)
 
 			if (data.isEmpty()) break
 
 			data.forEach { process(it) }
-			operationPosition = data.last().operationPosition
+			currentOperationPosition = data.last().operationPosition
 			totalHandled += data.size
 		}
 

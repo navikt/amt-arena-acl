@@ -12,6 +12,7 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
+import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService.Companion.toOperationPosition
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils
@@ -36,12 +37,12 @@ class RetryArenaMessageConsumerServiceTest(
 		var pos = 1
 
 		repeat(3) {
-			val currentPos = pos++.toString()
+			val currentPos = pos++.toOperationPosition()
 			val deltaker = publiserDeltaker(currentPos)
 			deltakere.add(Pair(currentPos, deltaker))
 		}
 
-		publiserGjennomforing(pos++.toString())
+		publiserGjennomforing(pos.toOperationPosition())
 
 		retryArenaMessageProcessorService.processMessages(5)
 
