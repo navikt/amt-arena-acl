@@ -6,6 +6,7 @@ import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.FIVE_MINUTES
 import no.nav.amt.arena.acl.utils.ONE_MINUTE
+import no.nav.common.job.leader_election.LeaderElectionClient
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -14,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
 @Component
 class MetricSchedules(
 	private val arenaDataRepository: ArenaDataRepository,
+	private val leaderElectionClient: LeaderElectionClient,
 	meterRegistry: MeterRegistry,
 ) {
 	private val log = LoggerFactory.getLogger(javaClass)
@@ -26,8 +28,10 @@ class MetricSchedules(
 
 	@Scheduled(fixedDelay = FIVE_MINUTES, initialDelay = ONE_MINUTE)
 	fun logIngestStatus() {
-		log.debug("Collecting metrics for FAILED ingest status")
-		failedGauge.set(arenaDataRepository.getFailedIngestStatusCount())
+		if (leaderElectionClient.isLeader) {
+			log.debug("Collecting metrics for FAILED ingest status")
+			failedGauge.set(arenaDataRepository.getFailedIngestStatusCount())
+		}
 	}
 
 	companion object {
