@@ -110,7 +110,7 @@ class ArenaDataRepository(
 			AND arena_id = :arena_id
 			ORDER BY operation_pos
 		""".trimIndent()
-
+        // TODO: håndtere ordering by operation_position istedet for id
 		val parameters = sqlParameters(
 			"arena_table_name" to tableName,
 			"arena_id" to arenaId,
@@ -135,7 +135,7 @@ class ArenaDataRepository(
 			ORDER BY operation_pos
 			LIMIT :limit
 		""".trimIndent()
-
+		// TODO: håndtere ordering by operation_position istedet for id
 		val parameters = sqlParameters(
 			"ingestStatus" to status.name,
 			"tableName" to tableName,
