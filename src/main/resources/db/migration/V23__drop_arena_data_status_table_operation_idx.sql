@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS arena_data_status_table_operation_idx;
