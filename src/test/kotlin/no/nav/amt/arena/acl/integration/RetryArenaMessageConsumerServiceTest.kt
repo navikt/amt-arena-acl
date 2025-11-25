@@ -43,17 +43,22 @@ class RetryArenaMessageConsumerServiceTest(
 
 		publiserGjennomforing(pos++.toString())
 
-		retryArenaMessageProcessorService.processMessages(2)
+		retryArenaMessageProcessorService.processMessages(5)
 
-		deltakere.forEach { deltaker ->
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, deltaker.first)
-			println(deltaker)
-			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
+		deltakere.forEach { (position, _) ->
+			val arenaData = arenaDataRepository.get(
+				tableName = ARENA_DELTAKER_TABLE_NAME,
+				operation = AmtOperation.CREATED,
+				position = position
+			)
+
+			arenaData.shouldNotBeNull()
+			arenaData.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 
 		await().untilAsserted {
-			val deltakerRecord = kafkaMessageConsumer.getRecords(KafkaMessageConsumer.Topic.AMT_TILTAK)
-			deltakerRecord.size shouldBe 3
+			val deltakerRecords = kafkaMessageConsumer.getRecords(KafkaMessageConsumer.Topic.AMT_TILTAK)
+			deltakerRecords.size shouldBe 3
 		}
 	}
 

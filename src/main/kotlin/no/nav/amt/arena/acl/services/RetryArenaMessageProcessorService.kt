@@ -1,14 +1,14 @@
 package no.nav.amt.arena.acl.services
 
+import no.nav.amt.arena.acl.consumer.ArenaDeltakerConsumer
+import no.nav.amt.arena.acl.consumer.GjennomforingConsumer
+import no.nav.amt.arena.acl.consumer.HistDeltakerConsumer
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
 import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
 import no.nav.amt.arena.acl.exceptions.ExternalSourceSystemException
 import no.nav.amt.arena.acl.exceptions.IgnoredException
-import no.nav.amt.arena.acl.consumer.ArenaDeltakerConsumer
-import no.nav.amt.arena.acl.consumer.GjennomforingConsumer
-import no.nav.amt.arena.acl.consumer.HistDeltakerConsumer
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
@@ -20,7 +20,7 @@ import java.time.Duration
 import java.time.Instant
 
 @Service
-open class RetryArenaMessageProcessorService(
+class RetryArenaMessageProcessorService(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val gjennomforingConsumer: GjennomforingConsumer,
 	private val arenaDeltakerConsumer: ArenaDeltakerConsumer,
@@ -48,17 +48,21 @@ open class RetryArenaMessageProcessorService(
 	}
 
 	private fun processMessages(tableName: String, status: IngestStatus, batchSize: Int) {
-		var offset = 0
 		val start = Instant.now()
 		var totalHandled = 0
 
-		while (true) {
-			val data = arenaDataRepository.getByIngestStatus(tableName, status, offset, batchSize)
-			if (data.isEmpty()) break
-			data.forEach { process(it) }
-			totalHandled += data.size
-			offset += batchSize
-		}
+			while (true) {
+				val data = arenaDataRepository.getByIngestStatus(
+					tableName = tableName,
+					status = status,
+					limit = batchSize
+				)
+
+				if (data.isEmpty()) break
+
+				data.forEach { process(it) }
+				totalHandled += data.size
+			}
 
 		val duration = Duration.between(start, Instant.now())
 
@@ -72,8 +76,13 @@ open class RetryArenaMessageProcessorService(
 				ARENA_GJENNOMFORING_TABLE_NAME -> gjennomforingConsumer.handleArenaMessage(
 					toArenaKafkaMessage(arenaDataDbo)
 				)
+
 				ARENA_DELTAKER_TABLE_NAME -> arenaDeltakerConsumer.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
-				ARENA_HIST_DELTAKER_TABLE_NAME -> histDeltakerConsumer.handleArenaMessage(toArenaKafkaMessage(arenaDataDbo))
+				ARENA_HIST_DELTAKER_TABLE_NAME -> histDeltakerConsumer.handleArenaMessage(
+					toArenaKafkaMessage(
+						arenaDataDbo
+					)
+				)
 			}
 		} catch (e: Exception) {
 			val currentIngestAttempts = arenaDataDbo.ingestAttempts + 1
@@ -82,19 +91,15 @@ open class RetryArenaMessageProcessorService(
 			if (e is IgnoredException) {
 				log.info("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}'")
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.IGNORED)
-			}
-			else if (e is ExternalSourceSystemException) {
+			} else if (e is ExternalSourceSystemException) {
 				log.info("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName} was created by a external source system: '${e.message}'")
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.EXTERNAL_SOURCE)
-			}
-			else if (e is DependencyNotValidException) {
+			} else if (e is DependencyNotValidException) {
 				log.error("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: '${e.message}'")
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.WAITING)
-			}
-			else if (arenaDataDbo.ingestStatus == IngestStatus.RETRY && hasReachedMaxRetries) {
+			} else if (arenaDataDbo.ingestStatus == IngestStatus.RETRY && hasReachedMaxRetries) {
 				arenaDataRepository.updateIngestStatus(arenaDataDbo.id, IngestStatus.FAILED)
-			}
-			else log.error("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: ${e.message}", e)
+			} else log.error("${arenaDataDbo.id} in table ${arenaDataDbo.arenaTableName}: ${e.message}", e)
 
 			arenaDataRepository.updateIngestAttempts(arenaDataDbo.id, currentIngestAttempts, e.message)
 		}
@@ -110,5 +115,4 @@ open class RetryArenaMessageProcessorService(
 			after = arenaDataDbo.after?.let { fromJsonString<D>(it) }
 		)
 	}
-
 }

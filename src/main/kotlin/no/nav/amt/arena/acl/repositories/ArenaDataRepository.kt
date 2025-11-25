@@ -122,24 +122,22 @@ class ArenaDataRepository(
 	fun getByIngestStatus(
 		tableName: String,
 		status: IngestStatus,
-		offset: Int,
 		limit: Int = 500
 	): List<ArenaDataDbo> {
 		val sql = """
 			SELECT *
 			FROM arena_data
-			WHERE ingest_status = :ingestStatus
-			AND arena_table_name = :tableName
+			WHERE
+				ingest_status = :ingestStatus
+				AND arena_table_name = :tableName
 			ORDER BY operation_pos
 			LIMIT :limit
-			OFFSET :offset
 		""".trimIndent()
 
 		val parameters = sqlParameters(
 			"ingestStatus" to status.name,
 			"tableName" to tableName,
 			"limit" to limit,
-			"offset" to offset,
 		)
 
 		return template.query(sql, parameters, rowMapper)
