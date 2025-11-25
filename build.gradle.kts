@@ -110,16 +110,14 @@ kotlin {
     }
 }
 
-tasks.jar {
+tasks.named<Jar>("jar") {
     enabled = false
 }
 
-tasks.test {
+tasks.named<Test>("test") {
     jvmArgs(
         "-Xshare:off",
-        "-XX:+EnableDynamicAgentLoading",
-        "-Dkotest.framework.classpath.scanning.autoscan.disable=true",
-        "-Dkotest.framework.config.fqn=no.nav.amt.arena.acl.KotestConfig",
+        "-XX:+EnableDynamicAgentLoading"
     )
     useJUnitPlatform()
 }
