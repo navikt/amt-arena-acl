@@ -52,7 +52,7 @@ class ArenaDeltakerConsumer(
 		val arenaDeltakerId = arenaDeltakerRaw.TILTAKDELTAKER_ID.toString()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
 		val gjennomforing = getGjennomforing(arenaGjennomforingId)
-
+		if(!gjennomforing.erEnkelplass()) return
 		externalDeltakerGuard(arenaDeltakerRaw)
 
 		val arenaDeltaker = arenaDeltakerRaw
