@@ -72,20 +72,20 @@ class RetryArenaMessageProcessorService(
 		runCatching {
 			when (arenaData.arenaTableName) {
 				ARENA_GJENNOMFORING_TABLE_NAME ->
-					gjennomforingConsumer.handleArenaMessage(toArenaKafkaMessage(arenaData))
+					gjennomforingConsumer.handleArenaMessage(arenaData.toArenaKafkaMessage())
 
 				ARENA_DELTAKER_TABLE_NAME ->
-					arenaDeltakerConsumer.handleArenaMessage(toArenaKafkaMessage(arenaData))
+					arenaDeltakerConsumer.handleArenaMessage(arenaData.toArenaKafkaMessage())
 
 				ARENA_HIST_DELTAKER_TABLE_NAME ->
-					histDeltakerConsumer.handleArenaMessage(toArenaKafkaMessage(arenaData))
+					histDeltakerConsumer.handleArenaMessage(arenaData.toArenaKafkaMessage())
 			}
 		}.onFailure { throwable -> handleProcessingException(arenaData, throwable) }
 	}
 
-	private fun handleProcessingException(data: ArenaDataDbo, throwable: Throwable) {
-		val prefix = "${data.id} (${data.arenaTableName})"
-		val attempts = data.ingestAttempts + 1
+	private fun handleProcessingException(arenaData: ArenaDataDbo, throwable: Throwable) {
+		val prefix = "${arenaData.id} (${arenaData.arenaTableName})"
+		val attempts = arenaData.ingestAttempts + 1
 
 		val newStatus = when (throwable) {
 			is IgnoredException -> {
@@ -104,7 +104,7 @@ class RetryArenaMessageProcessorService(
 			}
 
 			else -> {
-				if (data.ingestStatus == IngestStatus.RETRY && attempts >= MAX_INGEST_ATTEMPTS) {
+				if (arenaData.ingestStatus == IngestStatus.RETRY && attempts >= MAX_INGEST_ATTEMPTS) {
 					IngestStatus.FAILED
 				} else {
 					log.error("$prefix: ${throwable.message}", throwable)
@@ -113,8 +113,8 @@ class RetryArenaMessageProcessorService(
 			}
 		}
 
-		newStatus?.let { arenaDataRepository.updateIngestStatus(data.id, it) }
-		arenaDataRepository.updateIngestAttempts(data.id, attempts, throwable.message)
+		newStatus?.let { arenaDataRepository.updateIngestStatus(arenaData.id, it) }
+		arenaDataRepository.updateIngestAttempts(arenaData.id, attempts, throwable.message)
 	}
 
 	companion object {
@@ -134,14 +134,14 @@ class RetryArenaMessageProcessorService(
 			padChar = OPERATION_POS_PAD_CHAR
 		)
 
-		private inline fun <reified D> toArenaKafkaMessage(arenaDataDbo: ArenaDataDbo): ArenaKafkaMessage<D> =
+		private inline fun <reified T : Any> ArenaDataDbo.toArenaKafkaMessage(): ArenaKafkaMessage<T> =
 			ArenaKafkaMessage(
-				arenaTableName = arenaDataDbo.arenaTableName,
-				operationType = arenaDataDbo.operation,
-				operationTimestamp = arenaDataDbo.operationTimestamp,
-				operationPosition = arenaDataDbo.operationPosition,
-				before = arenaDataDbo.before?.let { fromJsonString<D>(it) },
-				after = arenaDataDbo.after?.let { fromJsonString<D>(it) }
+				arenaTableName = arenaTableName,
+				operationType = operation,
+				operationTimestamp = operationTimestamp,
+				operationPosition = operationPosition,
+				before = this.before?.let { fromJsonString<T>(it) },
+				after = this.after?.let { fromJsonString<T>(it) }
 			)
 	}
 }
