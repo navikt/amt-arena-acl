@@ -1,8 +1,6 @@
 # amt-arena-acl
 Tjeneste som leser data fra Arena og muterer de til AMT-Domene
 
-![img.png](img.png)
-
 ## Data ingest
 Leser data fra flere arena kafka topics, lagrer i arena_data tabellen sammen med status på konverteringen (til AMT domene).
 Det kjøres schedulerte jobber i tabellen, som sletter eller reingester meldinger basert på statusen.
