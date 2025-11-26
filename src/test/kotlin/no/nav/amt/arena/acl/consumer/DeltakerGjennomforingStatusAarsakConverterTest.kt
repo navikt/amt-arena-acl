@@ -1,21 +1,19 @@
 package no.nav.amt.arena.acl.consumer
 
 import io.kotest.matchers.shouldBe
+import no.nav.amt.arena.acl.consumer.converters.ArenaDeltakerAarsakConverter
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
-import no.nav.amt.arena.acl.consumer.converters.ArenaDeltakerAarsakConverter
 import org.junit.jupiter.api.Test
 
 class DeltakerGjennomforingStatusAarsakConverterTest {
-	val erGjennomforingAvsluttet = false
-
 	@Test
 	fun `convert() - årsak brukes når årsak kan mappes direkte`() {
 		val actual = ArenaDeltakerAarsakConverter.convert(
 			TiltakDeltaker.Status.NEITAKK,
 			AmtDeltaker.Status.HAR_SLUTTET,
 			TiltakDeltaker.StatusAarsak.SYK,
-			erGjennomforingAvsluttet
+			ER_GJENNOMFORING_AVSLUTTET
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.SYK
@@ -27,7 +25,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.FULLF,
 			AmtDeltaker.Status.HAR_SLUTTET,
 			TiltakDeltaker.StatusAarsak.UTV,
-			erGjennomforingAvsluttet
+			ER_GJENNOMFORING_AVSLUTTET
 		)
 
 		actual shouldBe null
@@ -39,7 +37,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.IKKEM,
 			AmtDeltaker.Status.FULLFORT,
 			TiltakDeltaker.StatusAarsak.BEGA,
-			erGjennomforingAvsluttet
+			ER_GJENNOMFORING_AVSLUTTET
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.IKKE_MOTT
@@ -51,7 +49,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.IKKAKTUELL,
 			AmtDeltaker.Status.HAR_SLUTTET,
 			TiltakDeltaker.StatusAarsak.UTV,
-			erGjennomforingAvsluttet
+			ER_GJENNOMFORING_AVSLUTTET
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.ANNET
@@ -63,7 +61,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.IKKAKTUELL,
 			AmtDeltaker.Status.DELTAR,
 			TiltakDeltaker.StatusAarsak.SYK,
-			erGjennomforingAvsluttet
+			ER_GJENNOMFORING_AVSLUTTET
 		)
 
 		actual shouldBe null
@@ -75,7 +73,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.IKKEM,
 			AmtDeltaker.Status.HAR_SLUTTET,
 			TiltakDeltaker.StatusAarsak.HENLU,
-			erGjennomforingAvsluttet
+			ER_GJENNOMFORING_AVSLUTTET
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.IKKE_MOTT
@@ -88,7 +86,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.AVSLAG,
 			AmtDeltaker.Status.HAR_SLUTTET,
 			TiltakDeltaker.StatusAarsak.HENLU,
-			erGjennomforingAvsluttet
+			ER_GJENNOMFORING_AVSLUTTET
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
@@ -101,7 +99,7 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 			TiltakDeltaker.Status.AVSLAG,
 			AmtDeltaker.Status.HAR_SLUTTET,
 			TiltakDeltaker.StatusAarsak.SYK,
-			erGjennomforingAvsluttet
+			ER_GJENNOMFORING_AVSLUTTET
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.SYK
@@ -118,8 +116,9 @@ class DeltakerGjennomforingStatusAarsakConverterTest {
 		)
 
 		actual shouldBe AmtDeltaker.StatusAarsak.FIKK_IKKE_PLASS
-
 	}
 
-
+	companion object {
+		private const val ER_GJENNOMFORING_AVSLUTTET = false
+	}
 }

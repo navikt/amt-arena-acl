@@ -7,8 +7,10 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.CapturingSlot
+import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.amt.arena.acl.consumer.ArenaDeltakerConsumer
@@ -37,6 +39,10 @@ class ArenaMessageConsumerServiceTest : StringSpec({
 
 	beforeEach {
 		clearAllMocks()
+		every { gjennomforingConsumer.handleArenaMessage(any()) } just Runs
+		every { arenaDeltakerConsumer.handleArenaMessage(any()) } just Runs
+		every { histDeltakerProcessor.handleArenaMessage(any()) } just Runs
+
 		val rootLogger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 		rootLogger.level = Level.WARN
 	}
@@ -45,10 +51,6 @@ class ArenaMessageConsumerServiceTest : StringSpec({
 		val tiltakdeltakereJsonFileContent = readResourceAsText("data/arena-tiltakdeltakerendret-v1.json")
 		val tiltakdeltakere: List<JsonNode> = fromJsonString(tiltakdeltakereJsonFileContent)
 		val deltakerJson = tiltakdeltakere.toList()[0].toString()
-
-		every {
-			arenaDeltakerConsumer.handleArenaMessage(any())
-		} returns Unit
 
 		messageProcessor.handleArenaGoldenGateRecord(
 			ConsumerRecord("test", 1, 1, "123456", deltakerJson)
@@ -64,10 +66,6 @@ class ArenaMessageConsumerServiceTest : StringSpec({
 		val histTiltakdeltakere: List<JsonNode> = fromJsonString(histTiltakdeltakereJsonFileContent)
 		val histDeltakerJson = histTiltakdeltakere.toList()[0].toString()
 
-		every {
-			histDeltakerProcessor.handleArenaMessage(any())
-		} returns Unit
-
 		messageProcessor.handleArenaGoldenGateRecord(
 			ConsumerRecord("test", 1, 1, "123456", histDeltakerJson)
 		)
@@ -81,10 +79,6 @@ class ArenaMessageConsumerServiceTest : StringSpec({
 		val tiltakgjennomforingerJsonFileContent = readResourceAsText("data/arena-tiltakgjennomforingendret-v1.json")
 		val tiltakgjennomforinger: List<JsonNode> = fromJsonString(tiltakgjennomforingerJsonFileContent)
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
-
-		every {
-			gjennomforingConsumer.handleArenaMessage(any())
-		} returns Unit
 
 		messageProcessor.handleArenaGoldenGateRecord(
 			ConsumerRecord("test", 1, 1, "123456", tiltakgjennomforingJson)
@@ -102,10 +96,6 @@ class ArenaMessageConsumerServiceTest : StringSpec({
 		val tiltakgjennomforinger: List<JsonNode> = fromJsonString(tiltakgjennomforingerJsonFileContent)
 		val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
-		every {
-			gjennomforingConsumer.handleArenaMessage(any())
-		} returns Unit
-
 		messageProcessor.handleArenaGoldenGateRecord(
 			ConsumerRecord("test", 1, 1, "123456", tiltakgjennomforingJson)
 		)
@@ -120,5 +110,4 @@ class ArenaMessageConsumerServiceTest : StringSpec({
 
 		capturedData.after?.VURDERING_GJENNOMFORING shouldBe "Vurdering"
 	}
-
 })

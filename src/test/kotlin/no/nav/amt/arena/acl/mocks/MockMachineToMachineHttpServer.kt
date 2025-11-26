@@ -6,7 +6,7 @@ import okhttp3.mockwebserver.RecordedRequest
 class MockMachineToMachineHttpServer : MockHttpServer() {
 
 	companion object {
-		const val tokenPath = "/token"
+		const val TOKEN_PATH = "/token"
 	}
 
 	init {
@@ -19,7 +19,7 @@ class MockMachineToMachineHttpServer : MockHttpServer() {
 
 	private fun mockToken() {
 		val predicate = { req: RecordedRequest ->
-			req.path == tokenPath
+			req.path == TOKEN_PATH
 		}
 
 		// Dette er en falsk request body:

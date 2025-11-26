@@ -33,7 +33,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.TestConstructor
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
-import java.util.*
+import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 @ActiveProfiles("integration")
@@ -115,7 +115,7 @@ abstract class IntegrationTestBase(
 
 			mockMachineToMachineHttpServer.start()
 			registry.add("nais.env.azureOpenIdConfigTokenEndpoint") {
-				mockMachineToMachineHttpServer.serverUrl() + MockMachineToMachineHttpServer.tokenPath
+				mockMachineToMachineHttpServer.serverUrl() + MockMachineToMachineHttpServer.TOKEN_PATH
 			}
 		}
 	}

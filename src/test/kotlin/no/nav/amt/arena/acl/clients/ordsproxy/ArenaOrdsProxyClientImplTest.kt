@@ -6,18 +6,11 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.Test
 
 class ArenaOrdsProxyClientImplTest {
-	var token = "TOKEN"
-
-	val server = MockWebServer()
-	val serverUrl = server.url("").toString().removeSuffix("/")
-
-
-
 	@Test
 	fun `hentFnr() skal lage riktig request og parse respons`() {
 		val client = ArenaOrdsProxyClientImpl(
 			arenaOrdsProxyUrl = serverUrl,
-			tokenProvider = { token },
+			tokenProvider = { TOKEN },
 		)
 
 		server.enqueue(
@@ -35,7 +28,7 @@ class ArenaOrdsProxyClientImplTest {
 
 		request.path shouldBe "/api/ords/fnr?personId=987654"
 		request.method shouldBe "GET"
-		request.getHeader("Authorization") shouldBe "Bearer $token"
+		request.getHeader("Authorization") shouldBe "Bearer $TOKEN"
 		fnr shouldBe "78900"
 	}
 
@@ -43,7 +36,7 @@ class ArenaOrdsProxyClientImplTest {
 	fun `hentFnr() skal null hvis stauts er 404`() {
 		val client = ArenaOrdsProxyClientImpl(
 			arenaOrdsProxyUrl = serverUrl,
-			tokenProvider = { token },
+			tokenProvider = { TOKEN },
 		)
 
 		server.enqueue(MockResponse().setResponseCode(404))
@@ -55,7 +48,7 @@ class ArenaOrdsProxyClientImplTest {
 	fun `hentVirksomhetsnummer() skal lage riktig request og parse respons`() {
 		val client = ArenaOrdsProxyClientImpl(
 			arenaOrdsProxyUrl = serverUrl,
-			tokenProvider = { token },
+			tokenProvider = { TOKEN },
 		)
 
 		val virksomhetsnummerBody = "6834920"
@@ -76,9 +69,15 @@ class ArenaOrdsProxyClientImplTest {
 
 		request.path shouldBe "/api/ords/arbeidsgiver?arbeidsgiverId=1234567"
 		request.method shouldBe "GET"
-		request.getHeader("Authorization") shouldBe "Bearer $token"
+		request.getHeader("Authorization") shouldBe "Bearer $TOKEN"
 
 
 		virksomhetsnummer shouldBe virksomhetsnummerBody
+	}
+
+	companion object {
+		private const val TOKEN = "TOKEN"
+		private val server = MockWebServer()
+		private val serverUrl = server.url("").toString().removeSuffix("/")
 	}
 }
