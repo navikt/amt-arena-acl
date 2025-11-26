@@ -6,6 +6,7 @@ import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltaker
+import no.nav.amt.arena.acl.extensions.toOperationPosition
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageConsumer
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageCreator
 import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
@@ -36,24 +37,29 @@ class RetryArenaMessageConsumerServiceTest(
 		var pos = 1
 
 		repeat(3) {
-			val currentPos = pos++.toString()
+			val currentPos = pos++.toOperationPosition()
 			val deltaker = publiserDeltaker(currentPos)
 			deltakere.add(Pair(currentPos, deltaker))
 		}
 
-		publiserGjennomforing(pos++.toString())
+		publiserGjennomforing(pos.toOperationPosition())
 
-		retryArenaMessageProcessorService.processMessages(2)
+		retryArenaMessageProcessorService.processRetryMessages(2)
 
-		deltakere.forEach { deltaker ->
-			val arenaData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, AmtOperation.CREATED, deltaker.first)
-			println(deltaker)
-			arenaData!!.ingestStatus shouldBe IngestStatus.HANDLED
+		deltakere.forEach { (position, _) ->
+			val arenaData = arenaDataRepository.get(
+				tableName = ARENA_DELTAKER_TABLE_NAME,
+				operation = AmtOperation.CREATED,
+				position = position
+			)
+
+			arenaData.shouldNotBeNull()
+			arenaData.ingestStatus shouldBe IngestStatus.HANDLED
 		}
 
 		await().untilAsserted {
-			val deltakerRecord = kafkaMessageConsumer.getRecords(KafkaMessageConsumer.Topic.AMT_TILTAK)
-			deltakerRecord.size shouldBe 3
+			val deltakerRecords = kafkaMessageConsumer.getRecords(KafkaMessageConsumer.Topic.AMT_TILTAK)
+			deltakerRecords.size shouldBe 3
 		}
 	}
 
