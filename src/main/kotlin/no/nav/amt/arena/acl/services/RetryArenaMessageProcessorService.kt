@@ -6,9 +6,6 @@ import no.nav.amt.arena.acl.consumer.HistDeltakerConsumer
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
-import no.nav.amt.arena.acl.exceptions.DependencyNotValidException
-import no.nav.amt.arena.acl.exceptions.ExternalSourceSystemException
-import no.nav.amt.arena.acl.exceptions.IgnoredException
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
@@ -24,7 +21,8 @@ class RetryArenaMessageProcessorService(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val gjennomforingConsumer: GjennomforingConsumer,
 	private val arenaDeltakerConsumer: ArenaDeltakerConsumer,
-	private val histDeltakerConsumer: HistDeltakerConsumer
+	private val histDeltakerConsumer: HistDeltakerConsumer,
+	private val retryMessageExceptionHandler: RetryMessageExceptionHandler,
 ) {
 	private val log = LoggerFactory.getLogger(javaClass)
 
@@ -80,46 +78,10 @@ class RetryArenaMessageProcessorService(
 				ARENA_HIST_DELTAKER_TABLE_NAME ->
 					histDeltakerConsumer.handleArenaMessage(arenaData.toArenaKafkaMessage())
 			}
-		}.onFailure { throwable -> handleProcessingException(arenaData, throwable) }
-	}
-
-	private fun handleProcessingException(arenaData: ArenaDataDbo, throwable: Throwable) {
-		val prefix = "${arenaData.id} (${arenaData.arenaTableName})"
-		val attempts = arenaData.ingestAttempts + 1
-
-		val newStatus = when (throwable) {
-			is IgnoredException -> {
-				log.info("$prefix: '${throwable.message}'")
-				IngestStatus.IGNORED
-			}
-
-			is ExternalSourceSystemException -> {
-				log.info("$prefix from external system: '${throwable.message}'")
-				IngestStatus.EXTERNAL_SOURCE
-			}
-
-			is DependencyNotValidException -> {
-				log.error("$prefix: '${throwable.message}'")
-				IngestStatus.WAITING
-			}
-
-			else -> {
-				if (arenaData.ingestStatus == IngestStatus.RETRY && attempts >= MAX_INGEST_ATTEMPTS) {
-					IngestStatus.FAILED
-				} else {
-					log.error("$prefix: ${throwable.message}", throwable)
-					null
-				}
-			}
-		}
-
-		newStatus?.let { arenaDataRepository.updateIngestStatus(arenaData.id, it) }
-		arenaDataRepository.updateIngestAttempts(arenaData.id, attempts, throwable.message)
+		}.onFailure { throwable -> retryMessageExceptionHandler.handleProcessingException(arenaData, throwable) }
 	}
 
 	companion object {
-		private const val MAX_INGEST_ATTEMPTS = 10
-
 		const val DEFAULT_RETRY_MSG_BATCH_SIZE = 5000
 		const val DEFAULT_FAILED_MSG_BATCH_SIZE = 500
 
@@ -140,8 +102,8 @@ class RetryArenaMessageProcessorService(
 				operationType = operation,
 				operationTimestamp = operationTimestamp,
 				operationPosition = operationPosition,
-				before = this.before?.let { fromJsonString<T>(it) },
-				after = this.after?.let { fromJsonString<T>(it) }
+				before = before?.let { fromJsonString<T>(it) },
+				after = after?.let { fromJsonString<T>(it) }
 			)
 	}
 }
