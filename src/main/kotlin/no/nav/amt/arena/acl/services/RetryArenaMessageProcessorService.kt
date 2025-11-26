@@ -5,12 +5,12 @@ import no.nav.amt.arena.acl.consumer.GjennomforingConsumer
 import no.nav.amt.arena.acl.consumer.HistDeltakerConsumer
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
-import no.nav.amt.arena.acl.domain.kafka.arena.ArenaKafkaMessage
+import no.nav.amt.arena.acl.extensions.toArenaKafkaMessage
+import no.nav.amt.arena.acl.extensions.toOperationPosition
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
-import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -84,26 +84,5 @@ class RetryArenaMessageProcessorService(
 	companion object {
 		const val DEFAULT_RETRY_MSG_BATCH_SIZE = 5000
 		const val DEFAULT_FAILED_MSG_BATCH_SIZE = 500
-
-		// OPERATION_POS_LENGTH er hentet ut med følgende spørringer:
-		// SELECT MIN(length(arena_data.operation_pos)) FROM arena_data
-		// SELECT MAX(length(arena_data.operation_pos)) FROM arena_data
-		private const val OPERATION_POS_LENGTH = 20
-		private const val OPERATION_POS_PAD_CHAR = '0'
-
-		fun Int.toOperationPosition() = this.toString().padStart(
-			length = OPERATION_POS_LENGTH,
-			padChar = OPERATION_POS_PAD_CHAR
-		)
-
-		private inline fun <reified T : Any> ArenaDataDbo.toArenaKafkaMessage(): ArenaKafkaMessage<T> =
-			ArenaKafkaMessage(
-				arenaTableName = arenaTableName,
-				operationType = operation,
-				operationTimestamp = operationTimestamp,
-				operationPosition = operationPosition,
-				before = before?.let { fromJsonString<T>(it) },
-				after = after?.let { fromJsonString<T>(it) }
-			)
 	}
 }
