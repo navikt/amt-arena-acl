@@ -69,15 +69,21 @@ class ArenaDeltakerConsumerTemp(
 		message: ArenaDeltakerKafkaMessage,
 	): Boolean {
 		val sisteLagredeDeltaker = deltakerData
-			.maxBy { it.operationPosition.toLong() }
+			.maxByOrNull { it.operationPosition.toLong() }
+			?: return true
 		return message.operationPosition.toLong() > sisteLagredeDeltaker.operationPosition.toLong()
 	}
 
-	fun createDeltaker(arenaDeltaker: TiltakDeltaker, gjennomforing: Gjennomforing, erHistDeltaker: Boolean = false): AmtDeltaker {
+	fun createDeltaker(
+		arenaDeltaker: TiltakDeltaker,
+		gjennomforing: Gjennomforing,
+		erHistDeltaker: Boolean = false
+	): AmtDeltaker {
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
 			?: throw ValidationException("TEMP Arena mangler personlig ident for personId=${arenaDeltaker.personId}")
 
-		val deltakerId = arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, erHistDeltaker)
+		val deltakerId =
+			arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, erHistDeltaker)
 
 		return arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerId,
@@ -101,7 +107,7 @@ class ArenaDeltakerConsumerTemp(
 
 		// id kan være null for våre typer fordi id ikke ble lagret fra starten
 		// og pga en bug se trellokort #877
-		val gjennomforingId = gjennomforing.id?: getGjennomforingId(gjennomforing.arenaId).also {
+		val gjennomforingId = gjennomforing.id ?: getGjennomforingId(gjennomforing.arenaId).also {
 			gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
 		}
 
