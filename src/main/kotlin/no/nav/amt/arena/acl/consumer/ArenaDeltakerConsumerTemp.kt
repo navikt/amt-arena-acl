@@ -39,6 +39,11 @@ class ArenaDeltakerConsumerTemp(
 		val arenaDeltakerId = arenaDeltakerRaw.TILTAKDELTAKER_ID.toString()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
 
+		if (!arenaDeltakerRaw.EKSTERN_ID.isNullOrEmpty()) {
+			log.info("Hopper over deltaker $arenaDeltakerId med eksternId")
+			return
+		}
+
 		val gjennomforing = try {
 			getGjennomforing(arenaGjennomforingId)
 		} catch (_: IgnoredException) {
