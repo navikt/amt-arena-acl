@@ -68,9 +68,9 @@ class ArenaDeltakerConsumerTemp(
 		deltakerData: List<ArenaDataDbo>,
 		message: ArenaDeltakerKafkaMessage,
 	): Boolean {
+		if (deltakerData.isEmpty()) return true
 		val sisteLagredeDeltaker = deltakerData
-			.maxByOrNull { it.operationPosition.toLong() }
-			?: return true
+			.maxBy { it.operationPosition.toLong() }
 		return message.operationPosition.toLong() > sisteLagredeDeltaker.operationPosition.toLong()
 	}
 
