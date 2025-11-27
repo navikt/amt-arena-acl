@@ -144,6 +144,11 @@ class ArenaDataRepository(
 		return template.query(sql, parameters, rowMapper)
 	}
 
+	/*
+	Arenadeltaker 1 - i dag - handled
+	Arenadeltaker 2 - i fjor - NEW
+
+	 */
 	fun retryDeltakerePaaTiltakstype(tiltakskode: String) {
 		val sql = """
 			WITH latest AS (
@@ -154,7 +159,7 @@ class ArenaDataRepository(
 					JOIN gjennomforing g ON d.gjennomforing_id::text = g.arena_id
 				WHERE
 					a.arena_table_name = 'SIAMO.TILTAKDELTAKER'
-				  	AND a.ingest_status = 'HANDLED'
+				  	AND (a.ingest_status = 'HANDLED' OR a.ingest_status = 'NEW')
 				  	AND g.tiltak_kode = :tiltakskode
 				ORDER BY
 					a.arena_id, a.operation_pos DESC
