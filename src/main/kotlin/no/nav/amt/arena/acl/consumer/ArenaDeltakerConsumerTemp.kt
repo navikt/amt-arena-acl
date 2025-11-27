@@ -38,7 +38,13 @@ class ArenaDeltakerConsumerTemp(
 		val arenaDeltakerRaw = message.getData()
 		val arenaDeltakerId = arenaDeltakerRaw.TILTAKDELTAKER_ID.toString()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
-		val gjennomforing = getGjennomforing(arenaGjennomforingId)
+
+		val gjennomforing = try {
+			getGjennomforing(arenaGjennomforingId)
+		} catch (_: IgnoredException) {
+			log.info("Hopper over deltaker $arenaDeltakerId på ikke støttet gjennomføring")
+			return
+		}
 
 		if (!gjennomforing.erEnkelplass()) {
 			return
