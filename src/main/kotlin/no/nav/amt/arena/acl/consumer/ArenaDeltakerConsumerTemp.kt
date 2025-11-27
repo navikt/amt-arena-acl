@@ -49,6 +49,9 @@ class ArenaDeltakerConsumerTemp(
 		} catch (_: IgnoredException) {
 			log.info("Hopper over deltaker $arenaDeltakerId på ikke støttet gjennomføring")
 			return
+		} catch (_: DependencyNotIngestedException) {
+			log.info("Hopper over deltaker $arenaDeltakerId på ugyldig gjennomføring")
+			return
 		}
 
 		if (!gjennomforing.erEnkelplass()) {
