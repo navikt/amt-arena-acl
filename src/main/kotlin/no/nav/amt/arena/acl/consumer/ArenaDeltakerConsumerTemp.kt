@@ -49,7 +49,7 @@ class ArenaDeltakerConsumerTemp(
 		} catch (_: IgnoredException) {
 			log.info("Hopper over deltaker $arenaDeltakerId på ikke støttet gjennomføring")
 			return
-		} catch (_: DependencyNotIngestedException) {
+		} catch (_: DependencyNotValidException) {
 			log.info("Hopper over deltaker $arenaDeltakerId på ugyldig gjennomføring")
 			return
 		}
