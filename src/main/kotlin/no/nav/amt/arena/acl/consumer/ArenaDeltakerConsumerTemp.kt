@@ -47,7 +47,7 @@ class ArenaDeltakerConsumerTemp(
 		val gjennomforing = try {
 			getGjennomforing(arenaGjennomforingId)
 		} catch (_: IgnoredException) {
-			log.info("Hopper over deltaker $arenaDeltakerId på ikke støttet gjennomføring")
+			log.info("Hopper over deltaker $arenaDeltakerId som ikke er enkeltplass")
 			return
 		} catch (_: DependencyNotValidException) {
 			log.info("Hopper over deltaker $arenaDeltakerId på ugyldig gjennomføring")
@@ -112,6 +112,10 @@ class ArenaDeltakerConsumerTemp(
 	fun getGjennomforing(arenaGjennomforingId: String): Gjennomforing {
 		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
 			?: throw DependencyNotIngestedException("TEMP Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
+
+		if(gjennomforing.tiltakKode !in setOf("ENKELAMO", "ENKFAGYRKE", "HOYEREUTD")) {
+			throw IgnoredException("TEMP Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
+		}
 
 		if (!gjennomforing.isSupported) {
 			throw IgnoredException("TEMP Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
