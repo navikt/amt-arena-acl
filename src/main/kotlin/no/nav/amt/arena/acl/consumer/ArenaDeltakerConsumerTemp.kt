@@ -4,6 +4,8 @@ import ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
+import no.nav.amt.arena.acl.domain.db.IngestStatus
+import no.nav.amt.arena.acl.domain.db.toUpsertInput
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusNew
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaDeltakerKafkaMessage
@@ -68,7 +70,13 @@ class ArenaDeltakerConsumerTemp(
 			log.info("TEMP Melding for arenaId=$arenaDeltakerId pos=${message.operationPosition} op=${message.operationType} er allerede håndtert av nyere melding, hopper over lagring")
 			return
 		}
-		val deltaker = createDeltaker(arenaDeltaker, gjennomforing)
+
+		val deltaker = try { createDeltaker(arenaDeltaker, gjennomforing) }
+		catch (e: Exception) {
+			log.error("Klarte ikke å lage deltaker $arenaDeltakerId", e)
+			arenaDataRepository.upsert(message.toUpsertInput(arenaDeltakerId, IngestStatus.FAILED, note="error: ${e.message}"))
+			return
+		}
 
 		log.info("TEMP Lagrer ${gjennomforing.tiltakstype} deltaker med id=${deltaker.id}")
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusNew(arenaDeltakerId))
