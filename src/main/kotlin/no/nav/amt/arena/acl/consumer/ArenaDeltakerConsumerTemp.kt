@@ -30,11 +30,11 @@ class ArenaDeltakerConsumerTemp(
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val ordsClient: ArenaOrdsProxyClient,
 	private val mulighetsrommetApiClient: MulighetsrommetApiClient
-) : ArenaMessageConsumer<ArenaDeltakerKafkaMessage> {
+) {
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	override fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
+	fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
 		val arenaDeltakerRaw = message.getData()
 		val arenaDeltakerId = arenaDeltakerRaw.TILTAKDELTAKER_ID.toString()
 		val arenaGjennomforingId = arenaDeltakerRaw.TILTAKGJENNOMFORING_ID.toString()
@@ -56,7 +56,7 @@ class ArenaDeltakerConsumerTemp(
 		}
 		val deltaker = createDeltaker(arenaDeltaker, gjennomforing)
 
-		log.info("TEMP Lagrer deltaker med id=${deltaker.id}")
+		log.info("TEMP Lagrer ${gjennomforing.tiltakstype} deltaker med id=${deltaker.id}")
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusNew(arenaDeltakerId))
 		deltakerRepository.upsert(arenaDeltakerRaw.toDbo())
 
@@ -67,7 +67,11 @@ class ArenaDeltakerConsumerTemp(
 	private fun skalLagreDeltaker(
 		deltakerData: List<ArenaDataDbo>,
 		message: ArenaDeltakerKafkaMessage,
-	): Boolean = deltakerData.any { it.operationPosition > message.operationPosition }
+	): Boolean {
+		val sisteLagredeDeltaker = deltakerData
+			.maxBy { it.operationPosition.toLong() }
+		return message.operationPosition.toLong() > sisteLagredeDeltaker.operationPosition.toLong()
+	}
 
 	fun createDeltaker(arenaDeltaker: TiltakDeltaker, gjennomforing: Gjennomforing, erHistDeltaker: Boolean = false): AmtDeltaker {
 		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
