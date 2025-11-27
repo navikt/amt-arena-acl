@@ -114,7 +114,7 @@ class ArenaDeltakerConsumerTemp(
 			?: throw DependencyNotIngestedException("TEMP Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
 		if(gjennomforing.tiltakKode !in setOf("ENKELAMO", "ENKFAGYRKE", "HOYEREUTD")) {
-			throw IgnoredException("TEMP Deltaker på gjennomføring med arenakode $arenaGjennomforingId er ikke støttet")
+			throw IgnoredException("TEMP Deltaker på gjennomføring ${arenaGjennomforingId} med arenakode ${gjennomforing.tiltakKode} skal ikke leses")
 		}
 
 		if (!gjennomforing.isSupported) {
