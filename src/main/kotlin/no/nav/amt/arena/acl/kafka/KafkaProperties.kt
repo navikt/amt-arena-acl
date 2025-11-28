@@ -6,6 +6,8 @@ interface KafkaProperties {
 
     fun consumer(): Properties
 
+	fun tempConsumer(): Properties
+
     fun producer(): Properties
 
 }

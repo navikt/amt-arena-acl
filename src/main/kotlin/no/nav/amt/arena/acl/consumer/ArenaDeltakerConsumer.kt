@@ -76,7 +76,6 @@ class ArenaDeltakerConsumer(
 			sendMessageAndUpdateIngestStatus(message, deltaker, arenaDeltakerId, gjennomforing=gjennomforing)
 			log.info("Lagrer deltaker med id=${deltaker.id}")
 			deltakerRepository.upsert(arenaDeltakerRaw.toDbo())
-
 		}
 		metrics.publishMetrics(message)
 		log.info("Deltaker med id=${deltaker.id} ferdig prosessert")
@@ -128,7 +127,7 @@ class ArenaDeltakerConsumer(
 	private fun skalVente(deltakerData: List<ArenaDataDbo>): Boolean {
 		// Når flere meldinger for samme deltaker sendes så raskt samtidig til amt-tiltak og andre
 		// så øker det sjansen for at en eller flere race-condtions inntreffer...
-		val sisteMelding = deltakerData.findLast { it.ingestStatus == IngestStatus.HANDLED }
+		val sisteMelding = deltakerData.sortedBy { it.operationPosition.toLong() }.findLast { it.ingestStatus == IngestStatus.HANDLED }
 		return sisteMelding
 			?.ingestedTimestamp
 			?.isAfter(LocalDateTime.now().minus(Duration.ofMillis(500))) == true
@@ -139,10 +138,9 @@ class ArenaDeltakerConsumer(
 		message: ArenaDeltakerKafkaMessage,
 	): Boolean {
 		// Hvis det finnes en eldre melding på deltaker som ikke er håndtert så skal meldingen få status RETRY
-		val eldreMeldingVenter = deltakerData
-			.filter { it.operationPosition < message.operationPosition }
-			.firstOrNull { it.ingestStatus in listOf(IngestStatus.RETRY, IngestStatus.FAILED, IngestStatus.WAITING) }
-		return eldreMeldingVenter != null
+		return deltakerData
+			.filter { it.operationPosition.toLong() < message.operationPosition.toLong() }
+			.any { it.ingestStatus in listOf(IngestStatus.RETRY, IngestStatus.FAILED, IngestStatus.WAITING) }
 	}
 
 	private fun handleDeleteMessage(
