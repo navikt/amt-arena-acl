@@ -27,10 +27,10 @@ class ArenaConsumerServiceTemp(
 
 		if (messageDto.table == ARENA_DELTAKER_TABLE_NAME) {
 
-			if ((partition == 0 && offset > 10535748) ||
-				(partition == 1 && offset > 10531311) ||
-				(partition == 2 && offset > 10532586) ||
-				(partition == 3 && offset > 10540184)
+			if ((partition == 0 && offset > 10535748L) ||
+				(partition == 1 && offset > 10531311L) ||
+				(partition == 2 && offset > 10532586L) ||
+				(partition == 3 && offset > 10540184L)
 			) {
 				log.info("ArenaDeltakerConsumerTemp: Ferdig med å prosessere deltakere for partisjon=${partition}. Hopper over offset=${offset}")
 				return
