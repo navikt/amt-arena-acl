@@ -16,6 +16,7 @@ import java.util.Properties
 @EnableConfigurationProperties(KafkaTopicProperties::class)
 class KafkaConfiguration(
 	@Value($$"${app.env.consumerId}") private val consumerId: String,
+	private val tempConsumerId: String = "amt-arena-acl-temp-consumer-v1",
 	@Value($$"${app.env.producerId}") private val producerId: String,
 ) {
 	@Bean
@@ -27,7 +28,7 @@ class KafkaConfiguration(
 	fun kafkaProperties(): KafkaProperties =
 		object : KafkaProperties {
 			override fun consumer(): Properties = KafkaPropertiesPreset.aivenDefaultConsumerProperties(consumerId)
-
+			override fun tempConsumer(): Properties = KafkaPropertiesPreset.aivenDefaultConsumerProperties(tempConsumerId)
 			override fun producer(): Properties = KafkaPropertiesPreset.aivenDefaultProducerProperties(producerId)
 		}
 
@@ -41,6 +42,15 @@ class KafkaConfiguration(
 					.withBrokerUrl("localhost:9092")
 					.withBaseProperties()
 					.withConsumerGroupId(consumerId)
+					.withDeserializers(ByteArrayDeserializer::class.java, ByteArrayDeserializer::class.java)
+					.build()
+
+			override fun tempConsumer(): Properties =
+				KafkaPropertiesBuilder
+					.consumerBuilder()
+					.withBrokerUrl("localhost:9092")
+					.withBaseProperties()
+					.withConsumerGroupId(tempConsumerId)
 					.withDeserializers(ByteArrayDeserializer::class.java, ByteArrayDeserializer::class.java)
 					.build()
 

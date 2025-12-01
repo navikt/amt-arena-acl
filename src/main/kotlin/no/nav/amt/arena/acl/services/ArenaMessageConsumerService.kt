@@ -53,7 +53,9 @@ open class ArenaMessageConsumerService(
 		withTimer(consumerName) {
 			when (messageDto.table) {
 				ARENA_GJENNOMFORING_TABLE_NAME -> process(messageDto, gjennomforingConsumer) { it.TILTAKGJENNOMFORING_ID.toString() }
-				ARENA_DELTAKER_TABLE_NAME -> process(messageDto, arenaDeltakerConsumer) { it.TILTAKDELTAKER_ID.toString() }
+				ARENA_DELTAKER_TABLE_NAME -> {
+					process(messageDto, arenaDeltakerConsumer) { it.TILTAKDELTAKER_ID.toString() }
+				}
 				ARENA_HIST_DELTAKER_TABLE_NAME -> process(messageDto, histDeltakerConsumer) { it.HIST_TILTAKDELTAKER_ID.toString() }
 				else -> throw IllegalArgumentException("Kan ikke håndtere melding fra ukjent arena tabell: ${messageDto.table}")
 			}

@@ -110,7 +110,6 @@ class ArenaDataRepository(
 			AND arena_id = :arena_id
 			ORDER BY operation_pos
 		""".trimIndent()
-
 		val parameters = sqlParameters(
 			"arena_table_name" to tableName,
 			"arena_id" to arenaId,
@@ -135,7 +134,6 @@ class ArenaDataRepository(
 			ORDER BY operation_pos
 			LIMIT :limit
 		""".trimIndent()
-
 		val parameters = sqlParameters(
 			"ingestStatus" to status.name,
 			"tableName" to tableName,
@@ -146,17 +144,22 @@ class ArenaDataRepository(
 		return template.query(sql, parameters, rowMapper)
 	}
 
+	/*
+	Arenadeltaker 1 - i dag - handled
+	Arenadeltaker 2 - i fjor - NEW
+
+	 */
 	fun retryDeltakerePaaTiltakstype(tiltakskode: String) {
 		val sql = """
 			WITH latest AS (
-				SELECT DISTINCT ON (a.arena_id) a.operation_pos
+				SELECT DISTINCT ON (a.arena_id) a.id, a.operation_pos
 				FROM
 					arena_data a
 					JOIN deltaker d ON a.arena_id = d.arena_id::text
 					JOIN gjennomforing g ON d.gjennomforing_id::text = g.arena_id
 				WHERE
 					a.arena_table_name = 'SIAMO.TILTAKDELTAKER'
-				  	AND a.ingest_status = 'HANDLED'
+				  	AND (a.ingest_status = 'HANDLED' OR a.ingest_status = 'NEW')
 				  	AND g.tiltak_kode = :tiltakskode
 				ORDER BY
 					a.arena_id, a.operation_pos DESC

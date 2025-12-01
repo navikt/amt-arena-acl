@@ -137,6 +137,13 @@ class IntegrationTestConfiguration {
 				.withDeserializers(ByteArrayDeserializer::class.java, ByteArrayDeserializer::class.java)
 				.build()
 
+			override fun tempConsumer(): Properties = KafkaPropertiesBuilder.consumerBuilder()
+				.withBrokerUrl(host)
+				.withBaseProperties()
+				.withConsumerGroupId("INTEGRATION_TEMP_CONSUMER")
+				.withDeserializers(ByteArrayDeserializer::class.java, ByteArrayDeserializer::class.java)
+				.build()
+
 			override fun producer(): Properties = KafkaPropertiesBuilder.producerBuilder()
 				.withBrokerUrl(host)
 				.withBaseProperties()
