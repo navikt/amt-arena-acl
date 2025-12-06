@@ -33,7 +33,7 @@ val testcontainersVersion = "2.0.2"
 val kotestExtensionsSpringVersion = "1.3.0"
 val kotestExtensionsTestcontainersVersion = "2.0.2"
 
-val amtLibVersion = "1.2025.11.29_14.10-65f3180bda94"
+val amtLibVersion = "1.2025.12.06_12.56-a9fdb0b96ea0"
 val navCommonModules = setOf("log", "job", "rest", "token-client")
 
 dependencyManagement {
@@ -47,7 +47,19 @@ dependencyManagement {
     }
 }
 
+// fjernes ved neste release av org.apache.kafka:kafka-clients
+configurations.configureEach {
+    resolutionStrategy {
+        capabilitiesResolution {
+            withCapability("org.lz4:lz4-java") {
+                select(candidates.first { (it.id as ModuleComponentIdentifier).group == "at.yawk.lz4" })
+            }
+        }
+    }
+}
+
 dependencies {
+    implementation("at.yawk.lz4:lz4-java:1.10.1") // fjernes ved neste release av org.apache.kafka:kafka-clients
     implementation("com.nimbusds:oauth2-oidc-sdk:$nimbusVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$shedlockVersion")
