@@ -28,7 +28,7 @@ val logstashEncoderVersion = "9.0"
 
 val kotestVersion = "6.0.5"
 val mockkVersion = "1.14.6"
-val springmockkVersion = "4.0.2"
+val springmockkVersion = "5.0.1"
 val testcontainersVersion = "2.0.2"
 val kotestExtensionsSpringVersion = "1.3.0"
 val kotestExtensionsTestcontainersVersion = "2.0.2"
