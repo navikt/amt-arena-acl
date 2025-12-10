@@ -49,6 +49,8 @@ spec:
   envFrom:
     - secret: amt-arena-acl-unleash-api-token
   env:
+    - name: JDK_JAVA_OPTIONS
+      value: "-XX:MaxRAMPercentage=60.0"
     - name: AMT_ARENA_ORDS_PROXY_SCOPE
       value: api://dev-fss.amt.amt-arena-ords-proxy/.default
     - name: AMT_ARENA_ORDS_PROXY_URL
