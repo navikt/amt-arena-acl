@@ -19,8 +19,8 @@ spec:
     initialDelay: 50
     timeout: 3
   replicas:
-    min: 1
-    max: 2
+    min: 0
+    max: 0
     scalingStrategy:
       cpu:
         thresholdPercentage: 150
