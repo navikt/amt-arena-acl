@@ -81,9 +81,9 @@ spec:
     sqlInstances:
       - name: amt-arena-acl
         type: POSTGRES_17
-        tier: db-custom-2-5120
+        tier: db-custom-1-3840
         diskAutoresize: true
-        pointInTimeRecovery: true
+        pointInTimeRecovery: false
         databases:
           - name: amt-arena-acl
             envVarPrefix: DB
