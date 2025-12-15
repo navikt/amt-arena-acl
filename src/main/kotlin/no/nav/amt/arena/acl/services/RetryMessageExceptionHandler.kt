@@ -31,7 +31,7 @@ class RetryMessageExceptionHandler(
 			}
 
 			is DependencyNotValidException -> {
-				log.error("$prefix: '${throwable.message}'")
+				log.warn("$prefix: '${throwable.message}'")
 				IngestStatus.WAITING
 			}
 
