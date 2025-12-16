@@ -20,14 +20,14 @@ repositories {
 
 val nimbusVersion = "11.30.1"
 val okhttpVersion = "5.3.2"
-val shedlockVersion = "7.2.0"
+val shedlockVersion = "7.2.1"
 val unleashVersion = "11.1.1"
 val navCommonVersion = "3.2025.10.10_08.21-bb7c7830d93c"
 val navTokenSupportVersion = "5.0.39"
 val logstashEncoderVersion = "9.0"
 
-val kotestVersion = "6.0.5"
-val mockkVersion = "1.14.6"
+val kotestVersion = "6.0.7"
+val mockkVersion = "1.14.7"
 val springmockkVersion = "5.0.1"
 val testcontainersVersion = "2.0.2"
 val kotestExtensionsSpringVersion = "1.3.0"
