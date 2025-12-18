@@ -37,9 +37,10 @@ class RetryMessageExceptionHandler(
 
 			else -> {
 				if (arenaData.ingestStatus == IngestStatus.RETRY && attempts >= MAX_INGEST_ATTEMPTS) {
+					log.error("Setter IngestStatus.FAILED. $prefix: ${throwable.message}", throwable)
 					IngestStatus.FAILED
 				} else {
-					log.error("$prefix: ${throwable.message}", throwable)
+					log.warn("$prefix: ${throwable.message}", throwable)
 					null
 				}
 			}
