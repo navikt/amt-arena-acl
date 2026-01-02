@@ -27,9 +27,9 @@ spec:
   resources:
     requests:
       cpu: 20m
-      memory: 640Mi
+      memory: 800Mi
     limits:
-      memory: 1024Mi
+      memory: 1Gi
   azure:
     application:
       enabled: true
@@ -51,7 +51,7 @@ spec:
     - secret: amt-arena-acl-unleash-api-token
   env:
     - name: JDK_JAVA_OPTIONS
-      value: "-XX:MaxRAMPercentage=60.0"
+      value: "-XX:MaxRAMPercentage=75.0"
     - name: AMT_ARENA_ORDS_PROXY_SCOPE
       value: api://prod-fss.amt.amt-arena-ords-proxy/.default
     - name: AMT_ARENA_ORDS_PROXY_URL
