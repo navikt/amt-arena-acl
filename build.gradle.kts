@@ -1,5 +1,5 @@
 plugins {
-    val kotlinVersion = "2.2.21"
+    val kotlinVersion = "2.3.0"
     val springBootVersion = "3.5.7"
     val springDependencyManagementVersion = "1.1.7"
 
@@ -18,10 +18,10 @@ repositories {
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
-val nimbusVersion = "11.30.1"
+val nimbusVersion = "11.31"
 val okhttpVersion = "5.3.2"
-val shedlockVersion = "7.2.1"
-val unleashVersion = "11.1.1"
+val shedlockVersion = "7.5.0"
+val unleashVersion = "11.2.1"
 val navCommonVersion = "3.2025.10.10_08.21-bb7c7830d93c"
 val navTokenSupportVersion = "5.0.39"
 val logstashEncoderVersion = "9.0"
@@ -29,7 +29,7 @@ val logstashEncoderVersion = "9.0"
 val kotestVersion = "6.0.7"
 val mockkVersion = "1.14.7"
 val springmockkVersion = "5.0.1"
-val testcontainersVersion = "2.0.2"
+val testcontainersVersion = "2.0.3"
 val kotestExtensionsSpringVersion = "1.3.0"
 val kotestExtensionsTestcontainersVersion = "2.0.2"
 
@@ -59,7 +59,7 @@ configurations.configureEach {
 }
 
 dependencies {
-    implementation("at.yawk.lz4:lz4-java:1.10.1") // fjernes ved neste release av org.apache.kafka:kafka-clients
+    implementation("at.yawk.lz4:lz4-java:1.10.2") // fjernes ved neste release av org.apache.kafka:kafka-clients
     implementation("com.nimbusds:oauth2-oidc-sdk:$nimbusVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$shedlockVersion")
