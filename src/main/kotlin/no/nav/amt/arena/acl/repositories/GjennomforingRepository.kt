@@ -4,10 +4,10 @@ import no.nav.amt.arena.acl.utils.getLocalDate
 import no.nav.amt.arena.acl.utils.getNullableUUID
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Repository
 import java.util.UUID
 
-@Component
+@Repository
 class GjennomforingRepository(
 	private val template: NamedParameterJdbcTemplate,
 ) {

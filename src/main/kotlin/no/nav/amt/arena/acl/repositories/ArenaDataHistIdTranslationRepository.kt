@@ -6,10 +6,10 @@ import no.nav.amt.arena.acl.utils.getUUID
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Repository
 import java.util.UUID
 
-@Component
+@Repository
 class ArenaDataHistIdTranslationRepository(
 	private val template: NamedParameterJdbcTemplate,
 ) {
@@ -34,7 +34,7 @@ class ArenaDataHistIdTranslationRepository(
 
 		try {
 			template.update(sql, entry.asParameterSource())
-		} catch (e: DuplicateKeyException) {
+		} catch (_: DuplicateKeyException) {
 			throw IllegalStateException("Translation entry on amtId ${entry.amtId} with arenaHistId ${entry.arenaHistId} already exist.")
 		}
 	}
