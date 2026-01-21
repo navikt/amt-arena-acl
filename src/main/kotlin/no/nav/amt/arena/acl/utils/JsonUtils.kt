@@ -1,38 +1,23 @@
 package no.nav.amt.arena.acl.utils
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.MapperFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.fasterxml.jackson.module.kotlin.treeToValue
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.jacksonMapperBuilder
+import tools.jackson.module.kotlin.readValue
+import tools.jackson.module.kotlin.treeToValue
 
 object JsonUtils {
+	val objectMapper: ObjectMapper =
+		jacksonMapperBuilder()
+			.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+			.build()
 
-	val objectMapper: ObjectMapper = jacksonObjectMapper()
-		.registerKotlinModule()
-		.registerModule(JavaTimeModule())
-		.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-		.configure(MapperFeature.USE_STD_BEAN_NAMING, true)
-		.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+	inline fun <reified T> fromJsonString(jsonStr: String): T = objectMapper.readValue(jsonStr)
 
-	inline fun <reified T> fromJsonString(jsonStr: String): T {
-		return objectMapper.readValue(jsonStr)
-	}
+	fun toJsonString(any: Any): String = objectMapper.writeValueAsString(any)
 
-	fun toJsonString(any: Any): String {
-		return objectMapper.writeValueAsString(any)
-	}
+	fun toJsonNode(jsonStr: String): JsonNode = objectMapper.readTree(jsonStr)
 
-	fun toJsonNode(jsonStr: String): JsonNode {
-		return objectMapper.readTree(jsonStr)
-	}
-
-	inline fun <reified T> fromJsonNode(jsonNode: JsonNode): T {
-		return objectMapper.treeToValue(jsonNode)
-	}
+	inline fun <reified T> fromJsonNode(jsonNode: JsonNode): T = objectMapper.treeToValue(jsonNode)
 }

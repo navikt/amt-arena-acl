@@ -1,6 +1,5 @@
 package no.nav.amt.arena.acl.clients.ordsproxy
 
-import ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
 import no.nav.common.rest.client.RestClient.baseClient
 import okhttp3.OkHttpClient
@@ -13,13 +12,14 @@ open class ArenaOrdsProxyClientImpl(
 	private val tokenProvider: Supplier<String>,
 	private val httpClient: OkHttpClient = baseClient(),
 ) : ArenaOrdsProxyClient {
-
 	override fun hentFnr(arenaPersonId: String): String? {
-		val request = Request.Builder()
-			.url("$arenaOrdsProxyUrl/api/ords/fnr?personId=$arenaPersonId")
-			.header("Authorization", "Bearer ${tokenProvider.get()}")
-			.get()
-			.build()
+		val request =
+			Request
+				.Builder()
+				.url("$arenaOrdsProxyUrl/api/ords/fnr?personId=$arenaPersonId")
+				.header("Authorization", "Bearer ${tokenProvider.get()}")
+				.get()
+				.build()
 
 		httpClient.newCall(request).execute().use { response ->
 			if (response.code == HttpStatus.NOT_FOUND.value()) {
@@ -30,18 +30,20 @@ open class ArenaOrdsProxyClientImpl(
 				throw RuntimeException("Klarte ikke å hente fnr for Arena personId. Status: ${response.code}")
 			}
 
-			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
+			val body = response.body.string()
 
 			return fromJsonString<HentFnrResponse>(body).fnr
 		}
 	}
 
 	override fun hentVirksomhetsnummer(arenaArbeidsgiverId: String): String {
-		val request = Request.Builder()
-			.url("$arenaOrdsProxyUrl/api/ords/arbeidsgiver?arbeidsgiverId=$arenaArbeidsgiverId")
-			.header("Authorization", "Bearer ${tokenProvider.get()}")
-			.get()
-			.build()
+		val request =
+			Request
+				.Builder()
+				.url("$arenaOrdsProxyUrl/api/ords/arbeidsgiver?arbeidsgiverId=$arenaArbeidsgiverId")
+				.header("Authorization", "Bearer ${tokenProvider.get()}")
+				.get()
+				.build()
 
 		httpClient.newCall(request).execute().use { response ->
 			if (response.code == HttpStatus.NOT_FOUND.value()) {
@@ -52,7 +54,7 @@ open class ArenaOrdsProxyClientImpl(
 				throw RuntimeException("Klarte ikke å hente arbeidsgiver. Status: ${response.code}")
 			}
 
-			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
+			val body = response.body.string()
 
 			val arbeidsgiverResponse = fromJsonString<ArbeidsgiverResponse>(body)
 
@@ -68,5 +70,4 @@ open class ArenaOrdsProxyClientImpl(
 		val virksomhetsnummer: String,
 		val organisasjonsnummerMorselskap: String,
 	)
-
 }

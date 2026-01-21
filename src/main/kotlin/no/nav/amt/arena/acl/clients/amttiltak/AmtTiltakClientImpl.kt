@@ -12,28 +12,30 @@ import java.util.function.Supplier
 class AmtTiltakClientImpl(
 	private val baseUrl: String,
 	private val tokenProvider: Supplier<String>,
-	private val httpClient: OkHttpClient = RestClient.baseClient()
+	private val httpClient: OkHttpClient = RestClient.baseClient(),
 ) : AmtTiltakClient {
 	private val mediaTypeJson = "application/json".toMediaType()
 
 	override fun hentDeltakelserForPerson(personIdent: String): List<DeltakerDto> {
-		val request = Request.Builder()
-			.url("$baseUrl/api/external/deltakelser")
-			.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
-			.post(toJsonString(HentDeltakelserRequest(personIdent)).toRequestBody(mediaTypeJson))
-			.build()
+		val request =
+			Request
+				.Builder()
+				.url("$baseUrl/api/external/deltakelser")
+				.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
+				.post(toJsonString(HentDeltakelserRequest(personIdent)).toRequestBody(mediaTypeJson))
+				.build()
 
 		httpClient.newCall(request).execute().use { response ->
 			if (!response.isSuccessful) {
 				throw RuntimeException("Klarte ikke å hente tiltaksdeltakelser fra amt-tiltak. status=${response.code}")
 			}
 
-			val body = response.body?.string() ?: throw RuntimeException("Body is missing")
+			val body = response.body.string()
 			return JsonUtils.fromJsonString<List<DeltakerDto>>(body)
 		}
 	}
 
 	data class HentDeltakelserRequest(
-		val personIdent: String
+		val personIdent: String,
 	)
 }

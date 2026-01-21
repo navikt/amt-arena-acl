@@ -1,11 +1,11 @@
 package no.nav.amt.arena.acl.domain.kafka.arena
 
-import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.consumer.converters.ArenaDeltakerAarsakConverter
 import no.nav.amt.arena.acl.consumer.converters.ArenaDeltakerStatusConverter
+import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class TiltakDeltaker(
 	val tiltakdeltakerId: String,
@@ -19,33 +19,33 @@ data class TiltakDeltaker(
 	val dagerPerUke: Float?,
 	val prosentDeltid: Float?,
 	val regDato: LocalDateTime,
-	val innsokBegrunnelse: String?
+	val innsokBegrunnelse: String?,
 ) {
 	enum class Status {
-		DELAVB,    // Deltakelse avbrutt
-		FULLF,     // Fullført
+		DELAVB, // Deltakelse avbrutt
+		FULLF, // Fullført
 		GJENN_AVB, // Gjennomføring avbrutt
 		GJENN_AVL, // Gjennomføring avlyst
-		IKKEM,     // Ikke møtt
+		IKKEM, // Ikke møtt
 		IKKAKTUELL, // Ikke aktuell
-		AVSLAG,     // Fått avslag
-		NEITAKK,    // Takket nei til tilbud
-		GJENN,       // Gjennomføres
-		TILBUD,      // Godkjent tiltaksplass
+		AVSLAG, // Fått avslag
+		NEITAKK, // Takket nei til tilbud
+		GJENN, // Gjennomføres
+		TILBUD, // Godkjent tiltaksplass
 		VENTELISTE,
 		AKTUELL,
 		JATAKK,
 		INFOMOETE,
-		FEILREG
+		FEILREG,
 	}
 
 	enum class StatusAarsak {
 		HENLU, // Henlagt etter utredning
 		SYK, // syk
-		FRISM,  // Friskmeldt
-		ANN, //Annet
-		BEGA, //Begynt i arbeid
-		UTV,  // Utvist
+		FRISM, // Friskmeldt
+		ANN, // Annet
+		BEGA, // Begynt i arbeid
+		UTV, // Utvist
 		FTOAT, // Fått tilbud om annet tiltak
 	}
 
@@ -55,24 +55,26 @@ data class TiltakDeltaker(
 		gjennomforingSluttDato: LocalDate?,
 		erGjennomforingAvsluttet: Boolean,
 		personIdent: String,
-		deltakelseKreverGodkjenningLoep: Boolean
+		deltakelseKreverGodkjenningLoep: Boolean,
 	): AmtDeltaker {
-		val deltakerStatus = ArenaDeltakerStatusConverter(
-			deltakerRegistrertDato = regDato,
-			deltakerStartdato = datoFra,
-			deltakerSluttdato = datoTil,
-			arenaStatus = deltakerStatusKode,
-			datoStatusEndring = datoStatusendring,
-			gjennomforingSluttdato = gjennomforingSluttDato,
-			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
-			deltakelseKreverGodkjenningLoep = deltakelseKreverGodkjenningLoep
-		).convert()
-		val statusAarsak = ArenaDeltakerAarsakConverter.convert(
-			deltakerStatusKode,
-			deltakerStatus.navn,
-			statusAarsakKode,
-			erGjennomforingAvsluttet
-		)
+		val deltakerStatus =
+			ArenaDeltakerStatusConverter(
+				deltakerRegistrertDato = regDato,
+				deltakerStartdato = datoFra,
+				deltakerSluttdato = datoTil,
+				arenaStatus = deltakerStatusKode,
+				datoStatusEndring = datoStatusendring,
+				gjennomforingSluttdato = gjennomforingSluttDato,
+				erGjennomforingAvsluttet = erGjennomforingAvsluttet,
+				deltakelseKreverGodkjenningLoep = deltakelseKreverGodkjenningLoep,
+			).convert()
+		val statusAarsak =
+			ArenaDeltakerAarsakConverter.convert(
+				deltakerStatusKode,
+				deltakerStatus.navn,
+				statusAarsakKode,
+				erGjennomforingAvsluttet,
+			)
 
 		return AmtDeltaker(
 			id = amtDeltakerId,
@@ -86,7 +88,7 @@ data class TiltakDeltaker(
 			registrertDato = regDato,
 			status = deltakerStatus.navn,
 			statusEndretDato = deltakerStatus.endretDato,
-			innsokBegrunnelse = innsokBegrunnelse
+			innsokBegrunnelse = innsokBegrunnelse,
 		)
 	}
 }

@@ -12,13 +12,12 @@ import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
 @Component
-open class KafkaConsumer(
+class KafkaConsumer(
 	kafkaTopicProperties: KafkaTopicProperties,
 	kafkaProperties: KafkaProperties,
 	private val arenaMessageConsumerService: ArenaMessageConsumerService,
-	private val arenaConsumerServiceTemp: ArenaConsumerServiceTemp
+	private val arenaConsumerServiceTemp: ArenaConsumerServiceTemp,
 ) {
-
 	private val client: KafkaConsumerClient
 
 	private val tempClient: KafkaConsumerClient
@@ -26,48 +25,57 @@ open class KafkaConsumer(
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	init {
-		val topics = listOf(
-			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
-			kafkaTopicProperties.arenaTiltakDeltakerTopic,
-			kafkaTopicProperties.arenaHistTiltakDeltakerTopic
-		)
-
-		val topicConfigs = topics.map { topic ->
-			KafkaConsumerClientBuilder.TopicConfig<String, String>()
-				.withLogging()
-				.withConsumerConfig(
-					topic,
-					stringDeserializer(),
-					stringDeserializer(),
-					arenaMessageConsumerService::handleArenaGoldenGateRecord
-				)
-		}
-
-		val tempTopicConfig = KafkaConsumerClientBuilder.TopicConfig<String, String>()
-			.withLogging()
-			.withConsumerConfig(
+		val topics =
+			listOf(
+				kafkaTopicProperties.arenaTiltakGjennomforingTopic,
 				kafkaTopicProperties.arenaTiltakDeltakerTopic,
-				stringDeserializer(),
-				stringDeserializer(),
-				arenaConsumerServiceTemp::handleArenaGoldenGateRecord
+				kafkaTopicProperties.arenaHistTiltakDeltakerTopic,
 			)
 
-		client = KafkaConsumerClientBuilder.builder()
-			.withProperties(kafkaProperties.consumer())
-			.withTopicConfigs(topicConfigs)
-			.build()
+		val topicConfigs =
+			topics.map { topic ->
+				KafkaConsumerClientBuilder
+					.TopicConfig<String, String>()
+					.withLogging()
+					.withConsumerConfig(
+						topic,
+						stringDeserializer(),
+						stringDeserializer(),
+						arenaMessageConsumerService::handleArenaGoldenGateRecord,
+					)
+			}
 
-		tempClient = KafkaConsumerClientBuilder.builder()
-			.withProperties(kafkaProperties.tempConsumer())
-			.withTopicConfigs(listOf(tempTopicConfig))
-			.build()
+		val tempTopicConfig =
+			KafkaConsumerClientBuilder
+				.TopicConfig<String, String>()
+				.withLogging()
+				.withConsumerConfig(
+					kafkaTopicProperties.arenaTiltakDeltakerTopic,
+					stringDeserializer(),
+					stringDeserializer(),
+					arenaConsumerServiceTemp::handleArenaGoldenGateRecord,
+				)
+
+		client =
+			KafkaConsumerClientBuilder
+				.builder()
+				.withProperties(kafkaProperties.consumer())
+				.withTopicConfigs(topicConfigs)
+				.build()
+
+		tempClient =
+			KafkaConsumerClientBuilder
+				.builder()
+				.withProperties(kafkaProperties.tempConsumer())
+				.withTopicConfigs(listOf(tempTopicConfig))
+				.build()
 	}
 
 	@EventListener
-	open fun onContextRefreshed(_event: ContextRefreshedEvent) = start()
+	fun onContextRefreshed(_event: ContextRefreshedEvent) = start()
 
 	@EventListener
-	open fun onContextClosed(_event: ContextClosedEvent) = stop()
+	fun onContextClosed(_event: ContextClosedEvent) = stop()
 
 	fun start() {
 		log.info("Starting kafka consumer...")

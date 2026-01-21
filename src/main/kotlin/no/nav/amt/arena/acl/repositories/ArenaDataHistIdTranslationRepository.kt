@@ -10,26 +10,27 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-open class ArenaDataHistIdTranslationRepository(
-	private val template: NamedParameterJdbcTemplate
+class ArenaDataHistIdTranslationRepository(
+	private val template: NamedParameterJdbcTemplate,
 ) {
-
-	private val rowMapper = RowMapper { rs, _ ->
-		ArenaDataHistIdTranslationDbo(
-			amtId = rs.getUUID("amt_id"),
-			arenaHistId = rs.getString("arena_hist_id"),
-			arenaId = rs.getString("arena_id"),
-		)
-	}
+	private val rowMapper =
+		RowMapper { rs, _ ->
+			ArenaDataHistIdTranslationDbo(
+				amtId = rs.getUUID("amt_id"),
+				arenaHistId = rs.getString("arena_hist_id"),
+				arenaId = rs.getString("arena_id"),
+			)
+		}
 
 	fun insert(entry: ArenaDataHistIdTranslationDbo) {
-		val sql = """
+		val sql =
+			"""
 			INSERT INTO arena_data_hist_id_translation(amt_id, arena_hist_id, arena_id)
 			VALUES (:amt_id,
 					:arena_hist_id,
 					:arena_id)
 			ON CONFLICT (amt_id) DO NOTHING
-		""".trimIndent()
+			""".trimIndent()
 
 		try {
 			template.update(sql, entry.asParameterSource())
@@ -39,34 +40,41 @@ open class ArenaDataHistIdTranslationRepository(
 	}
 
 	fun get(id: UUID): ArenaDataHistIdTranslationDbo? {
-		val sql = """
+		val sql =
+			"""
 			SELECT * FROM arena_data_hist_id_translation WHERE amt_id = :amt_id
-		""".trimIndent()
+			""".trimIndent()
 
-		val parameters = sqlParameters(
-			"amt_id" to id
-		)
+		val parameters =
+			sqlParameters(
+				"amt_id" to id,
+			)
 
-		return template.query(sql, parameters, rowMapper)
+		return template
+			.query(sql, parameters, rowMapper)
 			.firstOrNull()
 	}
 
 	fun get(arenaHistId: String): ArenaDataHistIdTranslationDbo? {
-		val sql = """
+		val sql =
+			"""
 			SELECT * FROM arena_data_hist_id_translation WHERE arena_hist_id = :arena_hist_id
-		""".trimIndent()
+			""".trimIndent()
 
-		val parameters = sqlParameters(
-			"arena_hist_id" to arenaHistId
-		)
+		val parameters =
+			sqlParameters(
+				"arena_hist_id" to arenaHistId,
+			)
 
-		return template.query(sql, parameters, rowMapper)
+		return template
+			.query(sql, parameters, rowMapper)
 			.firstOrNull()
 	}
 
-	private fun ArenaDataHistIdTranslationDbo.asParameterSource() = sqlParameters(
-		"amt_id" to amtId,
-		"arena_hist_id" to arenaHistId,
-		"arena_id" to arenaId,
-	)
+	private fun ArenaDataHistIdTranslationDbo.asParameterSource() =
+		sqlParameters(
+			"amt_id" to amtId,
+			"arena_hist_id" to arenaHistId,
+			"arena_id" to arenaId,
+		)
 }

@@ -1,6 +1,5 @@
 package no.nav.amt.arena.acl.clients.ordsproxy
 
-import ArenaOrdsProxyClient
 import no.nav.common.token_client.client.MachineToMachineTokenClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
