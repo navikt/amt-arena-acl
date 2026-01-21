@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.clients.mulighetsrommet_api
+package no.nav.amt.arena.acl.clients.mulighetsrommet
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper

@@ -6,11 +6,11 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 
-class ArenaOrdsProxyClientImplTest {
+class ArenaOrdsProxyClientTest {
 	@Test
 	fun `hentFnr() skal lage riktig request og parse respons`() {
 		val client =
-			ArenaOrdsProxyClientImpl(
+			ArenaOrdsProxyClient(
 				arenaOrdsProxyUrl = serverUrl,
 				tokenProvider = { TOKEN },
 			)
@@ -37,7 +37,7 @@ class ArenaOrdsProxyClientImplTest {
 	@Test
 	fun `hentFnr() skal null hvis stauts er 404`() {
 		val client =
-			ArenaOrdsProxyClientImpl(
+			ArenaOrdsProxyClient(
 				arenaOrdsProxyUrl = serverUrl,
 				tokenProvider = { TOKEN },
 			)
@@ -50,7 +50,7 @@ class ArenaOrdsProxyClientImplTest {
 	@Test
 	fun `hentVirksomhetsnummer() skal lage riktig request og parse respons`() {
 		val client =
-			ArenaOrdsProxyClientImpl(
+			ArenaOrdsProxyClient(
 				arenaOrdsProxyUrl = serverUrl,
 				tokenProvider = { TOKEN },
 			)

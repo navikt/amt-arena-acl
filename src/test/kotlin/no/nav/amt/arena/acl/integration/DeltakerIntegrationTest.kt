@@ -56,10 +56,10 @@ class DeltakerIntegrationTest(
 
 	val gjennomforingIdMR: UUID = UUID.randomUUID()
 	val gjennomforingMRData =
-		no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing(
+		no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing(
 			id = gjennomforingIdMR,
 			tiltakstype =
-				no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Tiltakstype(
+				no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Tiltakstype(
 					id = UUID.randomUUID(),
 					navn = "Navn på tiltak",
 					arenaKode = "INDOPPFAG",
@@ -67,9 +67,9 @@ class DeltakerIntegrationTest(
 			navn = "Navn på gjennomføring",
 			startDato = LocalDate.now(),
 			sluttDato = LocalDate.now().plusDays(3),
-			status = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Status.GJENNOMFORES,
+			status = no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Status.GJENNOMFORES,
 			virksomhetsnummer = "999888777",
-			oppstart = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Oppstartstype.LOPENDE,
+			oppstart = no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Oppstartstype.LOPENDE,
 		)
 
 	val fnr = "123456789"

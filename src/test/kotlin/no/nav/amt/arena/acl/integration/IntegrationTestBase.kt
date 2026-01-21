@@ -72,7 +72,6 @@ abstract class IntegrationTestBase(
 		val mockArenaOrdsProxyHttpServer = MockArenaOrdsProxyHttpServer()
 		val mockAmtTiltakServer = MockAmtTiltakServer()
 
-		// @ServiceConnection
 		val kafkaContainer =
 			KafkaContainer(DockerImageName.parse("apache/kafka")).apply {
 				// workaround for https://github.com/testcontainers/testcontainers-java/issues/9506

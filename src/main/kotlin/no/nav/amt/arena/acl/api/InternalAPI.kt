@@ -18,7 +18,7 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @RequestMapping("/internal/api")
 class InternalAPI(
-	val kafkaProducerService: KafkaProducerService,
+	private val kafkaProducerService: KafkaProducerService,
 	private val arenaDataRepository: ArenaDataRepository,
 ) {
 	private val log = LoggerFactory.getLogger(javaClass)

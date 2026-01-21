@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus
 import tools.jackson.module.kotlin.readValue
 import java.util.function.Supplier
 
-open class ArenaOrdsProxyClientImpl(
+class ArenaOrdsProxyClient(
 	private val arenaOrdsProxyUrl: String,
 	private val tokenProvider: Supplier<String>,
 	private val httpClient: OkHttpClient = baseClient(),
