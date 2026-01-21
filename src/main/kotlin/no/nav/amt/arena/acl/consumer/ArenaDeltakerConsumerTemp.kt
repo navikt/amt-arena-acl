@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.consumer
 
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClientImpl
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.clients.ordsproxy.ArenaOrdsProxyClientImpl
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
@@ -31,7 +31,7 @@ class ArenaDeltakerConsumerTemp(
 	private val gjennomforingService: GjennomforingService,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val ordsClient: ArenaOrdsProxyClientImpl,
-	private val mulighetsrommetApiClient: MulighetsrommetApiClientImpl,
+	private val mulighetsrommetApiClient: MulighetsrommetApiClient,
 ) {
 	private val log = LoggerFactory.getLogger(javaClass)
 

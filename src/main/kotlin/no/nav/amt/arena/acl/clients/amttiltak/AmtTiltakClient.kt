@@ -10,7 +10,7 @@ import org.springframework.http.HttpHeaders
 import tools.jackson.module.kotlin.readValue
 import java.util.function.Supplier
 
-class AmtTiltakClientImpl(
+class AmtTiltakClient(
 	private val baseUrl: String,
 	private val tokenProvider: Supplier<String>,
 	private val httpClient: OkHttpClient = RestClient.baseClient(),

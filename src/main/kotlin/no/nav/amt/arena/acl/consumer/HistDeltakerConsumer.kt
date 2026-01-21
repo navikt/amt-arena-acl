@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.consumer
 
-import no.nav.amt.arena.acl.clients.amttiltak.AmtTiltakClientImpl
+import no.nav.amt.arena.acl.clients.amttiltak.AmtTiltakClient
 import no.nav.amt.arena.acl.clients.amttiltak.DeltakerDto
 import no.nav.amt.arena.acl.clients.amttiltak.DeltakerStatus
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
@@ -36,7 +36,7 @@ class HistDeltakerConsumer(
 	private val ordsClient: ArenaOrdsProxyClientImpl,
 	private val kafkaProducerService: KafkaProducerService,
 	private val arenaDeltakerConsumer: ArenaDeltakerConsumer,
-	private val amtTiltakClient: AmtTiltakClientImpl,
+	private val amtTiltakClient: AmtTiltakClient,
 	private val deltakerRepository: DeltakerRepository,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 ) : ArenaMessageConsumer<ArenaHistDeltakerKafkaMessage> {

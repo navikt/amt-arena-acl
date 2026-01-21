@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.consumer
 
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClientImpl
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
 import no.nav.amt.arena.acl.clients.ordsproxy.ArenaOrdsProxyClientImpl
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
@@ -41,7 +41,7 @@ class ArenaDeltakerConsumer(
 	private val ordsClient: ArenaOrdsProxyClientImpl,
 	private val metrics: DeltakerMetricHandler,
 	private val kafkaProducerService: KafkaProducerService,
-	private val mulighetsrommetApiClient: MulighetsrommetApiClientImpl,
+	private val mulighetsrommetApiClient: MulighetsrommetApiClient,
 ) : ArenaMessageConsumer<ArenaDeltakerKafkaMessage> {
 	private val log = LoggerFactory.getLogger(javaClass)
 

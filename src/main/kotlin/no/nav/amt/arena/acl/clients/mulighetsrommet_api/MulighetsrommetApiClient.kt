@@ -11,7 +11,7 @@ import tools.jackson.module.kotlin.readValue
 import java.util.UUID
 import java.util.function.Supplier
 
-class MulighetsrommetApiClientImpl(
+class MulighetsrommetApiClient(
 	private val baseUrl: String,
 	private val tokenProvider: Supplier<String>,
 	private val httpClient: OkHttpClient = baseClient(),

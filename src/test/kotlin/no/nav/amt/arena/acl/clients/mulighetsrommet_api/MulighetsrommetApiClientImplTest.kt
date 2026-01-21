@@ -14,7 +14,7 @@ class MulighetsrommetApiClientImplTest :
 		val server = MockHttpServer(true)
 
 		val client =
-			MulighetsrommetApiClientImpl(
+			MulighetsrommetApiClient(
 				baseUrl = server.serverUrl(),
 				tokenProvider = { "TOKEN" },
 			)
