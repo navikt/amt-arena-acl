@@ -1,23 +1,25 @@
 package no.nav.amt.arena.acl.clients.ordsproxy
 
-import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
+import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
 import no.nav.common.rest.client.RestClient.baseClient
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import tools.jackson.module.kotlin.readValue
 import java.util.function.Supplier
 
 open class ArenaOrdsProxyClientImpl(
 	private val arenaOrdsProxyUrl: String,
 	private val tokenProvider: Supplier<String>,
 	private val httpClient: OkHttpClient = baseClient(),
-) : ArenaOrdsProxyClient {
-	override fun hentFnr(arenaPersonId: String): String? {
+) {
+	fun hentFnr(arenaPersonId: String): String? {
 		val request =
 			Request
 				.Builder()
 				.url("$arenaOrdsProxyUrl/api/ords/fnr?personId=$arenaPersonId")
-				.header("Authorization", "Bearer ${tokenProvider.get()}")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
 				.get()
 				.build()
 
@@ -32,16 +34,16 @@ open class ArenaOrdsProxyClientImpl(
 
 			val body = response.body.string()
 
-			return fromJsonString<HentFnrResponse>(body).fnr
+			return objectMapper.readValue<HentFnrResponse>(body).fnr
 		}
 	}
 
-	override fun hentVirksomhetsnummer(arenaArbeidsgiverId: String): String {
+	fun hentVirksomhetsnummer(arenaArbeidsgiverId: String): String {
 		val request =
 			Request
 				.Builder()
 				.url("$arenaOrdsProxyUrl/api/ords/arbeidsgiver?arbeidsgiverId=$arenaArbeidsgiverId")
-				.header("Authorization", "Bearer ${tokenProvider.get()}")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
 				.get()
 				.build()
 
@@ -56,7 +58,7 @@ open class ArenaOrdsProxyClientImpl(
 
 			val body = response.body.string()
 
-			val arbeidsgiverResponse = fromJsonString<ArbeidsgiverResponse>(body)
+			val arbeidsgiverResponse = objectMapper.readValue<ArbeidsgiverResponse>(body)
 
 			return arbeidsgiverResponse.virksomhetsnummer
 		}

@@ -1,10 +1,10 @@
 package no.nav.amt.arena.acl.consumer
 
-import no.nav.amt.arena.acl.clients.amttiltak.AmtTiltakClient
+import no.nav.amt.arena.acl.clients.amttiltak.AmtTiltakClientImpl
 import no.nav.amt.arena.acl.clients.amttiltak.DeltakerDto
-import no.nav.amt.arena.acl.clients.amttiltak.DeltakerStatusDto
+import no.nav.amt.arena.acl.clients.amttiltak.DeltakerStatus
 import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
-import no.nav.amt.arena.acl.clients.ordsproxy.ArenaOrdsProxyClient
+import no.nav.amt.arena.acl.clients.ordsproxy.ArenaOrdsProxyClientImpl
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
@@ -33,10 +33,10 @@ import java.util.UUID
 @Component
 class HistDeltakerConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
-	private val ordsClient: ArenaOrdsProxyClient,
+	private val ordsClient: ArenaOrdsProxyClientImpl,
 	private val kafkaProducerService: KafkaProducerService,
 	private val arenaDeltakerConsumer: ArenaDeltakerConsumer,
-	private val amtTiltakClient: AmtTiltakClient,
+	private val amtTiltakClient: AmtTiltakClientImpl,
 	private val deltakerRepository: DeltakerRepository,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 ) : ArenaMessageConsumer<ArenaHistDeltakerKafkaMessage> {
@@ -74,7 +74,7 @@ class HistDeltakerConsumer(
 				log.info(
 					"Fant ingen match for hist-deltaker $arenaHistDeltakerId, oppretter ny deltaker ${nyDeltaker.id} og lagrer mapping og sender videre",
 				)
-				sendMessage(nyDeltaker, arenaHistDeltakerId, AmtOperation.CREATED)
+				sendMessage(nyDeltaker, arenaHistDeltakerId)
 			} else {
 				log.info("Hist deltaker $arenaHistDeltakerId matcher deltaker ${eksisterendeDeltaker.arenaId}")
 
@@ -93,7 +93,7 @@ class HistDeltakerConsumer(
 					amtDeltakerId = deltakerFraAmtTiltak.id,
 					histDeltakerArenaId = arenaHistDeltakerId,
 				)
-				if (deltakerFraAmtTiltak.status == DeltakerStatusDto.FEILREGISTRERT) {
+				if (deltakerFraAmtTiltak.status == DeltakerStatus.FEILREGISTRERT) {
 					log.info("amt-deltaker ${deltakerFraAmtTiltak.id} er feilregistrert, gjenoppretter")
 					gjenopprettFeilregistrertDeltaker(histDeltaker, deltakerFraAmtTiltak.id, gjennomforing, personIdent)
 				}
@@ -134,12 +134,11 @@ class HistDeltakerConsumer(
 	private fun sendMessage(
 		deltaker: AmtDeltaker,
 		arenaDeltakerId: String,
-		operation: AmtOperation,
 	) {
 		val deltakerKafkaMessage =
 			AmtKafkaMessageDto(
 				type = PayloadType.DELTAKER,
-				operation = operation,
+				operation = AmtOperation.CREATED,
 				payload = deltaker,
 			)
 		kafkaProducerService.sendTilAmtTiltak(deltaker.id, deltakerKafkaMessage)

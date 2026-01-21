@@ -15,7 +15,7 @@ import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
-import no.nav.amt.arena.acl.utils.JsonUtils
+import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -47,11 +47,12 @@ class RetryArenaMessageConsumerServiceTest(
 		retryArenaMessageProcessorService.processRetryMessages(2)
 
 		deltakere.forEach { (position, _) ->
-			val arenaData = arenaDataRepository.get(
-				tableName = ARENA_DELTAKER_TABLE_NAME,
-				operation = AmtOperation.CREATED,
-				position = position
-			)
+			val arenaData =
+				arenaDataRepository.get(
+					tableName = ARENA_DELTAKER_TABLE_NAME,
+					operation = AmtOperation.CREATED,
+					position = position,
+				)
 
 			arenaData.shouldNotBeNull()
 			arenaData.ingestStatus shouldBe IngestStatus.HANDLED
@@ -90,7 +91,7 @@ class RetryArenaMessageConsumerServiceTest(
 
 		kafkaMessageSender.publiserArenaDeltaker(
 			deltaker.TILTAKDELTAKER_ID,
-			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = deltaker, opPos = pos)),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = deltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -120,7 +121,7 @@ class RetryArenaMessageConsumerServiceTest(
 
 		kafkaMessageSender.publiserArenaGjennomforing(
 			gjennomforingArenaId,
-			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos)),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos)),
 		)
 
 		await().untilAsserted {

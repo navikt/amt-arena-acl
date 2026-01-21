@@ -1,6 +1,6 @@
 package no.nav.amt.arena.acl.consumer
 
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
+import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClientImpl
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInputWithStatusHandled
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
@@ -15,7 +15,7 @@ import java.util.UUID
 class GjennomforingConsumer(
 	private val arenaDataRepository: ArenaDataRepository,
 	private val gjennomforingService: GjennomforingService,
-	private val mulighetsrommetApiClient: MulighetsrommetApiClient,
+	private val mulighetsrommetApiClient: MulighetsrommetApiClientImpl,
 ) : ArenaMessageConsumer<ArenaGjennomforingKafkaMessage> {
 	private val log = LoggerFactory.getLogger(javaClass)
 

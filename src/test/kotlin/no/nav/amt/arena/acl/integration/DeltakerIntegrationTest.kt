@@ -26,11 +26,11 @@ import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
-import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
-import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
+import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import tools.jackson.module.kotlin.readValue
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -113,7 +113,7 @@ class DeltakerIntegrationTest(
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 		kafkaMessageSender.publiserArenaDeltaker(
 			baseDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(baseDeltaker, opPos = pos1)),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaDeltaker(baseDeltaker, opPos = pos1)),
 		)
 
 		await().untilAsserted {
@@ -135,7 +135,7 @@ class DeltakerIntegrationTest(
 		val endretDeltaker = baseDeltaker.copy(DELTAKERSTATUSKODE = "AKTUELL")
 		kafkaMessageSender.publiserArenaDeltaker(
 			endretDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(endretDeltaker, opPos = pos2)),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaDeltaker(endretDeltaker, opPos = pos2)),
 		)
 
 		await().untilAsserted {
@@ -164,7 +164,7 @@ class DeltakerIntegrationTest(
 		val pos = "42"
 		kafkaMessageSender.publiserArenaDeltaker(
 			baseDeltaker.TILTAKGJENNOMFORING_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -191,7 +191,7 @@ class DeltakerIntegrationTest(
 		val pos = "77"
 		kafkaMessageSender.publiserArenaDeltaker(
 			baseDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -235,7 +235,7 @@ class DeltakerIntegrationTest(
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 		kafkaMessageSender.publiserArenaDeltaker(
 			baseDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(baseDeltaker, opPos = pos)),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaDeltaker(baseDeltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -261,7 +261,7 @@ class DeltakerIntegrationTest(
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 		kafkaMessageSender.publiserArenaDeltaker(
 			baseDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(deltaker, opPos = pos)),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaDeltaker(deltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -288,7 +288,7 @@ class DeltakerIntegrationTest(
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 		kafkaMessageSender.publiserArenaDeltaker(
 			baseDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(deltaker, opPos = pos)),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaDeltaker(deltaker, opPos = pos)),
 		)
 
 		deltaker.publiserOgValiderOutput {
@@ -318,7 +318,7 @@ class DeltakerIntegrationTest(
 
 		kafkaMessageSender.publiserArenaDeltaker(
 			deltaker.TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(deltaker, opPos = "67", opType = "U")),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaDeltaker(deltaker, opPos = "67", opType = "U")),
 		)
 
 		await().untilAsserted {
@@ -355,7 +355,7 @@ class DeltakerIntegrationTest(
 		val pos = "42"
 		kafkaMessageSender.publiserArenaDeltaker(
 			baseDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(
+			objectMapper.writeValueAsString(
 				KafkaMessageCreator.opprettArenaDeltaker(
 					arenaDeltaker = baseDeltaker,
 					opPos = pos,
@@ -391,7 +391,7 @@ class DeltakerIntegrationTest(
 		val pos = "443"
 		kafkaMessageSender.publiserArenaDeltaker(
 			baseDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(
+			objectMapper.writeValueAsString(
 				KafkaMessageCreator.opprettArenaDeltaker(
 					arenaDeltaker = baseDeltaker,
 					opPos = pos,
@@ -441,7 +441,7 @@ class DeltakerIntegrationTest(
 
 		kafkaMessageSender.publiserArenaDeltaker(
 			baseDeltaker.TILTAKDELTAKER_ID,
-			toJsonString(
+			objectMapper.writeValueAsString(
 				KafkaMessageCreator.opprettArenaDeltaker(
 					arenaDeltaker = baseDeltaker,
 					opPos = pos,
@@ -464,7 +464,7 @@ class DeltakerIntegrationTest(
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
 			deltakerRecord.shouldNotBeNull()
 
-			val deltakerResult = fromJsonString<AmtKafkaMessageDto<AmtDeltaker>>(deltakerRecord.value())
+			val deltakerResult = objectMapper.readValue<AmtKafkaMessageDto<AmtDeltaker>>(deltakerRecord.value())
 			assertSoftly(deltakerResult) {
 				type shouldBe PayloadType.DELTAKER
 				operation shouldBe AmtOperation.MODIFIED
@@ -507,7 +507,7 @@ class DeltakerIntegrationTest(
 	fun ArenaGjennomforing.publiser(customAssertions: (payload: Gjennomforing?) -> Unit) {
 		kafkaMessageSender.publiserArenaGjennomforing(
 			TILTAKGJENNOMFORING_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(this)),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaGjennomforingMessage(this)),
 		)
 
 		await().untilAsserted {
@@ -519,14 +519,14 @@ class DeltakerIntegrationTest(
 	fun ArenaDeltaker.publiserOgValiderOutput(customAssertions: (payload: AmtDeltaker) -> Unit) {
 		kafkaMessageSender.publiserArenaDeltaker(
 			TILTAKDELTAKER_ID,
-			toJsonString(KafkaMessageCreator.opprettArenaDeltaker(this)),
+			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaDeltaker(this)),
 		)
 
 		await().untilAsserted {
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
 			deltakerRecord.shouldNotBeNull()
 
-			val deltakerResult = fromJsonString<AmtKafkaMessageDto<AmtDeltaker>>(deltakerRecord.value())
+			val deltakerResult = objectMapper.readValue<AmtKafkaMessageDto<AmtDeltaker>>(deltakerRecord.value())
 			assertSoftly(deltakerResult) {
 				type shouldBe PayloadType.DELTAKER
 				operation shouldBe AmtOperation.CREATED

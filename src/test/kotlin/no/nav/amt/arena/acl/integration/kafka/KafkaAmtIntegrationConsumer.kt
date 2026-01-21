@@ -6,13 +6,14 @@ import no.nav.amt.arena.acl.domain.kafka.amt.AmtKafkaMessageDto
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtOperation
 import no.nav.amt.arena.acl.domain.kafka.amt.PayloadType
 import no.nav.amt.arena.acl.kafka.KafkaProperties
-import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonNode
-import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
+import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
 import no.nav.common.kafka.consumer.KafkaConsumerClient
 import no.nav.common.kafka.consumer.util.KafkaConsumerClientBuilder
 import no.nav.common.kafka.consumer.util.deserializer.Deserializers.stringDeserializer
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import tools.jackson.databind.JsonNode
+import tools.jackson.module.kotlin.readValue
+import tools.jackson.module.kotlin.treeToValue
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -49,12 +50,11 @@ class KafkaAmtIntegrationConsumer(
 	}
 
 	private fun handle(record: ConsumerRecord<String, String>) {
-		val unknownMessageWrapper = fromJsonString<UnknownMessageWrapper>(record.value())
+		val unknownMessageWrapper = objectMapper.readValue<UnknownMessageWrapper>(record.value())
 
 		when (unknownMessageWrapper.type) {
 			PayloadType.DELTAKER -> {
-				val deltakerPayload =
-					fromJsonNode<AmtDeltaker>(unknownMessageWrapper.payload)
+				val deltakerPayload: AmtDeltaker = objectMapper.treeToValue(unknownMessageWrapper.payload)
 				val message = toKnownMessageWrapper(deltakerPayload, unknownMessageWrapper)
 				deltakerSubsctiptions.values.forEach { it.invoke(message) }
 			}

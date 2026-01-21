@@ -22,12 +22,13 @@ import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.DateUtils.parseArenaDateTime
-import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonNode
-import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
+import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
 import no.nav.amt.arena.acl.utils.removeNullCharacters
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import tools.jackson.module.kotlin.readValue
+import tools.jackson.module.kotlin.treeToValue
 
 @Service
 class ArenaMessageConsumerService(
@@ -41,7 +42,7 @@ class ArenaMessageConsumerService(
 
 	fun handleArenaGoldenGateRecord(record: ConsumerRecord<String, String>) {
 		val recordValue = record.value().removeNullCharacters()
-		val messageDto = fromJsonString<ArenaKafkaMessageDto>(recordValue)
+		val messageDto = objectMapper.readValue<ArenaKafkaMessageDto>(recordValue)
 
 		processArenaKafkaMessage(messageDto)
 	}
@@ -127,8 +128,8 @@ class ArenaMessageConsumerService(
 			operationType = AmtOperation.fromArenaOperationString(messageDto.opType),
 			operationTimestamp = parseArenaDateTime(messageDto.opTs),
 			operationPosition = messageDto.pos,
-			before = messageDto.before?.let { fromJsonNode(it) },
-			after = messageDto.after?.let { fromJsonNode(it) },
+			before = messageDto.before?.let { objectMapper.treeToValue(it) },
+			after = messageDto.after?.let { objectMapper.treeToValue(it) },
 		)
 
 	private fun findProcessorName(arenaTableName: String): String =

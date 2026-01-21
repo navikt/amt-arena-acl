@@ -12,9 +12,8 @@ class AmtTiltakClientConfig {
 		machineToMachineTokenClient: MachineToMachineTokenClient,
 		@Value($$"${amt-tiltak.url}") url: String,
 		@Value($$"${amt-tiltak.scope}") scope: String,
-	): AmtTiltakClient =
-		AmtTiltakClientImpl(
-			baseUrl = url,
-			tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },
-		)
+	) = AmtTiltakClientImpl(
+		baseUrl = url,
+		tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },
+	)
 }

@@ -39,13 +39,4 @@ class API(
 			arenaHistId = arenaHistId,
 		)
 	}
-
-	data class HentArenaIdResponse(
-		val arenaId: String,
-	)
-
-	data class HentArenaIdV2Response(
-		val arenaId: String?,
-		val arenaHistId: String?,
-	)
 }

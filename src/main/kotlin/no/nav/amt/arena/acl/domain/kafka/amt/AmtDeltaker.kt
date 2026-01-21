@@ -2,7 +2,7 @@ package no.nav.amt.arena.acl.domain.kafka.amt
 
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class AmtDeltaker(
 	val id: UUID,
@@ -16,12 +16,20 @@ data class AmtDeltaker(
 	val prosentDeltid: Float?,
 	val registrertDato: LocalDateTime,
 	val statusEndretDato: LocalDateTime?,
-	val innsokBegrunnelse: String?
+	val innsokBegrunnelse: String?,
 ) {
-
 	enum class Status {
-		VENTER_PA_OPPSTART, DELTAR, HAR_SLUTTET, IKKE_AKTUELL, FEILREGISTRERT, PABEGYNT_REGISTRERING,
-		SOKT_INN, VURDERES, VENTELISTE, AVBRUTT, FULLFORT // kurs statuser
+		VENTER_PA_OPPSTART,
+		DELTAR,
+		HAR_SLUTTET,
+		IKKE_AKTUELL,
+		FEILREGISTRERT,
+		PABEGYNT_REGISTRERING,
+		SOKT_INN,
+		VURDERES,
+		VENTELISTE,
+		AVBRUTT,
+		FULLFORT, // kurs statuser
 	}
 
 	enum class StatusAarsak {
@@ -31,7 +39,7 @@ data class AmtDeltaker(
 		FIKK_IKKE_PLASS,
 		AVLYST_KONTRAKT,
 		IKKE_MOTT,
-		ANNET
+		ANNET,
 	}
 
 	fun toFeilregistrertDeltaker() =
@@ -40,16 +48,16 @@ data class AmtDeltaker(
 			statusAarsak = null,
 			dagerPerUke = null,
 			prosentDeltid = null,
-			innsokBegrunnelse = null
+			innsokBegrunnelse = null,
 		)
 }
 
-fun AmtDeltaker.Status.erAvsluttende() : Boolean{
-	return this in listOf(
-		AmtDeltaker.Status.IKKE_AKTUELL,
-		AmtDeltaker.Status.HAR_SLUTTET,
-		AmtDeltaker.Status.FEILREGISTRERT,
-		AmtDeltaker.Status.AVBRUTT,
-		AmtDeltaker.Status.FULLFORT
-	)
-}
+fun AmtDeltaker.Status.erAvsluttende(): Boolean =
+	this in
+		listOf(
+			AmtDeltaker.Status.IKKE_AKTUELL,
+			AmtDeltaker.Status.HAR_SLUTTET,
+			AmtDeltaker.Status.FEILREGISTRERT,
+			AmtDeltaker.Status.AVBRUTT,
+			AmtDeltaker.Status.FULLFORT,
+		)

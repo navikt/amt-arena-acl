@@ -1,28 +1,29 @@
 package no.nav.amt.arena.acl.clients.amttiltak
 
-import no.nav.amt.arena.acl.utils.JsonUtils
-import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
+import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
 import no.nav.common.rest.client.RestClient
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.springframework.http.HttpHeaders
+import tools.jackson.module.kotlin.readValue
 import java.util.function.Supplier
 
 class AmtTiltakClientImpl(
 	private val baseUrl: String,
 	private val tokenProvider: Supplier<String>,
 	private val httpClient: OkHttpClient = RestClient.baseClient(),
-) : AmtTiltakClient {
+) {
 	private val mediaTypeJson = "application/json".toMediaType()
 
-	override fun hentDeltakelserForPerson(personIdent: String): List<DeltakerDto> {
+	fun hentDeltakelserForPerson(personIdent: String): List<DeltakerDto> {
 		val request =
 			Request
 				.Builder()
 				.url("$baseUrl/api/external/deltakelser")
-				.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
-				.post(toJsonString(HentDeltakelserRequest(personIdent)).toRequestBody(mediaTypeJson))
+				.addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
+				.post(objectMapper.writeValueAsString(HentDeltakelserRequest(personIdent)).toRequestBody(mediaTypeJson))
 				.build()
 
 		httpClient.newCall(request).execute().use { response ->
@@ -31,11 +32,11 @@ class AmtTiltakClientImpl(
 			}
 
 			val body = response.body.string()
-			return JsonUtils.fromJsonString<List<DeltakerDto>>(body)
+			return objectMapper.readValue<List<DeltakerDto>>(body)
 		}
 	}
 
-	data class HentDeltakelserRequest(
+	private data class HentDeltakelserRequest(
 		val personIdent: String,
 	)
 }

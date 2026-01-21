@@ -18,10 +18,11 @@ import no.nav.amt.arena.acl.consumer.HistDeltakerConsumer
 import no.nav.amt.arena.acl.domain.kafka.arena.ArenaGjennomforingKafkaMessage
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.utils.ClassPathResourceUtils.readResourceAsText
-import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
+import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import tools.jackson.databind.JsonNode
+import tools.jackson.module.kotlin.readValue
 
 class ArenaMessageConsumerServiceTest :
 	StringSpec({
@@ -51,7 +52,7 @@ class ArenaMessageConsumerServiceTest :
 
 		"should handle arena deltaker message" {
 			val tiltakdeltakereJsonFileContent = readResourceAsText("data/arena-tiltakdeltakerendret-v1.json")
-			val tiltakdeltakere: List<JsonNode> = fromJsonString(tiltakdeltakereJsonFileContent)
+			val tiltakdeltakere: List<JsonNode> = objectMapper.readValue(tiltakdeltakereJsonFileContent)
 			val deltakerJson = tiltakdeltakere.toList()[0].toString()
 
 			messageProcessor.handleArenaGoldenGateRecord(
@@ -63,10 +64,9 @@ class ArenaMessageConsumerServiceTest :
 			}
 		}
 
-/*
 		"should handle arena hist deltaker message" {
 			val histTiltakdeltakereJsonFileContent = readResourceAsText("data/arena-histtiltakdeltakerendret-v1.json")
-			val histTiltakdeltakere: List<JsonNode> = fromJsonString(histTiltakdeltakereJsonFileContent)
+			val histTiltakdeltakere: List<JsonNode> = objectMapper.readValue(histTiltakdeltakereJsonFileContent)
 			val histDeltakerJson = histTiltakdeltakere.toList()[0].toString()
 
 			messageProcessor.handleArenaGoldenGateRecord(
@@ -77,11 +77,10 @@ class ArenaMessageConsumerServiceTest :
 				histDeltakerProcessor.handleArenaMessage(any())
 			}
 		}
-*/
 
 		"should handle arena gjennomforing message" {
 			val tiltakgjennomforingerJsonFileContent = readResourceAsText("data/arena-tiltakgjennomforingendret-v1.json")
-			val tiltakgjennomforinger: List<JsonNode> = fromJsonString(tiltakgjennomforingerJsonFileContent)
+			val tiltakgjennomforinger: List<JsonNode> = objectMapper.readValue(tiltakgjennomforingerJsonFileContent)
 			val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
 			messageProcessor.handleArenaGoldenGateRecord(
@@ -96,7 +95,7 @@ class ArenaMessageConsumerServiceTest :
 		"should handle message with unicode NULL" {
 			val tiltakgjennomforingerJsonFileContent =
 				readResourceAsText("data/arena-tiltakgjennomforingendret-v1-bad-unicode.json")
-			val tiltakgjennomforinger: List<JsonNode> = fromJsonString(tiltakgjennomforingerJsonFileContent)
+			val tiltakgjennomforinger: List<JsonNode> = objectMapper.readValue(tiltakgjennomforingerJsonFileContent)
 			val tiltakgjennomforingJson = tiltakgjennomforinger.toList()[0].toString()
 
 			messageProcessor.handleArenaGoldenGateRecord(

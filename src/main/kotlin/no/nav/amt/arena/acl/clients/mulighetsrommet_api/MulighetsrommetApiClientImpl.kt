@@ -1,9 +1,13 @@
 package no.nav.amt.arena.acl.clients.mulighetsrommet_api
 
-import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
+import com.fasterxml.jackson.annotation.JsonIgnore
+import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
+import no.nav.amt.lib.models.deltakerliste.tiltakstype.Tiltakskode
 import no.nav.common.rest.client.RestClient.baseClient
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.springframework.http.HttpHeaders
+import tools.jackson.module.kotlin.readValue
 import java.util.UUID
 import java.util.function.Supplier
 
@@ -11,13 +15,13 @@ class MulighetsrommetApiClientImpl(
 	private val baseUrl: String,
 	private val tokenProvider: Supplier<String>,
 	private val httpClient: OkHttpClient = baseClient(),
-) : MulighetsrommetApiClient {
-	override fun hentGjennomforingId(arenaId: String): UUID? {
+) {
+	fun hentGjennomforingId(arenaId: String): UUID? {
 		val request =
 			Request
 				.Builder()
 				.url("$baseUrl/api/v1/tiltaksgjennomforinger/id/$arenaId")
-				.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
+				.addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
 				.get()
 				.build()
 
@@ -31,18 +35,18 @@ class MulighetsrommetApiClientImpl(
 
 			val body = response.body.string()
 
-			val responseBody = fromJsonString<HentGjennomforingId.Response>(body)
+			val responseBody = objectMapper.readValue<HentGjennomforingIdResponse>(body)
 
 			return responseBody.id
 		}
 	}
 
-	override fun hentGjennomforing(id: UUID): Gjennomforing {
+	fun hentGjennomforing(id: UUID): Gjennomforing {
 		val request =
 			Request
 				.Builder()
 				.url("$baseUrl/api/v1/tiltaksgjennomforinger/$id")
-				.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
+				.addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
 				.get()
 				.build()
 
@@ -53,16 +57,16 @@ class MulighetsrommetApiClientImpl(
 
 			val body = response.body.string()
 
-			return fromJsonString(body)
+			return objectMapper.readValue(body)
 		}
 	}
 
-	override fun hentGjennomforingV2(id: UUID): Gjennomforing {
+	fun hentGjennomforingV2(id: UUID): Gjennomforing {
 		val request =
 			Request
 				.Builder()
 				.url("$baseUrl/api/v2/tiltaksgjennomforinger/$id")
-				.addHeader("Authorization", "Bearer ${tokenProvider.get()}")
+				.addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
 				.get()
 				.build()
 
@@ -72,14 +76,46 @@ class MulighetsrommetApiClientImpl(
 			}
 
 			val body = response.body.string()
-			val responseBody = fromJsonString<GjennomforingV2Response>(body)
+			val responseBody = objectMapper.readValue<GjennomforingV2Response>(body)
 			return responseBody.toGjennomforing()
 		}
 	}
 
-	object HentGjennomforingId {
-		data class Response(
-			val id: UUID,
+	private data class HentGjennomforingIdResponse(
+		val id: UUID,
+	)
+
+	private data class GjennomforingV2Response(
+		val id: UUID,
+		val tiltakskode: String? = null, // skal gjøres non-nullable
+		val tiltakstype: TiltakstypeResponse? = null, // skal fjernes
+		val arrangor: ArrangorResponse,
+	) {
+		data class ArrangorResponse(
+			val organisasjonsnummer: String,
 		)
+
+		data class TiltakstypeResponse(
+			val tiltakskode: String,
+		)
+
+		// erstattes av tiltakskode senere
+		@get:JsonIgnore
+		val effectiveTiltakskode: String
+			get() = tiltakskode ?: tiltakstype?.tiltakskode ?: throw IllegalStateException("Tiltakskode er ikke satt")
+
+		fun toGjennomforing(): Gjennomforing {
+			val arenaKode =
+				Tiltakskode
+					.valueOf(effectiveTiltakskode)
+					.toArenaKode()
+					.name
+
+			return Gjennomforing(
+				id = id,
+				tiltakstype = Gjennomforing.Tiltakstype(arenaKode = arenaKode),
+				virksomhetsnummer = arrangor.organisasjonsnummer,
+			)
+		}
 	}
 }

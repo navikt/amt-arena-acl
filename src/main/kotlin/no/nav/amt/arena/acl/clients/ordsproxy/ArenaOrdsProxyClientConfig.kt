@@ -12,9 +12,8 @@ class ArenaOrdsProxyClientConfig {
 		machineToMachineTokenClient: MachineToMachineTokenClient,
 		@Value($$"${amt-arena-ords-proxy.url}") url: String,
 		@Value($$"${amt-arena-ords-proxy.scope}") scope: String,
-	): ArenaOrdsProxyClient =
-		ArenaOrdsProxyClientImpl(
-			arenaOrdsProxyUrl = url,
-			tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },
-		)
+	) = ArenaOrdsProxyClientImpl(
+		arenaOrdsProxyUrl = url,
+		tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },
+	)
 }
