@@ -1,8 +1,8 @@
 package no.nav.amt.arena.acl.consumer
 
-import ArenaOrdsProxyClient
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing
-import no.nav.amt.arena.acl.clients.mulighetsrommet_api.MulighetsrommetApiClient
+import no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing
+import no.nav.amt.arena.acl.clients.mulighetsrommet.MulighetsrommetApiClient
+import no.nav.amt.arena.acl.clients.ordsproxy.ArenaOrdsProxyClient
 import no.nav.amt.arena.acl.domain.db.ArenaDataDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
 import no.nav.amt.arena.acl.domain.db.toUpsertInput
@@ -31,9 +31,8 @@ class ArenaDeltakerConsumerTemp(
 	private val gjennomforingService: GjennomforingService,
 	private val arenaDataIdTranslationService: ArenaDataIdTranslationService,
 	private val ordsClient: ArenaOrdsProxyClient,
-	private val mulighetsrommetApiClient: MulighetsrommetApiClient
+	private val mulighetsrommetApiClient: MulighetsrommetApiClient,
 ) {
-
 	private val log = LoggerFactory.getLogger(javaClass)
 
 	fun handleArenaMessage(message: ArenaDeltakerKafkaMessage) {
@@ -46,37 +45,49 @@ class ArenaDeltakerConsumerTemp(
 			return
 		}
 
-		val gjennomforing = try {
-			getGjennomforing(arenaGjennomforingId)
-		} catch (_: IgnoredException) {
-			log.info("Hopper over deltaker $arenaDeltakerId som ikke er enkeltplass")
-			return
-		} catch (_: DependencyNotValidException) {
-			log.info("Hopper over deltaker $arenaDeltakerId på ugyldig gjennomføring")
-			return
-		}
+		val gjennomforing =
+			try {
+				getGjennomforing(arenaGjennomforingId)
+			} catch (_: IgnoredException) {
+				log.info("Hopper over deltaker $arenaDeltakerId som ikke er enkeltplass")
+				return
+			} catch (_: DependencyNotValidException) {
+				log.info("Hopper over deltaker $arenaDeltakerId på ugyldig gjennomføring")
+				return
+			}
 
 		if (!gjennomforing.erEnkelplass()) {
 			return
 		}
 
-		val arenaDeltaker = arenaDeltakerRaw
-			.tryRun { it.mapTiltakDeltaker() }
-			.getOrThrow()
+		val arenaDeltaker =
+			arenaDeltakerRaw
+				.tryRun { it.mapTiltakDeltaker() }
+				.getOrThrow()
 
 		val deltakerData = arenaDataRepository.get(ARENA_DELTAKER_TABLE_NAME, arenaDeltakerId)
 
 		if (!skalLagreDeltaker(deltakerData, message)) {
-			log.info("TEMP Melding for arenaId=$arenaDeltakerId pos=${message.operationPosition} op=${message.operationType} er allerede håndtert av nyere melding, hopper over lagring")
+			log.info(
+				"TEMP Melding for arenaId=$arenaDeltakerId pos=${message.operationPosition} op=${message.operationType} er allerede håndtert av nyere melding, hopper over lagring",
+			)
 			return
 		}
 
-		val deltaker = try { createDeltaker(arenaDeltaker, gjennomforing) }
-		catch (e: Exception) {
-			log.error("Klarte ikke å lage deltaker $arenaDeltakerId", e)
-			arenaDataRepository.upsert(message.toUpsertInput(arenaDeltakerId, IngestStatus.FAILED, note="error: ${e.message}"))
-			return
-		}
+		val deltaker =
+			try {
+				createDeltaker(arenaDeltaker, gjennomforing)
+			} catch (e: Exception) {
+				log.error("Klarte ikke å lage deltaker $arenaDeltakerId", e)
+				arenaDataRepository.upsert(
+					message.toUpsertInput(
+						arenaDeltakerId,
+						IngestStatus.FAILED,
+						note = "error: ${e.message}",
+					),
+				)
+				return
+			}
 
 		log.info("TEMP Lagrer ${gjennomforing.tiltakstype} deltaker med id=${deltaker.id}")
 		arenaDataRepository.upsert(message.toUpsertInputWithStatusNew(arenaDeltakerId))
@@ -91,18 +102,20 @@ class ArenaDeltakerConsumerTemp(
 		message: ArenaDeltakerKafkaMessage,
 	): Boolean {
 		if (deltakerData.isEmpty()) return true
-		val sisteLagredeDeltaker = deltakerData
-			.maxBy { it.operationPosition.toLong() }
+		val sisteLagredeDeltaker =
+			deltakerData
+				.maxBy { it.operationPosition.toLong() }
 		return message.operationPosition.toLong() > sisteLagredeDeltaker.operationPosition.toLong()
 	}
 
 	fun createDeltaker(
 		arenaDeltaker: TiltakDeltaker,
 		gjennomforing: Gjennomforing,
-		erHistDeltaker: Boolean = false
+		erHistDeltaker: Boolean = false,
 	): AmtDeltaker {
-		val personIdent = ordsClient.hentFnr(arenaDeltaker.personId)
-			?: throw ValidationException("TEMP Arena mangler personlig ident for personId=${arenaDeltaker.personId}")
+		val personIdent =
+			ordsClient.hentFnr(arenaDeltaker.personId)
+				?: throw ValidationException("TEMP Arena mangler personlig ident for personId=${arenaDeltaker.personId}")
 
 		val deltakerId =
 			arenaDataIdTranslationService.hentEllerOpprettNyDeltakerId(arenaDeltaker.tiltakdeltakerId, erHistDeltaker)
@@ -118,11 +131,12 @@ class ArenaDeltakerConsumerTemp(
 	}
 
 	fun getGjennomforing(arenaGjennomforingId: String): Gjennomforing {
-		val gjennomforing = gjennomforingService.get(arenaGjennomforingId)
-			?: throw DependencyNotIngestedException("TEMP Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
+		val gjennomforing =
+			gjennomforingService.get(arenaGjennomforingId)
+				?: throw DependencyNotIngestedException("TEMP Venter på at gjennomføring med id=$arenaGjennomforingId skal bli håndtert")
 
-		if(gjennomforing.tiltakKode !in setOf("ENKELAMO", "ENKFAGYRKE", "HOYEREUTD")) {
-			throw IgnoredException("TEMP Deltaker på gjennomføring ${arenaGjennomforingId} med arenakode ${gjennomforing.tiltakKode} skal ikke leses")
+		if (gjennomforing.tiltakKode !in setOf("ENKELAMO", "ENKFAGYRKE", "HOYEREUTD")) {
+			throw IgnoredException("TEMP Deltaker på gjennomføring $arenaGjennomforingId med arenakode ${gjennomforing.tiltakKode} skal ikke leses")
 		}
 
 		if (!gjennomforing.isSupported) {
@@ -133,16 +147,15 @@ class ArenaDeltakerConsumerTemp(
 
 		// id kan være null for våre typer fordi id ikke ble lagret fra starten
 		// og pga en bug se trellokort #877
-		val gjennomforingId = gjennomforing.id ?: getGjennomforingId(gjennomforing.arenaId).also {
-			gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
-		}
+		val gjennomforingId =
+			gjennomforing.id ?: getGjennomforingId(gjennomforing.arenaId).also {
+				gjennomforingService.setGjennomforingId(gjennomforing.arenaId, it)
+			}
 
 		return mulighetsrommetApiClient.hentGjennomforingV2(gjennomforingId)
 	}
 
-	private fun getGjennomforingId(arenaId: String): UUID {
-		return mulighetsrommetApiClient.hentGjennomforingId(arenaId)
-			?: throw DependencyNotIngestedException("TEMP Venter på at gjennomføring med id=${arenaId} skal bli håndtert av Mulighetsrommet")
-	}
-
+	private fun getGjennomforingId(arenaId: String): UUID =
+		mulighetsrommetApiClient.hentGjennomforingId(arenaId)
+			?: throw DependencyNotIngestedException("TEMP Venter på at gjennomføring med id=$arenaId skal bli håndtert av Mulighetsrommet")
 }

@@ -5,7 +5,7 @@ import io.kotest.extensions.testcontainers.TestContainerSpecExtension
 import no.nav.amt.arena.acl.database.DatabaseTestUtils.cleanDatabase
 import no.nav.amt.arena.acl.database.SingletonPostgresContainer
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureJdbc
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import javax.sql.DataSource
 
@@ -26,7 +26,6 @@ abstract class KotestRepositoryTestBase(
 
 	companion object {
 		@ServiceConnection
-		@Suppress("unused")
 		private val container = SingletonPostgresContainer.postgresContainer
 	}
 }
