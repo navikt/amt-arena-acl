@@ -7,7 +7,6 @@
     "pos": "00000000050058769820",
     "before": null,
     "after": {
-      "HIST_TILTAKDELTAKER_ID": 42,
       "TILTAKDELTAKER_ID": 123456,
       "PERSON_ID": 556677,
       "TILTAKGJENNOMFORING_ID": 3461841,

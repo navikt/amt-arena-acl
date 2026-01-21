@@ -7,6 +7,7 @@ import no.nav.amt.arena.acl.utils.asValidatedLocalDate
 import no.nav.amt.arena.acl.utils.asValidatedLocalDateTime
 import java.util.UUID
 
+// @SONAR_START@
 data class ArenaDeltaker(
 	val TILTAKDELTAKER_ID: Long,
 	val PERSON_ID: Long? = null,
@@ -39,18 +40,17 @@ data class ArenaDeltaker(
 	val PARTISJON: Int? = null,
 	val BEGRUNNELSE_BESTILLING: String? = null,
 	val ANTALL_DAGER_PR_UKE: Float? = null,
-	val EKSTERN_ID: String? = null,
+	val EKSTERN_ID: String? = null
 ) {
-	fun mapTiltakDeltaker(): TiltakDeltaker {
-		val tiltakdeltakerId =
-			TILTAKDELTAKER_ID.toString().also {
-				if (it == "0") throw ValidationException("TILTAKDELTAKER_ID er 0")
-			}
 
-		val tiltakgjennomforingId =
-			TILTAKGJENNOMFORING_ID.toString().also {
-				if (it == "0") throw ValidationException("TILTAKGJENNOMFORING_ID er 0")
-			}
+	fun mapTiltakDeltaker(): TiltakDeltaker {
+		val tiltakdeltakerId = TILTAKDELTAKER_ID.toString().also {
+			if (it == "0") throw ValidationException("TILTAKDELTAKER_ID er 0")
+		}
+
+		val tiltakgjennomforingId = TILTAKGJENNOMFORING_ID.toString().also {
+			if (it == "0") throw ValidationException("TILTAKGJENNOMFORING_ID er 0")
+		}
 
 		return TiltakDeltaker(
 			tiltakdeltakerId = tiltakdeltakerId,
@@ -64,24 +64,26 @@ data class ArenaDeltaker(
 			dagerPerUke = ANTALL_DAGER_PR_UKE,
 			prosentDeltid = PROSENT_DELTID,
 			regDato = REG_DATO.asValidatedLocalDateTime("REG_DATO"),
+
 			// I tiltaksarrangor-bff så er det ikke mulig å slette bestillingsteksten ved å sette den til null,
 			// så for å fjerne tekst som finnes må man sette en tom string i steden for null
-			innsokBegrunnelse = BEGRUNNELSE_BESTILLING ?: "",
+			innsokBegrunnelse = BEGRUNNELSE_BESTILLING ?: ""
 		)
 	}
 
-	fun toDbo() =
-		DeltakerInsertDbo(
-			arenaId = TILTAKDELTAKER_ID,
-			personId = PERSON_ID,
-			gjennomforingId = TILTAKGJENNOMFORING_ID,
-			datoFra = DATO_FRA?.asValidatedLocalDate("DATO_FRA"),
-			datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
-			regDato = REG_DATO.asValidatedLocalDateTime("REG_DATO"),
-			modDato = MOD_DATO.asValidatedLocalDateTime("MOD_DATO"),
-			status = DELTAKERSTATUSKODE,
-			datoStatusEndring = DATO_STATUSENDRING?.asValidatedLocalDateTime("DATO_STATUSENDRING"),
-			arenaSourceTable = ARENA_DELTAKER_TABLE_NAME,
-			eksternId = EKSTERN_ID?.let { UUID.fromString(EKSTERN_ID) },
-		)
+	fun toDbo() = DeltakerInsertDbo(
+		arenaId = TILTAKDELTAKER_ID,
+		personId = PERSON_ID,
+		gjennomforingId = TILTAKGJENNOMFORING_ID,
+		datoFra = DATO_FRA?.asValidatedLocalDate("DATO_FRA"),
+		datoTil = DATO_TIL?.asValidatedLocalDate("DATO_TIL"),
+		regDato = REG_DATO.asValidatedLocalDateTime("REG_DATO"),
+		modDato = MOD_DATO.asValidatedLocalDateTime("MOD_DATO"),
+		status = DELTAKERSTATUSKODE,
+		datoStatusEndring = DATO_STATUSENDRING?.asValidatedLocalDateTime("DATO_STATUSENDRING"),
+		arenaSourceTable = ARENA_DELTAKER_TABLE_NAME,
+		eksternId = EKSTERN_ID?.let { UUID.fromString(EKSTERN_ID)},
+	)
+
 }
+// @SONAR_STOP@

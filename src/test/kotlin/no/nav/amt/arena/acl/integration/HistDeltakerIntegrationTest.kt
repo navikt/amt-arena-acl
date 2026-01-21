@@ -5,7 +5,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.amt.arena.acl.clients.amttiltak.DeltakerStatus
+import no.nav.amt.arena.acl.clients.amttiltak.DeltakerStatusDto
 import no.nav.amt.arena.acl.domain.Gjennomforing
 import no.nav.amt.arena.acl.domain.db.ArenaDataIdTranslationDbo
 import no.nav.amt.arena.acl.domain.db.IngestStatus
@@ -28,13 +28,13 @@ import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_HIST_DELTAKER_TABLE_NAME
-import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
+import no.nav.amt.arena.acl.utils.JsonUtils.fromJsonString
+import no.nav.amt.arena.acl.utils.JsonUtils.toJsonString
 import no.nav.amt.arena.acl.utils.asLocalDate
 import no.nav.amt.arena.acl.utils.asLocalDateTime
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import tools.jackson.module.kotlin.readValue
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -60,10 +60,10 @@ class HistDeltakerIntegrationTest(
 
 	val gjennomforingIdMR: UUID = UUID.randomUUID()
 	val gjennomforingMRData =
-		no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing(
+		no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing(
 			id = gjennomforingIdMR,
 			tiltakstype =
-				no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Tiltakstype(
+				no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Tiltakstype(
 					id = UUID.randomUUID(),
 					navn = "Navn på tiltak",
 					arenaKode = "INDOPPFAG",
@@ -71,9 +71,9 @@ class HistDeltakerIntegrationTest(
 			navn = "Navn på gjennomføring",
 			startDato = LocalDate.now(),
 			sluttDato = LocalDate.now().plusDays(3),
-			status = no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Status.GJENNOMFORES,
+			status = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Status.GJENNOMFORES,
 			virksomhetsnummer = "999888777",
-			oppstart = no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Oppstartstype.LOPENDE,
+			oppstart = no.nav.amt.arena.acl.clients.mulighetsrommet_api.Gjennomforing.Oppstartstype.LOPENDE,
 		)
 
 	val fnr = "123456789"
@@ -133,7 +133,7 @@ class HistDeltakerIntegrationTest(
 		val pos = "233"
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -190,7 +190,7 @@ class HistDeltakerIntegrationTest(
 			gjennomforingId = gjennomforingIdMR,
 			startdato = parseDate(baseDeltaker.DATO_FRA),
 			sluttdato = parseDate(baseDeltaker.DATO_TIL),
-			status = DeltakerStatus.FEILREGISTRERT,
+			status = DeltakerStatusDto.FEILREGISTRERT,
 		)
 
 		baseGjennomforing.publiser {
@@ -225,7 +225,7 @@ class HistDeltakerIntegrationTest(
 
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -258,7 +258,7 @@ class HistDeltakerIntegrationTest(
 
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -290,7 +290,7 @@ class HistDeltakerIntegrationTest(
 
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -323,7 +323,7 @@ class HistDeltakerIntegrationTest(
 		val pos = "42"
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.TILTAKGJENNOMFORING_ID,
-			objectMapper.writeValueAsString(
+			toJsonString(
 				KafkaMessageCreator.opprettArenaHistDeltaker(
 					arenaDeltaker = baseDeltaker,
 					opPos = pos,
@@ -361,7 +361,7 @@ class HistDeltakerIntegrationTest(
 		val pos = "42"
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.TILTAKGJENNOMFORING_ID,
-			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaHistDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -394,7 +394,7 @@ class HistDeltakerIntegrationTest(
 		val pos = "77"
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaHistDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(arenaDeltaker = baseDeltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -422,7 +422,7 @@ class HistDeltakerIntegrationTest(
 		gjennomforingService.upsert(baseGjennomforing.TILTAKGJENNOMFORING_ID.toString(), SUPPORTED_TILTAK.first(), true)
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			baseDeltaker.HIST_TILTAKDELTAKER_ID,
-			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(baseDeltaker, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -459,7 +459,7 @@ class HistDeltakerIntegrationTest(
 	private fun ArenaGjennomforing.publiser(customAssertions: (payload: Gjennomforing?) -> Unit) {
 		kafkaMessageSender.publiserArenaGjennomforing(
 			TILTAKGJENNOMFORING_ID,
-			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaGjennomforingMessage(this)),
+			toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(this)),
 		)
 
 		await().untilAsserted {
@@ -471,14 +471,14 @@ class HistDeltakerIntegrationTest(
 	private fun ArenaHistDeltaker.publiserOgValiderOutput(customAssertions: (payload: AmtDeltaker) -> Unit) {
 		kafkaMessageSender.publiserArenaHistDeltaker(
 			HIST_TILTAKDELTAKER_ID,
-			objectMapper.writeValueAsString(KafkaMessageCreator.opprettArenaHistDeltaker(this)),
+			toJsonString(KafkaMessageCreator.opprettArenaHistDeltaker(this)),
 		)
 
 		await().untilAsserted {
 			val deltakerRecord = kafkaMessageConsumer.getLatestRecord(KafkaMessageConsumer.Topic.AMT_TILTAK)
 			deltakerRecord.shouldNotBeNull()
 
-			val deltakerResult = objectMapper.readValue<AmtKafkaMessageDto<AmtDeltaker>>(deltakerRecord.value())
+			val deltakerResult = fromJsonString<AmtKafkaMessageDto<AmtDeltaker>>(deltakerRecord.value())
 			assertSoftly(deltakerResult) {
 				type shouldBe PayloadType.DELTAKER
 				operation shouldBe AmtOperation.MODIFIED

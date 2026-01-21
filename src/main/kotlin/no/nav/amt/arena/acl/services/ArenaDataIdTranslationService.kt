@@ -10,43 +10,42 @@ import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
-class ArenaDataIdTranslationService(
+open class ArenaDataIdTranslationService(
 	private val arenaDataIdTranslationRepository: ArenaDataIdTranslationRepository,
-	private val arenaDataHistIdTranslationRepository: ArenaDataHistIdTranslationRepository,
+	private val arenaDataHistIdTranslationRepository: ArenaDataHistIdTranslationRepository
 ) {
+
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	fun hentArenaHistId(id: UUID): String? = arenaDataHistIdTranslationRepository.get(id)?.arenaHistId
+	fun hentArenaHistId(id: UUID): String? {
+		return arenaDataHistIdTranslationRepository.get(id)?.arenaHistId
+	}
 
-	fun hentArenaId(id: UUID): String? = arenaDataIdTranslationRepository.get(id)?.arenaId
+	fun hentArenaId(id: UUID): String? {
+		return arenaDataIdTranslationRepository.get(id)?.arenaId
+	}
 
-	fun hentAmtId(
-		arenaId: String,
-		table: String = ARENA_DELTAKER_TABLE_NAME,
-	): UUID? = arenaDataIdTranslationRepository.get(table, arenaId)?.amtId
+	fun hentAmtId(arenaId: String, table: String = ARENA_DELTAKER_TABLE_NAME): UUID? {
+		return arenaDataIdTranslationRepository.get(table, arenaId)?.amtId
+	}
 
-	fun hentEllerOpprettNyDeltakerId(
-		deltakerArenaId: String,
-		erHistDeltaker: Boolean = false,
-	): UUID {
+	fun hentEllerOpprettNyDeltakerId(deltakerArenaId: String, erHistDeltaker: Boolean = false): UUID {
 		val deltakerId =
-			if (erHistDeltaker) {
-				arenaDataHistIdTranslationRepository.get(deltakerArenaId)?.amtId
-			} else {
-				arenaDataIdTranslationRepository.get(ARENA_DELTAKER_TABLE_NAME, deltakerArenaId)?.amtId
-			}
+			if (erHistDeltaker) arenaDataHistIdTranslationRepository.get(deltakerArenaId)?.amtId
+			else arenaDataIdTranslationRepository.get(ARENA_DELTAKER_TABLE_NAME, deltakerArenaId)?.amtId
 
 		if (deltakerId == null) {
 			val nyDeltakerId = UUID.randomUUID()
 			if (erHistDeltaker) {
 				lagreHistDeltakerId(nyDeltakerId, deltakerArenaId)
-			} else {
+			}
+			else {
 				arenaDataIdTranslationRepository.insert(
 					ArenaDataIdTranslationDbo(
 						amtId = nyDeltakerId,
 						arenaTableName = ARENA_DELTAKER_TABLE_NAME,
-						arenaId = deltakerArenaId,
-					),
+						arenaId = deltakerArenaId
+					)
 				)
 			}
 			log.info("Opprettet ny id for deltaker, id=$nyDeltakerId arenaId=$deltakerArenaId")
@@ -56,31 +55,27 @@ class ArenaDataIdTranslationService(
 		return deltakerId
 	}
 
-	fun opprettIdTranslation(
-		arenaId: String,
-		amtId: UUID,
-		table: String = ARENA_DELTAKER_TABLE_NAME,
-	) {
+	fun opprettIdTranslation(arenaId: String, amtId: UUID, table: String = ARENA_DELTAKER_TABLE_NAME) {
 		arenaDataIdTranslationRepository.insert(
 			ArenaDataIdTranslationDbo(
-				amtId = amtId,
-				arenaTableName = table,
-				arenaId = arenaId,
-			),
-		)
+			amtId = amtId,
+			arenaTableName = table,
+			arenaId = arenaId
+		))
 		log.info("Opprettet ny id for deltaker, id=$amtId arenaId=$arenaId")
+
 	}
 
 	fun lagreHistDeltakerId(
 		amtDeltakerId: UUID,
-		histDeltakerArenaId: String,
+		histDeltakerArenaId: String
 	) {
 		arenaDataHistIdTranslationRepository.insert(
 			ArenaDataHistIdTranslationDbo(
 				amtId = amtDeltakerId,
 				arenaHistId = histDeltakerArenaId,
-				arenaId = arenaDataIdTranslationRepository.get(amtDeltakerId)?.arenaId,
-			),
+				arenaId = arenaDataIdTranslationRepository.get(amtDeltakerId)?.arenaId
+			)
 		)
 	}
 }

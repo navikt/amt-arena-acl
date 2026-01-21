@@ -1,4 +1,4 @@
-package no.nav.amt.arena.acl.clients.mulighetsrommet
+package no.nav.amt.arena.acl.clients.mulighetsrommet_api
 
 import no.nav.common.token_client.client.MachineToMachineTokenClient
 import org.springframework.beans.factory.annotation.Value
@@ -12,8 +12,9 @@ class MulighetsrommetApiClientConfig {
 		machineToMachineTokenClient: MachineToMachineTokenClient,
 		@Value($$"${mulighetsrommet-api.url}") url: String,
 		@Value($$"${mulighetsrommet-api.scope}") scope: String,
-	) = MulighetsrommetApiClient(
-		baseUrl = url,
-		tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },
-	)
+	): MulighetsrommetApiClient =
+		MulighetsrommetApiClientImpl(
+			baseUrl = url,
+			tokenProvider = { machineToMachineTokenClient.createMachineToMachineToken(scope) },
+		)
 }

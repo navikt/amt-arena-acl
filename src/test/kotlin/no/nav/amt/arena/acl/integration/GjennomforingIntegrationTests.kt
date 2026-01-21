@@ -11,7 +11,7 @@ import no.nav.amt.arena.acl.integration.kafka.KafkaMessageSender
 import no.nav.amt.arena.acl.repositories.ArenaDataRepository
 import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
-import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
+import no.nav.amt.arena.acl.utils.JsonUtils
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -24,11 +24,10 @@ class GjennomforingIntegrationTests(
 	private val arenaDataRepository: ArenaDataRepository,
 ) : IntegrationTestBase() {
 	@BeforeEach
-	fun setup() =
-		mockArenaOrdsProxyHttpServer.mockHentVirksomhetsnummer(
-			arenaArbeidsgiverId = "0",
-			virksomhetsnummer = "12345",
-		)
+	fun setup() = mockArenaOrdsProxyHttpServer.mockHentVirksomhetsnummer(
+		arenaArbeidsgiverId = "0",
+		virksomhetsnummer = "12345"
+	)
 
 	@Test
 	fun `Konsumer gjennomføring - gyldig gjennomføring - ingestes uten feil`() {
@@ -39,12 +38,7 @@ class GjennomforingIntegrationTests(
 
 		kafkaMessageSender.publiserArenaGjennomforing(
 			gjennomforing.TILTAKGJENNOMFORING_ID,
-			objectMapper.writeValueAsString(
-				KafkaMessageCreator.opprettArenaGjennomforingMessage(
-					gjennomforing,
-					opPos = pos,
-				),
-			),
+			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos)),
 		)
 
 		await().untilAsserted {
@@ -80,7 +74,7 @@ class GjennomforingIntegrationTests(
 
 		kafkaMessageSender.publiserArenaGjennomforing(
 			ugyldigGjennomforing.TILTAKGJENNOMFORING_ID,
-			objectMapper.writeValueAsString(
+			JsonUtils.toJsonString(
 				KafkaMessageCreator.opprettArenaGjennomforingMessage(
 					ugyldigGjennomforing,
 					opPos = pos,
@@ -117,12 +111,7 @@ class GjennomforingIntegrationTests(
 
 		kafkaMessageSender.publiserArenaGjennomforing(
 			gjennomforing.TILTAKGJENNOMFORING_ID,
-			objectMapper.writeValueAsString(
-				KafkaMessageCreator.opprettArenaGjennomforingMessage(
-					gjennomforing,
-					opPos = pos,
-				),
-			),
+			JsonUtils.toJsonString(KafkaMessageCreator.opprettArenaGjennomforingMessage(gjennomforing, opPos = pos)),
 		)
 
 		await().untilAsserted {

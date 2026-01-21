@@ -20,12 +20,11 @@ class MetricSchedules(
 ) {
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	private val failedGauge: AtomicInteger =
-		meterRegistry.gauge(
-			INGEST_STATUS_GAUGE_NAME,
-			Tags.of(STATUS_KEY, IngestStatus.FAILED.name),
-			AtomicInteger(0),
-		)
+	private val failedGauge: AtomicInteger = meterRegistry.gauge(
+		INGEST_STATUS_GAUGE_NAME,
+		Tags.of(STATUS_KEY, IngestStatus.FAILED.name),
+		AtomicInteger(0)
+	)!!
 
 	@Scheduled(fixedDelay = FIVE_MINUTES, initialDelay = ONE_MINUTE)
 	fun logIngestStatus() {

@@ -1,22 +1,22 @@
 package no.nav.amt.arena.acl.domain.kafka.amt
 
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 enum class AmtOperation {
 	CREATED,
 	MODIFIED,
-	DELETED,
-	;
+	DELETED;
 
 	companion object {
-		fun fromArenaOperationString(arenaOperationString: String): AmtOperation =
-			when (arenaOperationString) {
+		fun fromArenaOperationString(arenaOperationString: String): AmtOperation {
+			return when (arenaOperationString) {
 				"I" -> CREATED
 				"U" -> MODIFIED
 				"D" -> DELETED
 				else -> throw IllegalArgumentException("Unknown arena operation $arenaOperationString")
 			}
+		}
 	}
 }
 
@@ -30,5 +30,5 @@ data class AmtKafkaMessageDto<T>(
 	val type: PayloadType,
 	val timestamp: LocalDateTime = LocalDateTime.now(),
 	val operation: AmtOperation,
-	val payload: T?,
+	val payload: T?
 )

@@ -8,8 +8,7 @@ import no.nav.common.kafka.consumer.util.deserializer.Deserializers
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.stereotype.Component
-import java.util.Collections
-import java.util.Properties
+import java.util.*
 
 @Component
 class KafkaMessageConsumer(
@@ -24,28 +23,26 @@ class KafkaMessageConsumer(
 		kafkaProperties.consumer().forEach { properties[it.key] = it.value }
 		properties[ConsumerConfig.GROUP_ID_CONFIG] = javaClass.canonicalName
 
-		val configs =
-			listOf(
-				kafkaTopicProperties.arenaTiltakDeltakerTopic,
-				kafkaTopicProperties.arenaHistTiltakDeltakerTopic,
-				kafkaTopicProperties.arenaTiltakGjennomforingTopic,
-				kafkaTopicProperties.amtTopic,
-				kafkaTopicProperties.amtEnkeltplassDeltakerTopic,
-			).map(::createTopicConfig)
+		val configs = listOf(
+			kafkaTopicProperties.arenaTiltakDeltakerTopic,
+			kafkaTopicProperties.arenaHistTiltakDeltakerTopic,
+			kafkaTopicProperties.arenaTiltakGjennomforingTopic,
+			kafkaTopicProperties.amtTopic,
+			kafkaTopicProperties.amtEnkeltplassDeltakerTopic,
+		).map(::createTopicConfig)
 
-		client =
-			KafkaConsumerClientBuilder
-				.builder()
-				.withProperties(properties)
-				.withTopicConfigs(configs)
-				.build()
+		client = KafkaConsumerClientBuilder.builder()
+			.withProperties(properties)
+			.withTopicConfigs(configs)
+			.build()
 	}
 
 	fun start() = client.start()
 
 	fun stop() = client.stop()
 
-	fun getRecords(topic: Topic): List<ConsumerRecord<String, String>> = records.filter { it.topic() == mapKafkaTopic(topic) }
+	fun getRecords(topic: Topic): List<ConsumerRecord<String, String>> =
+		records.filter { it.topic() == mapKafkaTopic(topic) }
 
 	fun getLatestRecord(topic: Topic): ConsumerRecord<String, String>? =
 		records.filter { it.topic() == mapKafkaTopic(topic) }.maxByOrNull { it.offset() }
@@ -53,33 +50,31 @@ class KafkaMessageConsumer(
 	fun reset() = records.clear()
 
 	private fun createTopicConfig(topic: String): KafkaConsumerClientBuilder.TopicConfig<String, String> =
-		KafkaConsumerClientBuilder
-			.TopicConfig<String, String>()
+		KafkaConsumerClientBuilder.TopicConfig<String, String>()
 			.withConsumerConfig(
 				topic,
 				Deserializers.stringDeserializer(),
 				Deserializers.stringDeserializer(),
-				::handleRecord,
+				::handleRecord
 			)
 
 	private fun handleRecord(record: ConsumerRecord<String, String>) {
 		records.add(record)
 	}
 
-	private fun mapKafkaTopic(topic: Topic): String =
-		when (topic) {
-			Topic.ARENA_TILTAK_DELTAKER -> kafkaTopicProperties.arenaTiltakDeltakerTopic
-			Topic.ARENA_HIST_TILTAK_DELTAKER -> kafkaTopicProperties.arenaHistTiltakDeltakerTopic
-			Topic.ARENA_TILTAK_GJENNOMFORING -> kafkaTopicProperties.arenaTiltakGjennomforingTopic
-			Topic.AMT_TILTAK -> kafkaTopicProperties.amtTopic
-			Topic.AMT_ENKELTPLASS_DELTAKER -> kafkaTopicProperties.amtEnkeltplassDeltakerTopic
-		}
+	private fun mapKafkaTopic(topic: Topic): String = when (topic) {
+		Topic.ARENA_TILTAK_DELTAKER -> kafkaTopicProperties.arenaTiltakDeltakerTopic
+		Topic.ARENA_HIST_TILTAK_DELTAKER -> kafkaTopicProperties.arenaHistTiltakDeltakerTopic
+		Topic.ARENA_TILTAK_GJENNOMFORING -> kafkaTopicProperties.arenaTiltakGjennomforingTopic
+		Topic.AMT_TILTAK -> kafkaTopicProperties.amtTopic
+		Topic.AMT_ENKELTPLASS_DELTAKER -> kafkaTopicProperties.amtEnkeltplassDeltakerTopic
+	}
 
 	enum class Topic {
 		ARENA_TILTAK_DELTAKER,
 		ARENA_HIST_TILTAK_DELTAKER,
 		ARENA_TILTAK_GJENNOMFORING,
 		AMT_TILTAK,
-		AMT_ENKELTPLASS_DELTAKER,
+		AMT_ENKELTPLASS_DELTAKER
 	}
 }
