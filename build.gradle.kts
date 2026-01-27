@@ -1,5 +1,5 @@
 plugins {
-    val kotlinVersion = "2.2.21"
+    val kotlinVersion = "2.3.0"
     val springBootVersion = "4.0.2"
     val springDependencyManagementVersion = "1.1.7"
 
@@ -27,7 +27,7 @@ val navTokenSupportVersion = "6.0.1"
 val logstashEncoderVersion = "9.0"
 val jacksonModuleKotlinVersion = "3.0.3"
 
-val kotestVersion = "6.0.7"
+val kotestVersion = "6.1.0"
 val mockkVersion = "1.14.7"
 val springmockkVersion = "5.0.1"
 val kotestExtensionsSpringVersion = "1.3.0"
