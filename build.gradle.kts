@@ -25,10 +25,10 @@ val unleashVersion = "12.1.0"
 val navCommonVersion = "3.2025.10.10_08.21-bb7c7830d93c"
 val navTokenSupportVersion = "6.0.1"
 val logstashEncoderVersion = "9.0"
-val jacksonModuleKotlinVersion = "3.0.3"
+val jacksonModuleKotlinVersion = "3.0.4"
 
-val kotestVersion = "6.1.0"
-val mockkVersion = "1.14.7"
+val kotestVersion = "6.1.1"
+val mockkVersion = "1.14.9"
 val springmockkVersion = "5.0.1"
 val kotestExtensionsSpringVersion = "1.3.0"
 val kotestExtensionsTestcontainersVersion = "2.0.2"
@@ -55,7 +55,7 @@ configurations.configureEach {
 }
 
 dependencies {
-    implementation("at.yawk.lz4:lz4-java:1.10.2") // fjernes ved neste release av org.apache.kafka:kafka-clients
+    implementation("at.yawk.lz4:lz4-java:1.10.3") // fjernes ved neste release av org.apache.kafka:kafka-clients
     implementation("com.nimbusds:oauth2-oidc-sdk:$nimbusVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$shedlockVersion")
