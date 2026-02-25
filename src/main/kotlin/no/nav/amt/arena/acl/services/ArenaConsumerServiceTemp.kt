@@ -30,7 +30,7 @@ class ArenaConsumerServiceTemp(
 			if ((partition == 0 && offset > 10535748L) ||
 				(partition == 1 && offset > 10531311L) ||
 				(partition == 2 && offset > 10532586L) ||
-				(partition == 3 && offset > 10540184L)
+				(partition == 3 && offset > 10540184L) || isDev()
 			) {
 				log.info("ArenaDeltakerConsumerTemp: Ferdig med å prosessere deltakere for partisjon=$partition. Hopper over offset=$offset")
 				return
@@ -39,6 +39,9 @@ class ArenaConsumerServiceTemp(
 			arenaDeltakerConsumerTemp.handleArenaMessage(toArenaKafkaMessage(messageDto))
 		}
 	}
+
+	private fun isDev(): Boolean =
+		System.getenv("NAIS_CLUSTER_NAME") == "dev-gcp"
 
 	private inline fun <reified D> toArenaKafkaMessage(messageDto: ArenaKafkaMessageDto): ArenaKafkaMessage<D> =
 		ArenaKafkaMessage(
