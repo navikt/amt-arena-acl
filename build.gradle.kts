@@ -1,6 +1,6 @@
 plugins {
     val kotlinVersion = "2.3.10"
-    val springBootVersion = "4.0.2"
+    val springBootVersion = "4.0.3"
     val springDependencyManagementVersion = "1.1.7"
 
     kotlin("jvm") version kotlinVersion
@@ -21,9 +21,9 @@ repositories {
 val nimbusVersion = "11.33"
 val okhttpVersion = "5.3.2"
 val shedlockVersion = "7.6.0"
-val unleashVersion = "12.1.1"
+val unleashVersion = "12.1.2"
 val navCommonVersion = "3.2025.10.10_08.21-bb7c7830d93c"
-val navTokenSupportVersion = "6.0.2"
+val navTokenSupportVersion = "6.0.3"
 val logstashEncoderVersion = "9.0"
 val jacksonModuleKotlinVersion = "3.0.4"
 
