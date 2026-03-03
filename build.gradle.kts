@@ -25,7 +25,7 @@ val unleashVersion = "12.1.2"
 val navCommonVersion = "3.2025.10.10_08.21-bb7c7830d93c"
 val navTokenSupportVersion = "6.0.3"
 val logstashEncoderVersion = "9.0"
-val jacksonModuleKotlinVersion = "3.1.0"
+val jacksonModuleKotlinVersion = "3.0.4"
 
 val kotestVersion = "6.1.3"
 val mockkVersion = "1.14.9"
