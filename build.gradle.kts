@@ -33,7 +33,7 @@ val springmockkVersion = "5.0.1"
 val kotestExtensionsSpringVersion = "1.3.0"
 val kotestExtensionsTestcontainersVersion = "2.0.2"
 
-val amtLibVersion = "1.2026.02.17_10.19-6505ca159a27"
+val amtLibVersion = "1.2026.03.01_23.16-831b1856e93b"
 val navCommonModules = setOf("log", "job", "rest", "token-client")
 
 dependencyManagement {
@@ -91,7 +91,7 @@ dependencies {
 
     implementation("io.micrometer:micrometer-registry-prometheus")
 
-    implementation("no.nav.amt.lib:models:$amtLibVersion")
+    implementation("no.nav.amt.deltakelser.lib:models:$amtLibVersion")
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
     testImplementation("io.kotest:kotest-extensions-spring:$kotestVersion")
