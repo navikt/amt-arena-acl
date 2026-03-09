@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     val kotlinVersion = "2.3.10"
     val springBootVersion = "4.0.3"
@@ -33,7 +35,7 @@ val springmockkVersion = "5.0.1"
 val kotestExtensionsSpringVersion = "1.3.0"
 val kotestExtensionsTestcontainersVersion = "2.0.2"
 
-val amtLibVersion = "1.2026.03.01_23.16-831b1856e93b"
+val amtLibVersion = "1.2026.03.09_08.53-79eac2a4df2a"
 val navCommonModules = setOf("log", "job", "rest", "token-client")
 
 dependencyManagement {
@@ -112,8 +114,9 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
     compilerOptions {
+        jvmTarget = JvmTarget.JVM_25
         freeCompilerArgs.addAll(
             "-Xjsr305=strict",
             "-Xannotation-default-target=param-property",
