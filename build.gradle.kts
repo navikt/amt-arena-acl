@@ -35,7 +35,7 @@ val springmockkVersion = "5.0.1"
 val kotestExtensionsSpringVersion = "1.3.0"
 val kotestExtensionsTestcontainersVersion = "2.0.2"
 
-val amtLibVersion = "1.2026.03.09_08.53-79eac2a4df2a"
+val amtLibVersion = "1.2026.03.15_00.13-2aec41852959"
 val navCommonModules = setOf("log", "job", "rest", "token-client")
 
 dependencyManagement {
