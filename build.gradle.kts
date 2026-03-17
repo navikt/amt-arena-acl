@@ -20,7 +20,7 @@ repositories {
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
-val nimbusVersion = "11.33"
+val nimbusVersion = "11.34"
 val okhttpVersion = "5.3.2"
 val shedlockVersion = "7.6.0"
 val unleashVersion = "12.2.0"
@@ -29,7 +29,7 @@ val navTokenSupportVersion = "6.0.3"
 val logstashEncoderVersion = "9.0"
 val jacksonModuleKotlinVersion = "3.0.4"
 
-val kotestVersion = "6.1.4"
+val kotestVersion = "6.1.6"
 val mockkVersion = "1.14.9"
 val springmockkVersion = "5.0.1"
 val kotestExtensionsSpringVersion = "1.3.0"
