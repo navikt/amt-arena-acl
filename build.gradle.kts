@@ -45,19 +45,7 @@ dependencyManagement {
     }
 }
 
-// fjernes ved neste release av org.apache.kafka:kafka-clients
-configurations.configureEach {
-    resolutionStrategy {
-        capabilitiesResolution {
-            withCapability("org.lz4:lz4-java") {
-                select(candidates.first { (it.id as ModuleComponentIdentifier).group == "at.yawk.lz4" })
-            }
-        }
-    }
-}
-
 dependencies {
-    implementation("at.yawk.lz4:lz4-java:1.10.4") // fjernes ved neste release av org.apache.kafka:kafka-clients
     implementation("com.nimbusds:oauth2-oidc-sdk:$nimbusVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$shedlockVersion")
