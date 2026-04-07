@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     val kotlinVersion = "2.3.10"
-    val springBootVersion = "4.0.4"
+    val springBootVersion = "4.0.5"
     val springDependencyManagementVersion = "1.1.7"
 
     kotlin("jvm") version kotlinVersion
@@ -20,16 +20,16 @@ repositories {
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
-val nimbusVersion = "11.34"
+val nimbusVersion = "11.37"
 val okhttpVersion = "5.3.2"
 val shedlockVersion = "7.7.0"
 val unleashVersion = "12.2.0"
 val navCommonVersion = "3.2026.03.04_12.35-b34c347c6239"
 val navTokenSupportVersion = "6.0.4"
 val logstashEncoderVersion = "9.0"
-val jacksonModuleKotlinVersion = "3.1.0"
+val jacksonModuleKotlinVersion = "3.1.1"
 
-val kotestVersion = "6.1.7"
+val kotestVersion = "6.1.10"
 val mockkVersion = "1.14.9"
 val springmockkVersion = "5.0.1"
 val kotestExtensionsSpringVersion = "1.3.0"
