@@ -43,7 +43,13 @@ dependencyManagement {
         dependency("com.squareup.okhttp3:okhttp:$okhttpVersion")
         dependency("com.squareup.okhttp3:mockwebserver:$okhttpVersion")
     }
+
+    imports {
+        mavenBom("tools.jackson:jackson-bom:3.1.2")
+    }
 }
+
+extra["tomcat.version"] = "11.0.21"
 
 dependencies {
     implementation("com.nimbusds:oauth2-oidc-sdk:$nimbusVersion")
