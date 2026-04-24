@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     val kotlinVersion = "2.3.20"
-    val springBootVersion = "4.0.5"
+    val springBootVersion = "4.0.6"
     val springDependencyManagementVersion = "1.1.7"
 
     kotlin("jvm") version kotlinVersion
@@ -43,13 +43,7 @@ dependencyManagement {
         dependency("com.squareup.okhttp3:okhttp:$okhttpVersion")
         dependency("com.squareup.okhttp3:mockwebserver:$okhttpVersion")
     }
-
-    imports {
-        mavenBom("tools.jackson:jackson-bom:3.1.2")
-    }
 }
-
-extra["tomcat.version"] = "11.0.21"
 
 dependencies {
     implementation("com.nimbusds:oauth2-oidc-sdk:$nimbusVersion")
