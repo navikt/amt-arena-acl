@@ -25,7 +25,7 @@ val okhttpVersion = "5.3.2"
 val shedlockVersion = "7.7.0"
 val unleashVersion = "12.2.1"
 val navCommonVersion = "3.2026.04.08_08.37-229807cc181a"
-val navTokenSupportVersion = "6.0.5"
+val navTokenSupportVersion = "6.0.6"
 val logstashEncoderVersion = "9.0"
 val jacksonModuleKotlinVersion = "3.1.2"
 
