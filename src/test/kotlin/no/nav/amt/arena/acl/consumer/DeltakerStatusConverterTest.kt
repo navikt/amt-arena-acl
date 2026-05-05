@@ -26,6 +26,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -41,6 +42,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -56,6 +58,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -67,6 +70,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false,
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -77,6 +81,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday.minusDays(1),
 			null,
+			false,
 			yesterday.atStartOfDay(),
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -87,6 +92,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday.minusDays(1),
 			null,
+			false,
 			yesterday.atStartOfDay(),
 			erGjennomforingAvsluttet, LocalDate.now(), false,
 		).convert().navn shouldBe HAR_SLUTTET
@@ -97,6 +103,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday,
 			null,
+			false,
 			yesterday.minusDays(1).atStartOfDay(),
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -107,6 +114,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday,
 			null,
+			false,
 			yesterday.minusDays(1).atStartOfDay(),
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -117,6 +125,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			tomorrow,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false,
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -128,6 +137,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false,
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -139,6 +149,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			endretDato.minusDays(1).toLocalDate(),
 			null,
+			false,
 			endretDato,
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -155,6 +166,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday,
 			null,
+			false,
 			endretDato,
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -170,6 +182,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			tomorrow,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -182,6 +195,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			deltakerStartdato = sluttDato.minusDays(1).toLocalDate(),
 			deltakerSluttdato = sluttDato.toLocalDate(),
+			false,
 			datoStatusEndring = sluttDato,
 			erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now(),
@@ -196,6 +210,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe VENTER_PA_OPPSTART
@@ -207,6 +222,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			startDato,
 			null,
+			false,
 			startDato.plusDays(1).atTime(12, 30),
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -222,6 +238,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			datoEndret.plusDays(2).toLocalDate(),
 			null,
+			false,
 			datoEndret,
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -236,6 +253,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday.minusDays(1),
 			yesterday,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe HAR_SLUTTET
@@ -247,6 +265,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			startDato,
 			tomorrow.plusDays(1),
+			false,
 			tomorrow.atTime(10, 20),
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -262,6 +281,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			sluttDato.minusDays(1),
 			sluttDato,
+			false,
 			sluttDato.plusDays(1).atTime(10, 20),
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert()
@@ -276,6 +296,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -286,6 +307,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday.minusDays(1),
 			null,
+			false,
 			yesterday.atStartOfDay(),
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -298,6 +320,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday,
 			null,
+			false,
 			yesterday.minusDays(1).atStartOfDay(),
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -310,6 +333,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			tomorrow,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -320,6 +344,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -330,6 +355,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday.minusDays(1),
 			null,
+			false,
 			yesterday.atStartOfDay(),
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -342,6 +368,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday,
 			null,
+			false,
 			yesterday.minusDays(1).atStartOfDay(),
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -354,6 +381,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			tomorrow,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -366,6 +394,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			statusEndret.plusDays(2),
 			statusEndret.plusDays(4),
+			false,
 			statusEndret.atStartOfDay(),
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -381,6 +410,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			now,
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -394,6 +424,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -404,6 +435,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday.minusDays(1),
 			null,
+			false,
 			yesterday.atStartOfDay(),
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -416,6 +448,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday,
 			null,
+			false,
 			yesterday.minusDays(1).atStartOfDay(),
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
@@ -428,6 +461,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			tomorrow,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -438,6 +472,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe VURDERES
@@ -448,6 +483,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe VENTER_PA_OPPSTART
@@ -458,6 +494,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe DELTAR
@@ -468,6 +505,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			tomorrow,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe VENTER_PA_OPPSTART
@@ -478,6 +516,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday.minusDays(1),
 			yesterday,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe HAR_SLUTTET
@@ -488,6 +527,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday,
 			tomorrow,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe DELTAR
@@ -498,6 +538,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe IKKE_AKTUELL
@@ -508,6 +549,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe VENTER_PA_OPPSTART
@@ -518,6 +560,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe DELTAR
@@ -528,6 +571,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			tomorrow,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe VENTER_PA_OPPSTART
@@ -538,6 +582,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday.minusDays(1),
 			yesterday,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe HAR_SLUTTET
@@ -548,6 +593,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			yesterday,
 			tomorrow,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe DELTAR
@@ -558,6 +604,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			null,
 			null,
+			false,
 			null,
 			erGjennomforingAvsluttet, LocalDate.now(), false
 		).convert().navn shouldBe VENTELISTE
@@ -569,6 +616,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			LocalDate.now(),
 			null,
+			false,
 			LocalDateTime.now(),
 			erGjennomforingAvsluttet, LocalDate.now(), true
 		).convert().navn shouldBe VENTELISTE
@@ -580,6 +628,7 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			now,
 			LocalDate.now(),
 			null,
+			false,
 			LocalDateTime.now(),
 			erGjennomforingAvsluttet, LocalDate.now(), true
 		).convert().navn shouldBe SOKT_INN
@@ -592,10 +641,11 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			deltakerRegistrertDato = now,
 			deltakerStartdato = LocalDate.now().minusDays(4),
 			deltakerSluttdato = LocalDate.now().minusDays(3),
+			erEnkeltplass = false,
 			datoStatusEndring = LocalDateTime.now().minusDays(5),
-			erGjennomforingAvsluttet,
+			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now(),
-			true
+			deltakelseKreverGodkjenningLoep = true
 		).convert().navn shouldBe AVBRUTT
 	}
 
@@ -606,10 +656,11 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			deltakerRegistrertDato = now,
 			deltakerStartdato = LocalDate.now().minusDays(4),
 			deltakerSluttdato = LocalDate.now().minusDays(3),
+			erEnkeltplass = false,
 			datoStatusEndring = LocalDateTime.now().minusDays(5),
-			erGjennomforingAvsluttet,
+			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().minusDays(3),
-			true
+			deltakelseKreverGodkjenningLoep = true
 		).convert().navn shouldBe FULLFORT
 	}
 
@@ -619,10 +670,11 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			deltakerRegistrertDato = now,
 			deltakerStartdato = LocalDate.now().plusDays(1),
 			deltakerSluttdato = LocalDate.now().plusDays(3),
+			erEnkeltplass = false,
 			datoStatusEndring = LocalDateTime.now(),
-			erGjennomforingAvsluttet,
+			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(3),
-			true
+			deltakelseKreverGodkjenningLoep = true
 		).convert().navn shouldBe VENTER_PA_OPPSTART
 	}
 
@@ -632,10 +684,11 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			deltakerRegistrertDato = now,
 			deltakerStartdato = LocalDate.now().plusDays(1),
 			deltakerSluttdato = LocalDate.now().plusDays(3),
+			erEnkeltplass = false,
 			datoStatusEndring = LocalDateTime.now().plusDays(3),
-			erGjennomforingAvsluttet,
+			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(3),
-			true
+			deltakelseKreverGodkjenningLoep = true
 		).convert().navn shouldBe FULLFORT
 	}
 
@@ -645,10 +698,11 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			deltakerRegistrertDato = now,
 			deltakerStartdato = LocalDate.now().plusDays(1),
 			deltakerSluttdato = LocalDate.now().plusDays(2),
+			erEnkeltplass = false,
 			datoStatusEndring = LocalDateTime.now().plusDays(2),
-			erGjennomforingAvsluttet,
+			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(3),
-			true
+			deltakelseKreverGodkjenningLoep = true
 		).convert().navn shouldBe FULLFORT
 	}
 
@@ -658,10 +712,11 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			deltakerRegistrertDato = now,
 			deltakerStartdato = LocalDate.now().plusDays(1),
 			deltakerSluttdato = LocalDate.now().plusDays(2),
+			erEnkeltplass = false,
 			datoStatusEndring = LocalDateTime.now().plusDays(2),
-			erGjennomforingAvsluttet,
+			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(3),
-			true
+			deltakelseKreverGodkjenningLoep = true
 		).convert().navn shouldBe AVBRUTT
 	}
 
@@ -671,10 +726,11 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			deltakerRegistrertDato = now,
 			deltakerStartdato = LocalDate.now().plusDays(1),
 			deltakerSluttdato = LocalDate.now().plusDays(4),
+			erEnkeltplass = false,
 			datoStatusEndring = LocalDateTime.now().plusDays(2),
-			erGjennomforingAvsluttet,
+			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(3),
-			true
+			deltakelseKreverGodkjenningLoep = true
 		).convert().navn shouldBe AVBRUTT
 	}
 
@@ -684,10 +740,11 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 			deltakerRegistrertDato = now,
 			deltakerStartdato = LocalDate.now().plusDays(1),
 			deltakerSluttdato = LocalDate.now().plusDays(1),
+			erEnkeltplass = false,
 			datoStatusEndring = LocalDateTime.now().plusDays(1),
-			erGjennomforingAvsluttet,
+			erGjennomforingAvsluttet = erGjennomforingAvsluttet,
 			gjennomforingSluttdato = LocalDate.now().plusDays(1),
-			true
+			deltakelseKreverGodkjenningLoep = true
 		).convert().navn shouldBe FULLFORT
 	}
 }) {
@@ -697,3 +754,185 @@ class DeltakerStatusArenaDeltakerStatusConvertererTest : StringSpec({
 		private val now = LocalDateTime.now()
 	}
 }
+
+class EnkeltplassStatusConverterTest : StringSpec({
+	val erGjennomforingAvsluttet = true
+
+	// Verifiser at med erEnkeltplass=false blir en ikke-avsluttende status overstyrt til IKKE_AKTUELL
+	// når gjennomføringen er avsluttet
+	"erEnkeltplass=false og gjennomforing avsluttet - GJENN uten startdato - returnerer IKKE_AKTUELL" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.GJENN,
+			now,
+			null,
+			null,
+			false,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe IKKE_AKTUELL
+	}
+
+	"erEnkeltplass=false og gjennomforing avsluttet - GJENN med startdato i fortid - returnerer IKKE_AKTUELL" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.GJENN,
+			now,
+			yesterday,
+			null,
+			false,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe IKKE_AKTUELL
+	}
+
+	"erEnkeltplass=false og gjennomforing avsluttet - AKTUELL - returnerer IKKE_AKTUELL" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.AKTUELL,
+			now,
+			null,
+			null,
+			false,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe IKKE_AKTUELL
+	}
+
+	// Med erEnkeltplass=true skal ikke avsluttet gjennomføring overstyre statusen
+	"erEnkeltplass=true og gjennomforing avsluttet - GJENN uten startdato - returnerer VENTER_PA_OPPSTART" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.GJENN,
+			now,
+			null,
+			null,
+			true,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe VENTER_PA_OPPSTART
+	}
+
+	"erEnkeltplass=true og gjennomforing avsluttet - GJENN med startdato i fortid - returnerer DELTAR" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.GJENN,
+			now,
+			yesterday,
+			null,
+			true,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe DELTAR
+	}
+
+	"erEnkeltplass=true og gjennomforing avsluttet - JATAKK uten startdato - returnerer VENTER_PA_OPPSTART" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.JATAKK,
+			now,
+			null,
+			null,
+			true,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe VENTER_PA_OPPSTART
+	}
+
+	"erEnkeltplass=true og gjennomforing avsluttet - TILBUD uten startdato - returnerer VENTER_PA_OPPSTART" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.TILBUD,
+			now,
+			null,
+			null,
+			true,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe VENTER_PA_OPPSTART
+	}
+
+	"erEnkeltplass=true og gjennomforing avsluttet - AKTUELL - returnerer SOKT_INN" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.AKTUELL,
+			now,
+			null,
+			null,
+			true,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe SOKT_INN
+	}
+
+	"erEnkeltplass=true og gjennomforing avsluttet - INFOMOETE - returnerer VURDERES" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.INFOMOETE,
+			now,
+			null,
+			null,
+			true,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe VURDERES
+	}
+
+	"erEnkeltplass=true og gjennomforing avsluttet - VENTELISTE - returnerer VENTELISTE" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.VENTELISTE,
+			now,
+			null,
+			null,
+			true,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe VENTELISTE
+	}
+
+	// Avsluttende statuser skal passere gjennom uavhengig av erEnkeltplass
+	"erEnkeltplass=true og gjennomforing avsluttet - GJENN med passert sluttdato - returnerer HAR_SLUTTET" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.GJENN,
+			now,
+			yesterday.minusDays(1),
+			yesterday,
+			true,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe HAR_SLUTTET
+	}
+
+	"erEnkeltplass=false og gjennomforing avsluttet - GJENN med passert sluttdato - returnerer HAR_SLUTTET" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.GJENN,
+			now,
+			yesterday.minusDays(1),
+			yesterday,
+			false,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe HAR_SLUTTET
+	}
+}) {
+	companion object {
+		private val yesterday = LocalDate.now().minusDays(1)
+		private val now = LocalDateTime.now()
+	}
+}
+
