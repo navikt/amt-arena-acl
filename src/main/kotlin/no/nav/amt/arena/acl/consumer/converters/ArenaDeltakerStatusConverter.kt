@@ -12,6 +12,7 @@ class ArenaDeltakerStatusConverter(
 	val deltakerRegistrertDato: LocalDateTime,
 	val deltakerStartdato: LocalDate?,
 	val deltakerSluttdato: LocalDate?,
+	val erEnkeltplass: Boolean,
 	val datoStatusEndring: LocalDateTime?,
 	val erGjennomforingAvsluttet: Boolean,
 	val gjennomforingSluttdato: LocalDate?,
@@ -35,7 +36,7 @@ class ArenaDeltakerStatusConverter(
 				throw UnknownFormatConversionException("Kan ikke konvertere deltakerstatuskode: $arenaStatus")
 			}
 
-		if (erGjennomforingAvsluttet && !status.navn.erAvsluttende()) {
+		if (!erEnkeltplass && (erGjennomforingAvsluttet && !status.navn.erAvsluttende())) {
 			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
 		}
 		return status

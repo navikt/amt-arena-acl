@@ -53,6 +53,7 @@ data class TiltakDeltaker(
 		amtDeltakerId: UUID,
 		gjennomforingId: UUID,
 		gjennomforingSluttDato: LocalDate?,
+		erEnkeltplass: Boolean,
 		erGjennomforingAvsluttet: Boolean,
 		personIdent: String,
 		deltakelseKreverGodkjenningLoep: Boolean,
@@ -65,6 +66,7 @@ data class TiltakDeltaker(
 				arenaStatus = deltakerStatusKode,
 				datoStatusEndring = datoStatusendring,
 				gjennomforingSluttdato = gjennomforingSluttDato,
+				erEnkeltplass = erEnkeltplass,
 				erGjennomforingAvsluttet = erGjennomforingAvsluttet,
 				deltakelseKreverGodkjenningLoep = deltakelseKreverGodkjenningLoep,
 			).convert()

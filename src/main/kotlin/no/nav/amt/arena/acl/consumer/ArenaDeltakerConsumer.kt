@@ -210,6 +210,7 @@ class ArenaDeltakerConsumer(
 			amtDeltakerId = deltakerId,
 			gjennomforingId = gjennomforing.id,
 			gjennomforingSluttDato = gjennomforing.sluttDato,
+			erEnkeltplass = gjennomforing.erEnkelplass(),
 			erGjennomforingAvsluttet = gjennomforing.erAvsluttet(),
 			deltakelseKreverGodkjenningLoep = gjennomforing.erKurs() || gjennomforing.erEnkelplass(),
 			personIdent = personIdent,
