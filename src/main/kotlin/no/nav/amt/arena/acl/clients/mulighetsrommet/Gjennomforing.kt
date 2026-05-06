@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.clients.mulighetsrommet
 
+import no.nav.amt.lib.models.deltakerliste.Oppstartstype
 import java.time.LocalDate
 import java.util.UUID
 
@@ -11,13 +12,8 @@ data class Gjennomforing(
 	val sluttDato: LocalDate? = null,
 	val status: Status? = null,
 	val virksomhetsnummer: String,
-	val oppstart: Oppstartstype? = null,
+	val oppstart: Oppstartstype?,
 ) {
-	enum class Oppstartstype {
-		LOPENDE,
-		FELLES,
-	}
-
 	data class Tiltakstype(
 		val id: UUID? = null,
 		val navn: String? = null,

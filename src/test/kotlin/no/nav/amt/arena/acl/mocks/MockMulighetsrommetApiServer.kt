@@ -27,12 +27,10 @@ class MockMulighetsrommetApiServer : MockHttpServer() {
 			{
 				"id": "$id",
 				"tiltakskode": "$tiltakskode",
-				"tiltakstype": {
-					"tiltakskode": "$tiltakskode"
-				},
 				"arrangor": {
 					"organisasjonsnummer": "${gjennomforingData?.virksomhetsnummer}"
-				}
+				},
+				"oppstart": "${gjennomforingData?.oppstart}"
 			}
 			""".trimIndent()
 
