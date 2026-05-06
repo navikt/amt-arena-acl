@@ -16,6 +16,7 @@ import no.nav.amt.arena.acl.services.RetryArenaMessageProcessorService
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.ARENA_GJENNOMFORING_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
+import no.nav.amt.lib.models.deltakerliste.Oppstartstype
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -83,7 +84,7 @@ class RetryArenaMessageConsumerServiceTest(
 				sluttDato = LocalDate.now().plusDays(5),
 				status = Gjennomforing.Status.GJENNOMFORES,
 				virksomhetsnummer = "999888777",
-				oppstart = Gjennomforing.Oppstartstype.LOPENDE,
+				oppstart = Oppstartstype.LOPENDE,
 			)
 
 		mockArenaOrdsProxyHttpServer.mockHentFnr(deltaker.PERSON_ID!!, (1..Long.MAX_VALUE).random().toString())

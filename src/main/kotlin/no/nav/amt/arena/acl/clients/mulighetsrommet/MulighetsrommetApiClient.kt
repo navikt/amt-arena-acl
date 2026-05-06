@@ -1,7 +1,7 @@
 package no.nav.amt.arena.acl.clients.mulighetsrommet
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
+import no.nav.amt.lib.models.deltakerliste.Oppstartstype
 import no.nav.amt.lib.models.deltakerliste.tiltakstype.ArenaKode
 import no.nav.amt.lib.models.deltakerliste.tiltakstype.Tiltakskode
 import no.nav.amt.lib.models.deltakerliste.tiltakstype.Tiltakskode.ARBEIDSFORBEREDENDE_TRENING
@@ -100,34 +100,22 @@ class MulighetsrommetApiClient(
 
 	private data class GjennomforingV2Response(
 		val id: UUID,
-		val tiltakskode: String? = null, // skal gjøres non-nullable
-		val tiltakstype: TiltakstypeResponse? = null, // skal fjernes
+		val tiltakskode: Tiltakskode, // skal gjøres non-nullable
 		val arrangor: ArrangorResponse,
+		val oppstart: Oppstartstype,
 	) {
 		data class ArrangorResponse(
 			val organisasjonsnummer: String,
 		)
 
-		data class TiltakstypeResponse(
-			val tiltakskode: String,
-		)
-
-		// erstattes av tiltakskode senere
-		@get:JsonIgnore
-		val effectiveTiltakskode: String
-			get() = tiltakskode ?: tiltakstype?.tiltakskode ?: throw IllegalStateException("Tiltakskode er ikke satt")
-
 		fun toGjennomforing(): Gjennomforing {
-			val arenaKode =
-				Tiltakskode
-					.valueOf(effectiveTiltakskode)
-					.toArenaKodeLocal()
-					.name
+			val arenaKode = tiltakskode.toArenaKodeLocal()
 
 			return Gjennomforing(
 				id = id,
-				tiltakstype = Gjennomforing.Tiltakstype(arenaKode = arenaKode),
+				tiltakstype = Gjennomforing.Tiltakstype(arenaKode = arenaKode.name),
 				virksomhetsnummer = arrangor.organisasjonsnummer,
+				oppstart = oppstart
 			)
 		}
 	}
@@ -152,4 +140,5 @@ fun Tiltakskode.toArenaKodeLocal() =
 		Tiltakskode.STUDIESPESIALISERING -> ArenaKode.GRUPPEAMO
 		Tiltakskode.FAG_OG_YRKESOPPLAERING -> ArenaKode.GRUFAGYRKE
 		Tiltakskode.HOYERE_YRKESFAGLIG_UTDANNING -> ArenaKode.GRUFAGYRKE
+		Tiltakskode.TILPASSET_JOBBSTOTTE -> throw UnsupportedOperationException("Tilpasset jobbstøtte deltakelser skal ikke komme fra arena")
 	}

@@ -27,6 +27,7 @@ import no.nav.amt.arena.acl.services.GjennomforingService
 import no.nav.amt.arena.acl.services.SUPPORTED_TILTAK
 import no.nav.amt.arena.acl.utils.ARENA_DELTAKER_TABLE_NAME
 import no.nav.amt.arena.acl.utils.JsonUtils.objectMapper
+import no.nav.amt.lib.models.deltakerliste.Oppstartstype
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -69,7 +70,7 @@ class DeltakerIntegrationTest(
 			sluttDato = LocalDate.now().plusDays(3),
 			status = no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Status.GJENNOMFORES,
 			virksomhetsnummer = "999888777",
-			oppstart = no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing.Oppstartstype.LOPENDE,
+			oppstart = Oppstartstype.LOPENDE,
 		)
 
 	val fnr = "123456789"
