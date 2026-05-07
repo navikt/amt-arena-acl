@@ -889,7 +889,7 @@ class EnkeltplassStatusConverterTest : StringSpec({
 
 	"erEnkeltplass=true og gjennomforing avsluttet - GJENN - returnerer Deltar" {
 		ArenaDeltakerStatusConverter(
-			TiltakDeltaker.Status.VENTELISTE,
+			TiltakDeltaker.Status.GJENN,
 			now,
 			LocalDate.now().minusDays(2),
 			LocalDate.now().plusDays(2),
