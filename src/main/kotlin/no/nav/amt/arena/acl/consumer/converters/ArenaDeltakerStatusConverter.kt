@@ -36,6 +36,15 @@ class ArenaDeltakerStatusConverter(
 				throw UnknownFormatConversionException("Kan ikke konvertere deltakerstatuskode: $arenaStatus")
 			}
 
+		/* Enkeltplasser kan få gjennomføringen automatisk avsluttet mens personen fortsatt deltar(som en schedulert batch kjøring i arena).
+				Deltakelsen blir da automatisk avsluttet. Deretter gjenåper de deltakelsen men gjennomføringen forblir avsluttet.
+				Derfor skal vi ikke avslutte deltakelsen selv om gjennomføringen er avsluttet.
+			 */
+		if(erEnkeltplass && erGjennomforingAvsluttet && !status.navn.erAvsluttende()) {
+			if(arenaStatus.erSoktInn()) { // Har ikke egentlig deltatt selv om gjennomføring er avsluttet
+				return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
+			}
+		}
 		if (!erEnkeltplass && (erGjennomforingAvsluttet && !status.navn.erAvsluttende())) {
 			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
 		}
@@ -50,6 +59,7 @@ class ArenaDeltakerStatusConverter(
 		} else if (arenaStatus.erGjennomforende()) {
 			status =
 				if (startDatoHarPassert() && sluttDatoHarPassert() && sluttetForTidlig()) {
+					//Kurs skal ha avbrutt status hvis man slutter for tidlig(i motsetning til andre tiltakstyper)
 					DeltakerStatus(AmtDeltaker.Status.AVBRUTT, deltakerSluttdato?.atStartOfDay())
 				} else {
 					utledGjennomforendeStatus()

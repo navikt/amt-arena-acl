@@ -859,7 +859,7 @@ class EnkeltplassStatusConverterTest : StringSpec({
 		).convert().navn shouldBe VENTER_PA_OPPSTART
 	}
 
-	"erEnkeltplass=true og gjennomforing avsluttet - AKTUELL - returnerer SOKT_INN" {
+	"erEnkeltplass=true og gjennomforing avsluttet - AKTUELL - returnerer IKKE_AKTUELL" {
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.AKTUELL,
 			now,
@@ -869,11 +869,11 @@ class EnkeltplassStatusConverterTest : StringSpec({
 			null,
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
-			false
-		).convert().navn shouldBe SOKT_INN
+			true
+		).convert().navn shouldBe IKKE_AKTUELL
 	}
 
-	"erEnkeltplass=true og gjennomforing avsluttet - INFOMOETE - returnerer VURDERES" {
+	"erEnkeltplass=true og gjennomforing avsluttet - INFOMOETE - returnerer IKKE_AKTUELL" {
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.INFOMOETE,
 			now,
@@ -884,10 +884,24 @@ class EnkeltplassStatusConverterTest : StringSpec({
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
 			false
-		).convert().navn shouldBe VURDERES
+		).convert().navn shouldBe IKKE_AKTUELL
 	}
 
-	"erEnkeltplass=true og gjennomforing avsluttet - VENTELISTE - returnerer VENTELISTE" {
+	"erEnkeltplass=true og gjennomforing avsluttet - GJENN - returnerer Deltar" {
+		ArenaDeltakerStatusConverter(
+			TiltakDeltaker.Status.GJENN,
+			now,
+			LocalDate.now().minusDays(2),
+			LocalDate.now().plusDays(2),
+			true,
+			null,
+			erGjennomforingAvsluttet,
+			LocalDate.now(),
+			false
+		).convert().navn shouldBe DELTAR
+	}
+
+	"erEnkeltplass=true og gjennomforing avsluttet - VENTELISTE - returnerer IKKE_AKTUELL" {
 		ArenaDeltakerStatusConverter(
 			TiltakDeltaker.Status.VENTELISTE,
 			now,
@@ -898,7 +912,7 @@ class EnkeltplassStatusConverterTest : StringSpec({
 			erGjennomforingAvsluttet,
 			LocalDate.now(),
 			false
-		).convert().navn shouldBe VENTELISTE
+		).convert().navn shouldBe IKKE_AKTUELL
 	}
 
 	// Avsluttende statuser skal passere gjennom uavhengig av erEnkeltplass
