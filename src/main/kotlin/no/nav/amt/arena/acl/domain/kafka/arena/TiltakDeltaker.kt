@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.domain.kafka.arena
 
+import no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing
 import no.nav.amt.arena.acl.consumer.converters.ArenaDeltakerAarsakConverter
 import no.nav.amt.arena.acl.consumer.converters.ArenaDeltakerStatusConverter
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
@@ -51,10 +52,8 @@ data class TiltakDeltaker(
 
 	fun constructDeltaker(
 		amtDeltakerId: UUID,
-		gjennomforingId: UUID,
-		gjennomforingSluttDato: LocalDate?,
 		erEnkeltplass: Boolean,
-		erGjennomforingAvsluttet: Boolean,
+		gjennomforing: Gjennomforing,
 		personIdent: String,
 		deltakelseKreverGodkjenningLoep: Boolean,
 	): AmtDeltaker {
@@ -65,9 +64,10 @@ data class TiltakDeltaker(
 				deltakerSluttdato = datoTil,
 				arenaStatus = deltakerStatusKode,
 				datoStatusEndring = datoStatusendring,
-				gjennomforingSluttdato = gjennomforingSluttDato,
+				gjennomforingSluttdato = gjennomforing.sluttDato,
 				erEnkeltplass = erEnkeltplass,
-				erGjennomforingAvsluttet = erGjennomforingAvsluttet,
+				erGjennomforingAvsluttet = gjennomforing.erAvsluttet(),
+				gjennomforingStatus = gjennomforing.status,
 				deltakelseKreverGodkjenningLoep = deltakelseKreverGodkjenningLoep,
 			).convert()
 		val statusAarsak =
@@ -75,12 +75,12 @@ data class TiltakDeltaker(
 				deltakerStatusKode,
 				deltakerStatus.navn,
 				statusAarsakKode,
-				erGjennomforingAvsluttet,
+				gjennomforing.erAvsluttet(),
 			)
 
 		return AmtDeltaker(
 			id = amtDeltakerId,
-			gjennomforingId = gjennomforingId,
+			gjennomforingId = gjennomforing.id,
 			personIdent = personIdent,
 			startDato = datoFra,
 			sluttDato = datoTil,

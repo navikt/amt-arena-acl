@@ -122,10 +122,8 @@ class ArenaDeltakerConsumerTemp(
 
 		return arenaDeltaker.constructDeltaker(
 			amtDeltakerId = deltakerId,
-			gjennomforingId = gjennomforing.id,
-			gjennomforingSluttDato = gjennomforing.sluttDato,
+			gjennomforing = gjennomforing,
 			erEnkeltplass = gjennomforing.erEnkelplass(),
-			erGjennomforingAvsluttet = gjennomforing.erAvsluttet(),
 			deltakelseKreverGodkjenningLoep = gjennomforing.erKurs() || gjennomforing.erEnkelplass(),
 			personIdent = personIdent,
 		)
