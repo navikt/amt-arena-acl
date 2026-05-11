@@ -1,5 +1,6 @@
 package no.nav.amt.arena.acl.consumer.converters
 
+import no.nav.amt.arena.acl.clients.mulighetsrommet.Gjennomforing
 import no.nav.amt.arena.acl.domain.kafka.amt.AmtDeltaker
 import no.nav.amt.arena.acl.domain.kafka.amt.erAvsluttende
 import no.nav.amt.arena.acl.domain.kafka.arena.TiltakDeltaker
@@ -16,6 +17,7 @@ class ArenaDeltakerStatusConverter(
 	val datoStatusEndring: LocalDateTime?,
 	val erGjennomforingAvsluttet: Boolean,
 	val gjennomforingSluttdato: LocalDate?,
+	val gjennomforingStatus: Gjennomforing.Status?,
 	val deltakelseKreverGodkjenningLoep: Boolean,
 ) {
 	fun convert(): DeltakerStatus {
@@ -35,17 +37,17 @@ class ArenaDeltakerStatusConverter(
 			} else {
 				throw UnknownFormatConversionException("Kan ikke konvertere deltakerstatuskode: $arenaStatus")
 			}
-
 		/* Enkeltplasser kan få gjennomføringen automatisk avsluttet mens personen fortsatt deltar(som en schedulert batch kjøring i arena).
-				Deltakelsen blir da automatisk avsluttet. Deretter gjenåper de deltakelsen men gjennomføringen forblir avsluttet.
-				Derfor skal vi ikke avslutte deltakelsen selv om gjennomføringen er avsluttet.
-			 */
-		if(erEnkeltplass && erGjennomforingAvsluttet && !status.navn.erAvsluttende()) {
-			if(arenaStatus.erSoktInn()) { // Har ikke egentlig deltatt selv om gjennomføring er avsluttet
-				return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
-			}
+		Deltakelsen blir da automatisk avsluttet. Deretter gjenåper de deltakelsen men gjennomføringen forblir avsluttet.
+		Derfor skal vi ikke avslutte deltakelsen selv om gjennomføringen er avsluttet.
+		Disse tilfellene har Gjennomføringen status AVSLUTT og deltakerstatus er GJENN
+		https://trello.com/c/WYQa8pU8/257-endre-mappinglogikk-p%C3%A5-enkeltplass-oppl%C3%A6ringstiltakene
+	 */
+		if(erEnkeltplass && gjennomforingStatus == Gjennomforing.Status.AVSLUTTET && arenaStatus == TiltakDeltaker.Status.GJENN) {
+			return status
 		}
-		if (!erEnkeltplass && (erGjennomforingAvsluttet && !status.navn.erAvsluttende())) {
+
+		else if (erGjennomforingAvsluttet && !status.navn.erAvsluttende()) {
 			return DeltakerStatus(AmtDeltaker.Status.IKKE_AKTUELL, datoStatusEndring)
 		}
 		return status
