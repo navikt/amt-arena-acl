@@ -39,7 +39,7 @@ jobs:
         uses: gradle/actions/dependency-submission@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6
 
       - name: docker-build-push
-        uses: nais/docker-build-push@be85229e81c0293c265c646c084f05317fb6e0d2 # v0
+        uses: nais/docker-build-push@751a312f0803eb96a05a41fadf51be19b7be362c # v0
         id: docker-build-push
         env: # Workaround for rate limiting inntil denne er fikset: https://github.com/aquasecurity/trivy-action/issues/389
           TRIVY_DB_REPOSITORY: "public.ecr.aws/aquasecurity/trivy-db"
