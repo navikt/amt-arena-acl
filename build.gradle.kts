@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    val kotlinVersion = "2.4.0"
+    val kotlinVersion = "2.4.10"
     val springBootVersion = "4.1.0"
     val springDependencyManagementVersion = "1.1.7"
 
@@ -23,7 +23,7 @@ repositories {
 val nimbusVersion = "11.38.1"
 val okhttpVersion = "5.4.0"
 val shedlockVersion = "7.7.0"
-val unleashVersion = "12.2.2"
+val unleashVersion = "12.2.3"
 val navCommonVersion = "4.2026.06.25_10.50-baa9d54e3cd8"
 val navTokenSupportVersion = "6.0.11"
 val logstashEncoderVersion = "9.0"
