@@ -36,7 +36,7 @@ jobs:
         run: ./gradlew build --console=plain --no-daemon
 
       - name: Dependency submission (for Dependabot)
-        uses: gradle/actions/dependency-submission@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
+        uses: gradle/actions/dependency-submission@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
 
       - name: docker-build-push
         uses: nais/docker-build-push@31c3a7321909bcb20799fdf46153fec721fd9512 # v0
