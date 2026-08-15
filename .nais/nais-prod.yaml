@@ -24,10 +24,11 @@ spec:
     path: /internal/health/liveness
 
   replicas:
-    disableAutoScaling: true
-    min: 0
-    max: 0
-
+    min: 1
+    max: 2
+    scalingStrategy:
+      cpu:
+        thresholdPercentage: 150
   resources:
     requests:
       cpu: 20m
