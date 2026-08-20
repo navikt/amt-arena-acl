@@ -499,7 +499,7 @@ class DeltakerIntegrationTest(
 		registrertDato shouldBe parseDateTime(baseDeltaker.REG_DATO)
 	}
 
-	private fun createDeltaker() =
+	private fun createDeltaker(): ArenaDeltaker =
 		KafkaMessageCreator.baseDeltaker(
 			startDato = LocalDate.now().plusDays(1),
 			sluttDato = LocalDate.now().plusMonths(6),
