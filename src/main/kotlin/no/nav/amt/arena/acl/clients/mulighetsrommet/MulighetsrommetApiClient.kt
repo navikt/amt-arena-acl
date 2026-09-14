@@ -140,5 +140,5 @@ fun Tiltakskode.toArenaKodeLocal() =
 		Tiltakskode.STUDIESPESIALISERING -> ArenaKode.GRUPPEAMO
 		Tiltakskode.FAG_OG_YRKESOPPLAERING -> ArenaKode.GRUFAGYRKE
 		Tiltakskode.HOYERE_YRKESFAGLIG_UTDANNING -> ArenaKode.GRUFAGYRKE
-		Tiltakskode.TILPASSET_JOBBSTOTTE -> throw UnsupportedOperationException("Tilpasset jobbstøtte deltakelser skal ikke komme fra arena")
+		Tiltakskode.TILRETTELAGT_ARBEID_ORDINAER -> throw UnsupportedOperationException("Tilpasset jobbstøtte deltakelser skal ikke komme fra arena")
 	}
