@@ -25,121 +25,120 @@ import java.util.UUID
 import java.util.function.Supplier
 
 class MulighetsrommetApiClient(
-    private val baseUrl: String,
-    private val tokenProvider: Supplier<String>,
-    private val httpClient: OkHttpClient = baseClient(),
+	private val baseUrl: String,
+	private val tokenProvider: Supplier<String>,
+	private val httpClient: OkHttpClient = baseClient(),
 ) {
-    fun hentGjennomforingId(arenaId: String): UUID? {
-        val request =
-            Request
-                .Builder()
-                .url("$baseUrl/api/v1/tiltaksgjennomforinger/id/$arenaId")
-                .addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
-                .get()
-                .build()
+	fun hentGjennomforingId(arenaId: String): UUID? {
+		val request =
+			Request
+				.Builder()
+				.url("$baseUrl/api/v1/tiltaksgjennomforinger/id/$arenaId")
+				.addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
+				.get()
+				.build()
 
-        httpClient.newCall(request).execute().use { response ->
-            if (response.code == 404) {
-                return null
-            }
-            if (!response.isSuccessful) {
-                throw RuntimeException("Klarte ikke å hente gjennomføring arenadata fra Mulighetsrommet. status=${response.code}")
-            }
+		httpClient.newCall(request).execute().use { response ->
+			if (response.code == 404) {
+				return null
+			}
+			if (!response.isSuccessful) {
+				throw RuntimeException("Klarte ikke å hente gjennomføring arenadata fra Mulighetsrommet. status=${response.code}")
+			}
 
-            val body = response.body.string()
+			val body = response.body.string()
 
-            val responseBody = objectMapper.readValue<HentGjennomforingIdResponse>(body)
+			val responseBody = objectMapper.readValue<HentGjennomforingIdResponse>(body)
 
-            return responseBody.id
-        }
-    }
+			return responseBody.id
+		}
+	}
 
-    fun hentGjennomforing(id: UUID): Gjennomforing {
-        val request =
-            Request
-                .Builder()
-                .url("$baseUrl/api/v1/tiltaksgjennomforinger/$id")
-                .addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
-                .get()
-                .build()
+	fun hentGjennomforing(id: UUID): Gjennomforing {
+		val request =
+			Request
+				.Builder()
+				.url("$baseUrl/api/v1/tiltaksgjennomforinger/$id")
+				.addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
+				.get()
+				.build()
 
-        httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw RuntimeException("Klarte ikke å hente gjennomføring fra Mulighetsrommet. status=${response.code}")
-            }
+		httpClient.newCall(request).execute().use { response ->
+			if (!response.isSuccessful) {
+				throw RuntimeException("Klarte ikke å hente gjennomføring fra Mulighetsrommet. status=${response.code}")
+			}
 
-            val body = response.body.string()
+			val body = response.body.string()
 
-            return objectMapper.readValue(body)
-        }
-    }
+			return objectMapper.readValue(body)
+		}
+	}
 
-    fun hentGjennomforingV2(id: UUID): Gjennomforing {
-        val request =
-            Request
-                .Builder()
-                .url("$baseUrl/api/v2/tiltaksgjennomforinger/$id")
-                .addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
-                .get()
-                .build()
+	fun hentGjennomforingV2(id: UUID): Gjennomforing {
+		val request =
+			Request
+				.Builder()
+				.url("$baseUrl/api/v2/tiltaksgjennomforinger/$id")
+				.addHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tokenProvider.get()}")
+				.get()
+				.build()
 
-        httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw RuntimeException("Klarte ikke å hente gjennomføring fra Mulighetsrommet v2 API. status=${response.code}")
-            }
+		httpClient.newCall(request).execute().use { response ->
+			if (!response.isSuccessful) {
+				throw RuntimeException("Klarte ikke å hente gjennomføring fra Mulighetsrommet v2 API. status=${response.code}")
+			}
 
-            val body = response.body.string()
-            val responseBody = objectMapper.readValue<GjennomforingV2Response>(body)
-            return responseBody.toGjennomforing()
-        }
-    }
+			val body = response.body.string()
+			val responseBody = objectMapper.readValue<GjennomforingV2Response>(body)
+			return responseBody.toGjennomforing()
+		}
+	}
 
-    private data class HentGjennomforingIdResponse(
-        val id: UUID,
-    )
+	private data class HentGjennomforingIdResponse(
+		val id: UUID,
+	)
 
-    private data class GjennomforingV2Response(
-        val id: UUID,
-        val tiltakskode: Tiltakskode, // skal gjøres non-nullable
-        val arrangor: ArrangorResponse,
-        val oppstart: Oppstartstype,
-    ) {
-        data class ArrangorResponse(
-            val organisasjonsnummer: String,
-        )
+	private data class GjennomforingV2Response(
+		val id: UUID,
+		val tiltakskode: Tiltakskode, // skal gjøres non-nullable
+		val arrangor: ArrangorResponse,
+		val oppstart: Oppstartstype,
+	) {
+		data class ArrangorResponse(
+			val organisasjonsnummer: String,
+		)
 
-        fun toGjennomforing(): Gjennomforing {
-            val arenaKode = tiltakskode.toArenaKodeLocal()
+		fun toGjennomforing(): Gjennomforing {
+			val arenaKode = tiltakskode.toArenaKodeLocal()
 
-            return Gjennomforing(
-                id = id,
-                tiltakstype = Gjennomforing.Tiltakstype(arenaKode = arenaKode.name),
-                virksomhetsnummer = arrangor.organisasjonsnummer,
-                oppstart = oppstart,
-            )
-        }
-    }
+			return Gjennomforing(
+				id = id,
+				tiltakstype = Gjennomforing.Tiltakstype(arenaKode = arenaKode.name),
+				virksomhetsnummer = arrangor.organisasjonsnummer,
+				oppstart = oppstart
+			)
+		}
+	}
 }
 
-fun Tiltakskode.toArenaKodeLocal() = when (this) {
-    ARBEIDSFORBEREDENDE_TRENING -> ArenaKode.ARBFORB
-    ARBEIDSRETTET_REHABILITERING -> ArenaKode.ARBRRHDAG
-    AVKLARING -> ArenaKode.AVKLARAG
-    DIGITALT_OPPFOLGINGSTILTAK -> ArenaKode.DIGIOPPARB
-    GRUPPE_ARBEIDSMARKEDSOPPLAERING -> ArenaKode.GRUPPEAMO
-    GRUPPE_FAG_OG_YRKESOPPLAERING -> ArenaKode.GRUFAGYRKE
-    JOBBKLUBB -> ArenaKode.JOBBK
-    OPPFOLGING -> ArenaKode.INDOPPFAG
-    VARIG_TILRETTELAGT_ARBEID_SKJERMET -> ArenaKode.VASV
-    ENKELTPLASS_ARBEIDSMARKEDSOPPLAERING -> ArenaKode.ENKELAMO
-    ENKELTPLASS_FAG_OG_YRKESOPPLAERING -> ArenaKode.ENKFAGYRKE
-    HOYERE_UTDANNING -> ArenaKode.HOYEREUTD
-    Tiltakskode.ARBEIDSMARKEDSOPPLAERING -> ArenaKode.GRUPPEAMO
-    Tiltakskode.NORSKOPPLAERING_GRUNNLEGGENDE_FERDIGHETER_FOV -> ArenaKode.GRUPPEAMO
-    Tiltakskode.STUDIESPESIALISERING -> ArenaKode.GRUPPEAMO
-    Tiltakskode.FAG_OG_YRKESOPPLAERING -> ArenaKode.GRUFAGYRKE
-    Tiltakskode.HOYERE_YRKESFAGLIG_UTDANNING -> ArenaKode.GRUFAGYRKE
-    Tiltakskode.TILRETTELAGT_ARBEID_ORDINAER -> throw UnsupportedOperationException(
-        "Tilpasset jobbstøtte deltakelser skal ikke komme fra arena",
-    )
-}
+fun Tiltakskode.toArenaKodeLocal() =
+	when (this) {
+		ARBEIDSFORBEREDENDE_TRENING -> ArenaKode.ARBFORB
+		ARBEIDSRETTET_REHABILITERING -> ArenaKode.ARBRRHDAG
+		AVKLARING -> ArenaKode.AVKLARAG
+		DIGITALT_OPPFOLGINGSTILTAK -> ArenaKode.DIGIOPPARB
+		GRUPPE_ARBEIDSMARKEDSOPPLAERING -> ArenaKode.GRUPPEAMO
+		GRUPPE_FAG_OG_YRKESOPPLAERING -> ArenaKode.GRUFAGYRKE
+		JOBBKLUBB -> ArenaKode.JOBBK
+		OPPFOLGING -> ArenaKode.INDOPPFAG
+		VARIG_TILRETTELAGT_ARBEID_SKJERMET -> ArenaKode.VASV
+		ENKELTPLASS_ARBEIDSMARKEDSOPPLAERING -> ArenaKode.ENKELAMO
+		ENKELTPLASS_FAG_OG_YRKESOPPLAERING -> ArenaKode.ENKFAGYRKE
+		HOYERE_UTDANNING -> ArenaKode.HOYEREUTD
+		Tiltakskode.ARBEIDSMARKEDSOPPLAERING -> ArenaKode.GRUPPEAMO
+		Tiltakskode.NORSKOPPLAERING_GRUNNLEGGENDE_FERDIGHETER_FOV -> ArenaKode.GRUPPEAMO
+		Tiltakskode.STUDIESPESIALISERING -> ArenaKode.GRUPPEAMO
+		Tiltakskode.FAG_OG_YRKESOPPLAERING -> ArenaKode.GRUFAGYRKE
+		Tiltakskode.HOYERE_YRKESFAGLIG_UTDANNING -> ArenaKode.GRUFAGYRKE
+		Tiltakskode.TILPASSET_JOBBSTOTTE -> throw UnsupportedOperationException("Tilpasset jobbstøtte deltakelser skal ikke komme fra arena")
+	}
