@@ -24,7 +24,7 @@ val nimbusVersion = "11.38.2"
 val okhttpVersion = "5.5.0"
 val shedlockVersion = "7.10.1"
 val unleashVersion = "12.3.0"
-val navCommonVersion = "4.2026.09.14_05.43-2bd32bda23c4"
+val navCommonVersion = "4.2026.09.24_06.17-80dfc0eacb29"
 val navTokenSupportVersion = "6.0.12"
 val logstashEncoderVersion = "9.0"
 val jacksonModuleKotlinVersion = "3.2.2"
@@ -35,7 +35,7 @@ val springmockkVersion = "5.0.1"
 val kotestExtensionsSpringVersion = "1.3.0"
 val kotestExtensionsTestcontainersVersion = "2.0.2"
 
-val amtLibVersion = "1.2026.09.19_14.04-d95fadb1dbac"
+val amtLibVersion = "1.2026.09.28_05.44-15fb3d33d2d7"
 val navCommonModules = setOf("log", "job", "rest", "token-client")
 
 dependencyManagement {
