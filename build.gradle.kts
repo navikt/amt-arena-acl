@@ -42,18 +42,17 @@ dependencyManagement {
     dependencies {
         dependency("com.squareup.okhttp3:okhttp:$okhttpVersion")
         dependency("com.squareup.okhttp3:mockwebserver:$okhttpVersion")
+
+        // Override Spring Boot's managed Jackson versions to apply the security fixes in 3.1.7.
+        dependency("tools.jackson.core:jackson-core:3.1.7")
+        dependency("tools.jackson.core:jackson-databind:3.1.7")
     }
 }
-
-// midlertidig fix for CVE-2026-65182
-extra["tomcat.version"] = "11.0.25"
 
 dependencies {
     constraints {
         implementation("at.yawk.lz4:lz4-java") {
-            version {
-                strictly("1.11.2")
-            }
+            version { strictly("1.11.2") }
             because("Fixes CVE-2026-59949")
         }
     }
@@ -76,7 +75,10 @@ dependencies {
 
     implementation("io.getunleash:unleash-client-java:$unleashVersion")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
-    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-web") {
+        exclude(group = "org.springframework.boot", module = "spring-boot-starter-tomcat")
+    }
+    runtimeOnly("org.springframework.boot:spring-boot-starter-jetty")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-logging")
