@@ -89,10 +89,6 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    compileOnly("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-
     implementation("io.micrometer:micrometer-registry-prometheus")
 
     implementation("no.nav.amt.deltakelser.lib:models:$amtLibVersion")
