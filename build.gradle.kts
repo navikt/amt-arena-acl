@@ -44,8 +44,8 @@ dependencyManagement {
         dependency("com.squareup.okhttp3:mockwebserver:$okhttpVersion")
 
         // Override Spring Boot's managed Jackson versions to apply the security fixes in 3.1.7.
-        dependency("tools.jackson.core:jackson-core:3.2.3")
-        dependency("tools.jackson.core:jackson-databind:3.2.3")
+        dependency("tools.jackson.core:jackson-core:3.1.7")
+        dependency("tools.jackson.core:jackson-databind:3.1.7")
     }
 }
 
