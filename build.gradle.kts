@@ -27,9 +27,9 @@ val unleashVersion = "12.3.0"
 val navCommonVersion = "4.2026.09.24_06.17-80dfc0eacb29"
 val navTokenSupportVersion = "6.0.13"
 val logstashEncoderVersion = "9.0"
-val jacksonModuleKotlinVersion = "3.2.3"
+val jacksonModuleKotlinVersion = "3.2.4"
 
-val kotestVersion = "6.2.5"
+val kotestVersion = "6.2.6"
 val mockkVersion = "1.14.11"
 val springmockkVersion = "5.0.1"
 val kotestExtensionsSpringVersion = "1.3.0"
@@ -44,8 +44,8 @@ dependencyManagement {
         dependency("com.squareup.okhttp3:mockwebserver:$okhttpVersion")
 
         // Override Spring Boot's managed Jackson versions to apply the security fixes in 3.1.7.
-        dependency("tools.jackson.core:jackson-core:3.1.7")
-        dependency("tools.jackson.core:jackson-databind:3.1.7")
+        dependency("tools.jackson.core:jackson-core:3.2.4")
+        dependency("tools.jackson.core:jackson-databind:3.2.4")
     }
 }
 
