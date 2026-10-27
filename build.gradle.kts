@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     val kotlinVersion = "2.4.21"
-    val springBootVersion = "4.1.1"
+    val springBootVersion = "4.1.2"
     val springDependencyManagementVersion = "1.1.7"
 
     kotlin("jvm") version kotlinVersion
@@ -27,9 +27,9 @@ val unleashVersion = "12.3.0"
 val navCommonVersion = "4.2026.09.24_06.17-80dfc0eacb29"
 val navTokenSupportVersion = "7.0.1"
 val logstashEncoderVersion = "9.0"
-val jacksonModuleKotlinVersion = "3.2.3"
+val jacksonModuleKotlinVersion = "3.2.4"
 
-val kotestVersion = "6.2.5"
+val kotestVersion = "6.2.6"
 val mockkVersion = "1.14.11"
 val springmockkVersion = "5.0.1"
 val kotestExtensionsSpringVersion = "1.3.0"
@@ -42,21 +42,10 @@ dependencyManagement {
     dependencies {
         dependency("com.squareup.okhttp3:okhttp:$okhttpVersion")
         dependency("com.squareup.okhttp3:mockwebserver:$okhttpVersion")
-
-        // Override Spring Boot's managed Jackson versions to apply the security fixes in 3.1.7.
-        dependency("tools.jackson.core:jackson-core:3.1.7")
-        dependency("tools.jackson.core:jackson-databind:3.1.7")
     }
 }
 
 dependencies {
-    constraints {
-        implementation("at.yawk.lz4:lz4-java") {
-            version { strictly("1.11.4") }
-            because("Fixes CVE-2026-59949")
-        }
-    }
-
     implementation("com.nimbusds:oauth2-oidc-sdk:$nimbusVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$shedlockVersion")
