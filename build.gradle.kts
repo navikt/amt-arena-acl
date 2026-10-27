@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     val kotlinVersion = "2.4.21"
-    val springBootVersion = "4.1.1"
+    val springBootVersion = "4.1.2"
     val springDependencyManagementVersion = "1.1.7"
 
     kotlin("jvm") version kotlinVersion
@@ -42,21 +42,10 @@ dependencyManagement {
     dependencies {
         dependency("com.squareup.okhttp3:okhttp:$okhttpVersion")
         dependency("com.squareup.okhttp3:mockwebserver:$okhttpVersion")
-
-        // Override Spring Boot's managed Jackson versions to apply the security fixes in 3.1.7.
-        dependency("tools.jackson.core:jackson-core:3.2.4")
-        dependency("tools.jackson.core:jackson-databind:3.2.4")
     }
 }
 
 dependencies {
-    constraints {
-        implementation("at.yawk.lz4:lz4-java") {
-            version { strictly("1.11.4") }
-            because("Fixes CVE-2026-59949")
-        }
-    }
-
     implementation("com.nimbusds:oauth2-oidc-sdk:$nimbusVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$shedlockVersion")
